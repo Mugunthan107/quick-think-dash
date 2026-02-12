@@ -3,6 +3,8 @@ import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Copy, Download, Trash2, LogOut, Plus, Users, Activity } from 'lucide-react';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const AdminDashboard = () => {
   const { adminLoggedIn, currentTest, students, createTestPin, deleteAllUsers, getLeaderboard, adminLogout } = useGame();
@@ -13,9 +15,13 @@ const AdminDashboard = () => {
     return null;
   }
 
-  const handleCreatePin = () => {
-    const pin = createTestPin();
-    toast.success(`Test PIN created: ${pin}`);
+  const handleCreatePin = async () => {
+    try {
+      const pin = await createTestPin();
+      toast.success(`Test PIN created: ${pin}`);
+    } catch (e) {
+      toast.error('Failed to create PIN');
+    }
   };
 
   const handleCopyPin = () => {
@@ -31,26 +37,51 @@ const AdminDashboard = () => {
       toast.error('No completed results to download');
       return;
     }
-    const csv = [
-      'Rank,Username,Score,Level,Time Taken (seconds)',
-      ...leaderboard.map((s, i) => {
-        const timeTaken = s.completedAt ? ((s.completedAt - s.startedAt) / 1000).toFixed(1) : 'N/A';
-        return `${i + 1},${s.username},${s.score},${s.level},${timeTaken}`;
-      }),
-    ].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `test-results-${currentTest?.pin || 'unknown'}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Results downloaded');
+
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(18);
+    doc.text(`Test Results - PIN: ${currentTest?.pin}`, 14, 22);
+
+    doc.setFontSize(11);
+    doc.text(`Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 30);
+    doc.text(`Total Students: ${students.length}`, 14, 36);
+
+    const tableColumn = ["Rank", "Student Name", "Score", "Level", "Time (seconds)"];
+    const tableRows = leaderboard.map((student, index) => {
+      const timeTaken = student.completedAt
+        ? ((student.completedAt - student.startedAt) / 1000).toFixed(1)
+        : 'N/A';
+
+      return [
+        index + 1,
+        student.username,
+        student.score,
+        student.level,
+        timeTaken
+      ];
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 45,
+      theme: 'grid',
+      styles: { fontSize: 10, cellPadding: 3 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      alternateRowStyles: { fillColor: [245, 245, 245] }
+    });
+
+    doc.save(`test-results-${currentTest?.pin}.pdf`);
+    toast.success('Results downloaded as PDF');
   };
 
-  const handleDelete = () => {
-    deleteAllUsers();
-    toast.success('All student data deleted');
+  const handleDelete = async () => {
+    if (confirm('Are you sure you want to delete all user data for this test? This cannot be undone.')) {
+      await deleteAllUsers();
+      toast.success('All student data deleted');
+    }
   };
 
   const finished = students.filter(s => s.isFinished);
@@ -145,14 +176,12 @@ const AdminDashboard = () => {
                 return (
                   <div
                     key={s.username}
-                    className={`flex items-center justify-between p-3.5 rounded-xl transition-all ${
-                      i === 0 ? 'bg-accent/10 border border-accent/20' : 'bg-secondary'
-                    }`}
+                    className={`flex items-center justify-between p-3.5 rounded-xl transition-all ${i === 0 ? 'bg-accent/10 border border-accent/20' : 'bg-secondary'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
-                        i === 0 ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
-                      }`}>
+                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${i === 0 ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                        }`}>
                         {i + 1}
                       </span>
                       <span className="font-medium text-foreground">{s.username}</span>
