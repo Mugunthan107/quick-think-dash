@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
-import { Copy, Download, Trash2, LogOut, Plus, Users } from 'lucide-react';
+import { Copy, Download, Trash2, LogOut, Plus, Users, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminDashboard = () => {
@@ -59,8 +59,12 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-2xl mx-auto animate-fade-in">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage tests and monitor progress</p>
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -73,31 +77,46 @@ const AdminDashboard = () => {
         </div>
 
         {/* Test PIN Section */}
-        <div className="bg-card rounded-lg p-6 mb-6 border border-border">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Test Session</h2>
+        <div className="bg-card rounded-2xl p-6 mb-6 border border-border">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Test Session</h2>
           {currentTest ? (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div className="flex items-center gap-4">
-                <div className="bg-secondary rounded-lg px-6 py-3">
-                  <span className="text-xs text-muted-foreground block mb-1">TEST PIN</span>
-                  <span className="text-3xl font-mono font-bold text-accent tracking-widest">{currentTest.pin}</span>
+                <div className="bg-secondary rounded-xl px-6 py-4 flex-1">
+                  <span className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Test PIN</span>
+                  <span className="text-4xl font-mono font-bold text-accent tracking-[0.3em]">{currentTest.pin}</span>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleCopyPin} className="border-border text-foreground hover:bg-secondary">
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy
+                <Button variant="outline" size="icon" onClick={handleCopyPin} className="border-border text-foreground hover:bg-secondary h-12 w-12 rounded-xl">
+                  <Copy className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="w-4 h-4" />
-                <span>{students.length} joined · {finished.length} completed · {active.length} active</span>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-secondary rounded-xl p-3 text-center">
+                  <Users className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
+                  <span className="font-mono font-bold text-lg text-foreground block">{students.length}</span>
+                  <span className="text-[10px] text-muted-foreground">Joined</span>
+                </div>
+                <div className="bg-secondary rounded-xl p-3 text-center">
+                  <Activity className="w-4 h-4 text-accent mx-auto mb-1" />
+                  <span className="font-mono font-bold text-lg text-foreground block">{active.length}</span>
+                  <span className="text-[10px] text-muted-foreground">Active</span>
+                </div>
+                <div className="bg-secondary rounded-xl p-3 text-center">
+                  <span className="text-sm">✓</span>
+                  <span className="font-mono font-bold text-lg text-foreground block">{finished.length}</span>
+                  <span className="text-[10px] text-muted-foreground">Done</span>
+                </div>
               </div>
-              <Button onClick={handleCreatePin} variant="outline" size="sm" className="border-border text-foreground hover:bg-secondary">
+
+              <Button onClick={handleCreatePin} variant="outline" size="sm" className="border-border text-foreground hover:bg-secondary rounded-lg">
                 <Plus className="w-4 h-4 mr-2" />
-                Create New PIN
+                New PIN
               </Button>
             </div>
           ) : (
-            <Button onClick={handleCreatePin} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button onClick={handleCreatePin} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl h-12 px-6">
               <Plus className="w-4 h-4 mr-2" />
               Create Test PIN
             </Button>
@@ -106,32 +125,32 @@ const AdminDashboard = () => {
 
         {/* Actions */}
         <div className="flex gap-3 mb-6">
-          <Button onClick={handleDownload} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button onClick={handleDownload} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-11">
             <Download className="w-4 h-4 mr-2" />
             Download Results
           </Button>
-          <Button onClick={handleDelete} variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">
+          <Button onClick={handleDelete} variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-xl h-11">
             <Trash2 className="w-4 h-4 mr-2" />
             Delete All Users
           </Button>
         </div>
 
-        {/* Live Leaderboard */}
+        {/* Leaderboard */}
         {finished.length > 0 && (
-          <div className="bg-card rounded-lg p-6 border border-border">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Leaderboard</h2>
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Leaderboard</h2>
             <div className="space-y-2">
               {getLeaderboard().map((s, i) => {
                 const timeTaken = s.completedAt ? ((s.completedAt - s.startedAt) / 1000).toFixed(1) : '-';
                 return (
                   <div
                     key={s.username}
-                    className={`flex items-center justify-between p-3 rounded-lg ${
-                      i === 0 ? 'bg-accent/10 border border-accent/30' : 'bg-secondary'
+                    className={`flex items-center justify-between p-3.5 rounded-xl transition-all ${
+                      i === 0 ? 'bg-accent/10 border border-accent/20' : 'bg-secondary'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
                         i === 0 ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
                       }`}>
                         {i + 1}
@@ -140,8 +159,8 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <span className="text-muted-foreground">Lvl {s.level}</span>
-                      <span className="font-mono font-bold text-foreground">{s.score} pts</span>
-                      <span className="text-muted-foreground">{timeTaken}s</span>
+                      <span className="font-mono font-bold text-foreground">{s.score}</span>
+                      <span className="text-muted-foreground w-14 text-right">{timeTaken}s</span>
                     </div>
                   </div>
                 );
