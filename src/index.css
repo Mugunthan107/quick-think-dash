@@ -61,8 +61,11 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-family: 'Space Grotesk', sans-serif;
+    background: linear-gradient(145deg, hsl(260 30% 6%) 0%, hsl(265 35% 10%) 30%, hsl(270 25% 8%) 60%, hsl(255 30% 5%) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
