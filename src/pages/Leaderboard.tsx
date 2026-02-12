@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { ArrowLeft, Trophy } from 'lucide-react';
+import { ArrowLeft, Trophy, Medal, Clock } from 'lucide-react';
 
 const Leaderboard = () => {
   const { getLeaderboard, currentStudent } = useGame();
@@ -12,23 +12,27 @@ const Leaderboard = () => {
       <div className="max-w-lg mx-auto animate-fade-in">
         <button
           onClick={() => navigate('/')}
-          className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          className="mb-10 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Home
         </button>
 
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center">
             <Trophy className="w-5 h-5 text-accent-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Leaderboard</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Leaderboard</h1>
+            <p className="text-xs text-muted-foreground">{leaderboard.length} completed</p>
+          </div>
         </div>
 
         {leaderboard.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">No completed results yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Results appear here after students finish</p>
+          <div className="text-center py-20">
+            <Medal className="w-10 h-10 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground font-medium">No results yet</p>
+            <p className="text-sm text-muted-foreground/60 mt-1">Results appear after students finish the test</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -38,18 +42,18 @@ const Leaderboard = () => {
               return (
                 <div
                   key={s.username}
-                  className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                  className={`flex items-center justify-between p-4 rounded-xl transition-all ${
                     i === 0
-                      ? 'bg-accent/10 border border-accent/30'
+                      ? 'bg-accent/10 border border-accent/20'
                       : isCurrentUser
-                        ? 'bg-secondary border border-accent/20'
+                        ? 'bg-secondary border border-accent/15'
                         : 'bg-card border border-border'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    <span className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold ${
                       i === 0 ? 'bg-accent text-accent-foreground' :
-                      i === 1 ? 'bg-muted-foreground/30 text-foreground' :
+                      i === 1 ? 'bg-muted-foreground/20 text-foreground' :
                       i === 2 ? 'bg-muted text-muted-foreground' :
                       'bg-muted text-muted-foreground'
                     }`}>
@@ -57,13 +61,16 @@ const Leaderboard = () => {
                     </span>
                     <div>
                       <span className="font-medium text-foreground">{s.username}</span>
-                      {isCurrentUser && <span className="text-xs text-accent ml-2">(You)</span>}
+                      {isCurrentUser && <span className="text-[10px] text-accent ml-2 font-semibold">(You)</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
-                    <span className="text-muted-foreground">Lvl {s.level}</span>
+                    <span className="text-muted-foreground text-xs">Lvl {s.level}</span>
                     <span className="font-mono font-bold text-foreground">{s.score}</span>
-                    <span className="text-muted-foreground w-16 text-right">{timeTaken}s</span>
+                    <div className="flex items-center gap-1 text-muted-foreground w-16 justify-end">
+                      <Clock className="w-3 h-3" />
+                      <span className="text-xs">{timeTaken}s</span>
+                    </div>
                   </div>
                 </div>
               );
