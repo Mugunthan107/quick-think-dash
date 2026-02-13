@@ -6,19 +6,19 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="text-center animate-fade-in">
-        <div className="w-16 h-16 rounded-2xl bg-accent/15 flex items-center justify-center mx-auto mb-6">
-          <Brain className="w-8 h-8 text-accent" />
+    <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
+      <div className="text-center animate-fade-in w-full max-w-sm px-2">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-accent/15 flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-accent/10">
+          <Brain className="w-8 h-8 sm:w-10 sm:h-10 text-accent" />
         </div>
-        <h1 className="text-4xl font-bold text-foreground mb-2 tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 tracking-tight">
           Cognitive Assessment
         </h1>
-        <p className="text-muted-foreground text-sm mb-10 max-w-xs mx-auto">
+        <p className="text-muted-foreground text-sm mb-8 sm:mb-10 max-w-xs mx-auto">
           Test your mental math speed and accuracy across 15 levels of increasing difficulty
         </p>
 
-        <div className="flex flex-col gap-3 w-72 mx-auto">
+        <div className="flex flex-col gap-3 w-full max-w-72 mx-auto">
           <Button
             onClick={() => navigate('/student')}
             className="w-full h-14 bg-accent text-accent-foreground hover:bg-accent/90 text-base font-semibold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -36,7 +36,7 @@ const Index = () => {
           </Button>
         </div>
 
-        <p className="text-[11px] text-muted-foreground/60 mt-12">
+        <p className="text-[11px] text-muted-foreground/60 mt-10 sm:mt-12">
           Sort math expressions from lowest to highest value
         </p>
       </div>

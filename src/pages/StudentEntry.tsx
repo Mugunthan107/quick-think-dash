@@ -56,30 +56,30 @@ const StudentEntry = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm animate-fade-in">
+    <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
+      <div className="w-full max-w-sm animate-fade-in px-2">
         <button
           onClick={() => step === 'name' ? (setStep('pin'), setError('')) : navigate('/')}
-          className="mb-10 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          className="mb-8 sm:mb-10 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           {step === 'name' ? 'Change PIN' : 'Back'}
         </button>
 
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center">
-            <Play className="w-5 h-5 text-accent-foreground" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent flex items-center justify-center">
+            <Play className="w-4 h-4 sm:w-5 sm:h-5 text-accent-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Join Test</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Join Test</h1>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               {step === 'pin' ? 'Enter the PIN from your instructor' : 'Enter your name to begin'}
             </p>
           </div>
         </div>
 
         {step === 'pin' ? (
-          <form onSubmit={handlePinSubmit} className="space-y-5 mt-8" key="pin">
+          <form onSubmit={handlePinSubmit} className="space-y-4 sm:space-y-5 mt-6 sm:mt-8" key="pin">
             <div>
               <label className="text-sm text-muted-foreground mb-2 block font-medium">Test PIN</label>
               <Input
@@ -88,18 +88,18 @@ const StudentEntry = () => {
                 onChange={e => { setPin(e.target.value); setError(''); }}
                 placeholder="Enter 6-digit PIN"
                 maxLength={6}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground font-mono text-xl tracking-[0.3em] text-center h-14 rounded-xl"
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground font-mono text-lg sm:text-xl tracking-[0.3em] text-center h-12 sm:h-14 rounded-xl"
                 autoFocus
               />
             </div>
             {error && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-xl border border-destructive/20">
+              <div className="bg-destructive/10 text-destructive text-xs sm:text-sm p-3 rounded-xl border border-destructive/20">
                 {error}
               </div>
             )}
             <Button
               type="submit"
-              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold rounded-xl text-base py-3.5 h-auto"
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold rounded-xl text-sm sm:text-base py-3 sm:py-3.5 h-auto"
               disabled={isVerifying}
             >
               {isVerifying ? 'Verifying...' : (
@@ -111,7 +111,7 @@ const StudentEntry = () => {
             </Button>
           </form>
         ) : (
-          <form onSubmit={handleNameSubmit} className="space-y-5 mt-8 animate-fade-in" key="name">
+          <form onSubmit={handleNameSubmit} className="space-y-4 sm:space-y-5 mt-6 sm:mt-8 animate-fade-in" key="name">
             <div className="bg-secondary rounded-xl px-4 py-3 flex items-center justify-between">
               <span className="text-xs text-muted-foreground">PIN</span>
               <span className="font-mono font-bold text-accent tracking-widest">{pin}</span>
@@ -124,18 +124,18 @@ const StudentEntry = () => {
                 onChange={e => { setUsername(e.target.value); setError(''); }}
                 placeholder="Enter your name"
                 maxLength={30}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground h-12 rounded-xl"
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground h-11 sm:h-12 rounded-xl"
                 autoFocus
               />
             </div>
             {error && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-xl border border-destructive/20">
+              <div className="bg-destructive/10 text-destructive text-xs sm:text-sm p-3 rounded-xl border border-destructive/20">
                 {error}
               </div>
             )}
             <Button
               type="submit"
-              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold rounded-xl text-base py-3.5 h-auto"
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold rounded-xl text-sm sm:text-base py-3 sm:py-3.5 h-auto"
               disabled={isVerifying}
             >
               {isVerifying ? 'Joining...' : 'Start Test'}

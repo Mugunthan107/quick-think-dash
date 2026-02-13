@@ -15,12 +15,6 @@ interface BubbleData {
 const MAX_LEVEL = 15;
 const TIME_PER_ROUND = 15;
 
-const BUBBLE_POSITIONS = [
-  { top: '10%', left: '35%' },
-  { top: '45%', left: '8%' },
-  { top: '42%', left: '62%' },
-];
-
 function getLevelConfig(level: number) {
   if (level <= 5) return { max: 9, ops: ['+', '-'], decimalAllowed: false, label: 'EASY' };
   if (level <= 10) return { max: 15, ops: ['+', '-', '×'], decimalAllowed: true, label: 'MEDIUM' };
@@ -171,27 +165,27 @@ const BubbleGame = () => {
 
   if (finished) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="text-center animate-fade-in max-w-md">
-          <div className="w-24 h-24 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-8 animate-pulse-ring">
-            <Trophy className="w-10 h-10 text-success" />
+      <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
+        <div className="text-center animate-fade-in max-w-md w-full px-2">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-6 sm:mb-8 animate-pulse-ring">
+            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-success" />
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-3">Test Complete!</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">Test Complete!</h1>
           <p className="text-muted-foreground mb-2">Great work, {currentStudent?.username}!</p>
-          <div className="flex items-center justify-center gap-6 my-8">
+          <div className="flex items-center justify-center gap-6 my-6 sm:my-8">
             <div className="text-center">
               <span className="text-xs text-muted-foreground block mb-1">SCORE</span>
-              <span className="font-mono font-bold text-3xl text-accent">{score}</span>
+              <span className="font-mono font-bold text-2xl sm:text-3xl text-accent">{score}</span>
             </div>
             <div className="w-px h-12 bg-border" />
             <div className="text-center">
               <span className="text-xs text-muted-foreground block mb-1">LEVEL</span>
-              <span className="font-mono font-bold text-3xl text-foreground">{level}</span>
+              <span className="font-mono font-bold text-2xl sm:text-3xl text-foreground">{level}</span>
             </div>
           </div>
           <button
             onClick={() => navigate('/leaderboard')}
-            className="bg-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:bg-accent/90 transition-all hover:scale-105 text-lg"
+            className="bg-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:bg-accent/90 transition-all hover:scale-105 text-base sm:text-lg"
           >
             View Leaderboard
           </button>
@@ -205,41 +199,41 @@ const BubbleGame = () => {
   const timerProgress = (timeLeft / TIME_PER_ROUND) * 100;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center p-3 sm:p-4 relative z-10">
       <div className="w-full max-w-[820px] animate-fade-in">
         {/* Top Stats Bar */}
-        <div className="flex items-center justify-between mb-4 px-2">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 px-1 sm:px-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{currentStudent?.username}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">{currentStudent?.username}</span>
           </div>
           {streak > 1 && (
-            <div className="flex items-center gap-1.5 text-accent text-sm font-semibold animate-fade-in">
-              <Zap className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 text-accent text-xs sm:text-sm font-semibold animate-fade-in">
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {streak} streak
             </div>
           )}
         </div>
 
         {/* Main Game Card */}
-        <div className={`bg-card rounded-2xl relative flex flex-col items-center shadow-2xl border border-border overflow-hidden transition-all duration-300 ${
+        <div className={`bg-card/80 backdrop-blur-sm rounded-2xl relative flex flex-col items-center shadow-2xl border border-border overflow-hidden transition-all duration-300 ${
           flash === 'wrong' ? 'border-destructive/50' : flash === 'correct' ? 'border-success/50' : ''
         }`}>
           
           {/* Header Section */}
-          <div className="w-full px-8 pt-6 pb-4 flex items-start justify-between">
+          <div className="w-full px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                <div className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
                   config.label === 'EASY' ? 'bg-success/15 text-success' :
                   config.label === 'MEDIUM' ? 'bg-accent/15 text-accent' :
                   'bg-destructive/15 text-destructive'
                 }`}>
                   {config.label}
                 </div>
-                <span className="text-sm font-semibold text-foreground">Level {level} / {MAX_LEVEL}</span>
+                <span className="text-xs sm:text-sm font-semibold text-foreground">Level {level} / {MAX_LEVEL}</span>
               </div>
               {/* Progress bar */}
-              <div className="w-full max-w-[300px] h-2 bg-secondary rounded-full overflow-hidden">
+              <div className="w-full max-w-[200px] sm:max-w-[300px] h-1.5 sm:h-2 bg-secondary rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${progress}%` }}
@@ -248,35 +242,31 @@ const BubbleGame = () => {
             </div>
 
             {/* Score display */}
-            <div className="text-right ml-6">
-              <span className="text-xs text-muted-foreground block mb-0.5">SCORE</span>
-              <span className="font-mono font-bold text-2xl text-foreground">{score}</span>
+            <div className="text-right ml-4 sm:ml-6">
+              <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5">SCORE</span>
+              <span className="font-mono font-bold text-xl sm:text-2xl text-foreground">{score}</span>
             </div>
           </div>
 
-          {/* Game Area */}
-          <div className="w-full px-8 py-4">
-            <div className="relative w-full" style={{ paddingBottom: '55%' }}>
-              {bubbles.map((bubble, i) => (
+          {/* Game Area - Responsive bubbles */}
+          <div className="w-full px-4 sm:px-8 py-2 sm:py-4">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-6 py-4 sm:py-8">
+              {bubbles.map((bubble) => (
                 <button
                   key={bubble.id}
                   onClick={() => handleBubbleClick(bubble)}
                   disabled={bubble.selected || transitioning}
-                  className={`absolute w-[130px] h-[130px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none font-semibold
+                  className={`w-[90px] h-[90px] sm:w-[130px] sm:h-[130px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none font-semibold
                     ${bubble.selected
                       ? 'bg-bubble-selected text-bubble-selected-foreground scale-90 shadow-inner cursor-default ring-2 ring-success/40'
                       : bubble.wrong
                         ? 'bg-destructive/20 text-destructive animate-shake ring-2 ring-destructive/40'
                         : 'bg-bubble text-bubble-foreground hover:scale-110 hover:shadow-lg hover:shadow-accent/10 cursor-pointer shadow-md active:scale-95'
                     }`}
-                  style={{
-                    top: BUBBLE_POSITIONS[i].top,
-                    left: BUBBLE_POSITIONS[i].left,
-                  }}
                 >
-                  <span className="text-xl leading-tight">{bubble.text}</span>
+                  <span className="text-sm sm:text-xl leading-tight">{bubble.text}</span>
                   {bubble.selected && bubble.order && (
-                    <span className="text-[10px] mt-1 opacity-60 font-mono">#{bubble.order}</span>
+                    <span className="text-[8px] sm:text-[10px] mt-1 opacity-60 font-mono">#{bubble.order}</span>
                   )}
                 </button>
               ))}
@@ -284,11 +274,11 @@ const BubbleGame = () => {
           </div>
 
           {/* Bottom Bar */}
-          <div className="w-full px-8 pb-6 flex items-end justify-between">
+          <div className="w-full px-4 sm:px-8 pb-4 sm:pb-6 flex items-end justify-between">
             {/* Timer */}
-            <div className="flex items-center gap-3">
-              <div className="relative w-12 h-12">
-                <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12">
+                <svg className="w-10 h-10 sm:w-12 sm:h-12 -rotate-90" viewBox="0 0 48 48">
                   <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--secondary))" strokeWidth="3" />
                   <circle
                     cx="24" cy="24" r="20" fill="none"
@@ -300,7 +290,7 @@ const BubbleGame = () => {
                     className="transition-all duration-1000 ease-linear"
                   />
                 </svg>
-                <span className={`absolute inset-0 flex items-center justify-center font-mono font-bold text-sm ${
+                <span className={`absolute inset-0 flex items-center justify-center font-mono font-bold text-xs sm:text-sm ${
                   timeLeft <= 5 ? 'text-destructive' : 'text-foreground'
                 }`}>
                   {timeLeft}
@@ -309,20 +299,20 @@ const BubbleGame = () => {
             </div>
 
             {/* Instruction */}
-            <div className="text-right text-xs text-muted-foreground leading-relaxed">
-              <div className="flex items-center gap-1.5 justify-end mb-1">
-                <Target className="w-3.5 h-3.5" />
+            <div className="text-right text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+              <div className="flex items-center gap-1 sm:gap-1.5 justify-end mb-0.5 sm:mb-1">
+                <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <span className="font-semibold text-foreground/70">Sort by value</span>
               </div>
-              <span className="text-foreground font-bold">LOWEST</span> → <span className="text-foreground font-bold">HIGHEST</span>
+              <span className="text-foreground font-bold">LOW</span> → <span className="text-foreground font-bold">HIGH</span>
             </div>
           </div>
 
           {/* Finish button */}
-          <div className="absolute top-6 right-8">
+          <div className="absolute top-3 sm:top-6 right-3 sm:right-8">
             <button
               onClick={handleFinish}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
+              className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 sm:px-3 py-1 sm:py-1.5 rounded-md hover:bg-secondary"
             >
               End Test
             </button>
