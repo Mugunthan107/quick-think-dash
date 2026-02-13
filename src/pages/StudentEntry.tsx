@@ -10,10 +10,11 @@ const StudentEntry = () => {
   const [pin, setPin] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
-  const { joinTest, currentTest } = useGame();
+  const [isVerifying, setIsVerifying] = useState(false);
+  const { joinTest, verifyTestPin } = useGame();
   const navigate = useNavigate();
 
-  const handlePinSubmit = (e: React.FormEvent) => {
+  const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const trimmedPin = pin.trim();
@@ -21,21 +22,36 @@ const StudentEntry = () => {
       setError('Please enter a test PIN');
       return;
     }
-    if (!currentTest || currentTest.pin !== trimmedPin) {
-      setError('Invalid test PIN');
-      return;
+
+    setIsVerifying(true);
+    try {
+      const isValid = await verifyTestPin(trimmedPin);
+      if (isValid) {
+        setStep('name');
+      } else {
+        setError('Invalid or inactive test PIN');
+      }
+    } catch (err) {
+      setError('Failed to verify PIN');
+    } finally {
+      setIsVerifying(false);
     }
-    setStep('name');
   };
 
-  const handleNameSubmit = (e: React.FormEvent) => {
+  const handleNameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const result = joinTest(pin.trim(), username.trim());
-    if (result.success) {
-      navigate('/game');
-    } else {
-      setError(result.error || 'Failed to join');
+
+    setIsVerifying(true);
+    try {
+      const result = await joinTest(pin.trim(), username.trim());
+      if (result.success) {
+        navigate('/game');
+      } else {
+        setError(result.error || 'Failed to join');
+      }
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -81,9 +97,17 @@ const StudentEntry = () => {
                 {error}
               </div>
             )}
-            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold rounded-xl text-base py-3.5 h-auto">
-              Next
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button
+              type="submit"
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold rounded-xl text-base py-3.5 h-auto"
+              disabled={isVerifying}
+            >
+              {isVerifying ? 'Verifying...' : (
+                <>
+                  Next
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
           </form>
         ) : (
@@ -109,8 +133,12 @@ const StudentEntry = () => {
                 {error}
               </div>
             )}
-            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold rounded-xl text-base py-3.5 h-auto">
-              Start Test
+            <Button
+              type="submit"
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold rounded-xl text-base py-3.5 h-auto"
+              disabled={isVerifying}
+            >
+              {isVerifying ? 'Joining...' : 'Start Test'}
             </Button>
           </form>
         )}

@@ -29,12 +29,17 @@ interface GameContextType extends GameState {
   adminLogin: (password: string) => boolean;
   adminLogout: () => void;
   createTestPin: () => Promise<string>;
+  verifyTestPin: (pin: string) => Promise<boolean>;
   joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string }>;
   updateStudentScore: (username: string, score: number, level: number) => Promise<void>;
   finishTest: (username: string) => Promise<void>;
   getLeaderboard: () => Student[];
   deleteAllUsers: () => Promise<void>;
+  deleteSession: (pin: string) => Promise<void>;
+  sessions: TestSession[];
   setCurrentStudent: (s: Student | null) => void;
+  fetchSessions: () => Promise<void>;
+  switchSession: (s: TestSession | null) => void;
 }
 
 const ADMIN_PASSWORD = 'admin123';
@@ -50,8 +55,36 @@ export const useGame = () => {
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [currentTest, setCurrentTest] = useState<TestSession | null>(null);
+  const [sessions, setSessions] = useState<TestSession[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+
+  // Fetch all active sessions
+  const fetchSessions = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('test_sessions')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching sessions:', error);
+      return;
+    }
+
+    if (data) {
+      const mappedSessions = data.map((row: any) => ({
+        pin: row.pin,
+        createdAt: new Date(row.created_at).getTime(),
+        isActive: row.is_active,
+      }));
+      setSessions(mappedSessions);
+      // Automatically select the most recent session if none selected
+      if (!currentTest && mappedSessions.length > 0) {
+        setCurrentTest(mappedSessions[0]);
+      }
+    }
+  }, [currentTest]);
 
   // Fetch students for the current test periodically or on change
   const fetchStudents = useCallback(async (pin: string) => {
@@ -91,6 +124,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, [currentTest, fetchStudents]);
 
+  // Initial load for admin
+  useEffect(() => {
+    if (adminLoggedIn) {
+      fetchSessions();
+    }
+  }, [adminLoggedIn, fetchSessions]);
+
   const adminLogin = useCallback((password: string) => {
     if (password === ADMIN_PASSWORD) {
       setAdminLoggedIn(true);
@@ -103,6 +143,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setAdminLoggedIn(false);
     setCurrentTest(null);
     setStudents([]);
+    setSessions([]);
   }, []);
 
   const createTestPin = useCallback(async () => {
@@ -120,7 +161,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const newTest = { pin, createdAt: Date.now(), isActive: true };
     setCurrentTest(newTest);
     setStudents([]);
+    await fetchSessions(); // Refresh list
     return pin;
+  }, [fetchSessions]);
+
+  const verifyTestPin = useCallback(async (pin: string) => {
+    const { data, error } = await supabase
+      .from('test_sessions')
+      .select('is_active')
+      .eq('pin', pin)
+      .single();
+
+    if (error || !data || !data.is_active) {
+      return false;
+    }
+    return true;
   }, []);
 
   const joinTest = useCallback(async (pin: string, username: string) => {
@@ -232,25 +287,49 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setStudents([]);
-    setCurrentStudent(null);
+    // setCurrentStudent(null); // Keep admin state
   }, [currentTest]);
+
+  const deleteSession = useCallback(async (pin: string) => {
+    const { error } = await supabase
+      .from('test_sessions')
+      .delete()
+      .eq('pin', pin);
+
+    if (error) {
+      toast.error('Failed to delete session');
+      return;
+    }
+
+    if (currentTest?.pin === pin) {
+      setCurrentTest(null);
+      setStudents([]);
+    }
+    await fetchSessions();
+    toast.success('Session deleted');
+  }, [currentTest, fetchSessions]);
 
   return (
     <GameContext.Provider
       value={{
         adminLoggedIn,
         currentTest,
+        sessions,
         students,
         currentStudent,
         adminLogin,
         adminLogout,
         createTestPin,
+        verifyTestPin,
         joinTest,
         updateStudentScore,
         finishTest,
         getLeaderboard,
         deleteAllUsers,
+        deleteSession,
         setCurrentStudent,
+        fetchSessions,
+        switchSession: setCurrentTest,
       }}
     >
       {children}

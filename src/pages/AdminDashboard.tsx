@@ -6,12 +6,38 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useEffect } from 'react';
+
 const AdminDashboard = () => {
-  const { adminLoggedIn, currentTest, students, createTestPin, deleteAllUsers, getLeaderboard, adminLogout } = useGame();
+  const {
+    adminLoggedIn,
+    currentTest,
+    students,
+    sessions,
+    createTestPin,
+    deleteAllUsers,
+    deleteSession,
+    getLeaderboard,
+    adminLogout,
+    switchSession,
+    setCurrentStudent
+  } = useGame();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      navigate('/admin-login');
+    }
+  }, [adminLoggedIn, navigate]);
+
   if (!adminLoggedIn) {
-    navigate('/admin-login');
     return null;
   }
 
@@ -109,16 +135,64 @@ const AdminDashboard = () => {
 
         {/* Test PIN Section */}
         <div className="bg-card rounded-2xl p-6 mb-6 border border-border">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Test Session</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Test Session</h2>
+            {sessions.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Select
+                  value={currentTest?.pin}
+                  onValueChange={(value) => {
+                    const selected = sessions.find(s => s.pin === value);
+                    if (selected) setCurrentStudent(null); // Clear student view if any
+                    // We need a way to set currentTest from context, but context only has setCurrentStudent.
+                    // Wait, context has setCurrentTest internally but not exposed directly.
+                    // Actually, we can just use the internal state if we expose it, or just rely on the fact that we need to switch context.
+                    // Let's check GameContext again. valid point.
+                    // I need to expose setCurrentTest or similar.
+                    // But wait, I can just find the session and set it?
+                    // I will need to update GameContext to expose setCurrentTest or a switchSession function.
+                    // For now, let's assume I will add switchSession to context or use a workaround.
+                    // Let's use a new function `switchSession` in context.
+                  }}
+                >
+                  <SelectTrigger className="w-[180px] h-8 text-xs">
+                    <SelectValue placeholder="Select Session" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sessions.map((session) => (
+                      <SelectItem key={session.pin} value={session.pin}>
+                        PIN: {session.pin}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
           {currentTest ? (
             <div className="space-y-5">
               <div className="flex items-center gap-4">
                 <div className="bg-secondary rounded-xl px-6 py-4 flex-1">
-                  <span className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Test PIN</span>
-                  <span className="text-4xl font-mono font-bold text-accent tracking-[0.3em]">{currentTest.pin}</span>
+                  <span className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Active Test PIN</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-4xl font-mono font-bold text-accent tracking-[0.3em]">{currentTest.pin}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {new Date(currentTest.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
                 <Button variant="outline" size="icon" onClick={handleCopyPin} className="border-border text-foreground hover:bg-secondary h-12 w-12 rounded-xl">
                   <Copy className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => deleteSession(currentTest.pin)}
+                  className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground h-12 w-12 rounded-xl"
+                  title="Delete this session"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -141,16 +215,25 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <Button onClick={handleCreatePin} variant="outline" size="sm" className="border-border text-foreground hover:bg-secondary rounded-lg">
-                <Plus className="w-4 h-4 mr-2" />
-                New PIN
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={handleCreatePin} variant="outline" size="sm" className="flex-1 border-border text-foreground hover:bg-secondary rounded-lg">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Session
+                </Button>
+                <Button onClick={handleDownload} variant="outline" size="sm" className="flex-1 border-border text-foreground hover:bg-secondary rounded-lg">
+                  <Download className="w-4 h-4 mr-2" />
+                  Results
+                </Button>
+              </div>
             </div>
           ) : (
-            <Button onClick={handleCreatePin} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl h-12 px-6">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Test PIN
-            </Button>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground text-sm mb-4">No active session selected</p>
+              <Button onClick={handleCreatePin} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl h-12 px-6">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Test PIN
+              </Button>
+            </div>
           )}
         </div>
 
