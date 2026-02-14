@@ -22,6 +22,7 @@ const AdminDashboard = () => {
     adminLoggedIn,
     currentTest,
     students,
+    pendingStudents,
     sessions,
     createTestPin,
     deleteAllUsers,
@@ -30,7 +31,9 @@ const AdminDashboard = () => {
     adminLogout,
     switchSession,
     setCurrentStudent,
-    startTest
+    startTest,
+    approveStudent,
+    rejectStudent
   } = useGame();
   const navigate = useNavigate();
 
@@ -46,7 +49,20 @@ const AdminDashboard = () => {
 
   const [showCountdown, setShowCountdown] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
+
+  // Notify on new pending students
+  useEffect(() => {
+    if (pendingStudents.length > 0) {
+      toast.info(`${pendingStudents.length} new join request(s)`, {
+        action: {
+          label: 'View',
+          onClick: () => setShowRequestsModal(true)
+        }
+      });
+    }
+  }, [pendingStudents.length]);
 
   const handleCreatePin = async () => {
     try {
@@ -316,16 +332,16 @@ const AdminDashboard = () => {
                         <div
                           key={s.username}
                           className={`flex items-center justify-between p-3 rounded-xl border ${i === 0 ? 'bg-yellow-500/10 border-yellow-500/50' :
-                              i === 1 ? 'bg-slate-400/10 border-slate-400/50' :
-                                i === 2 ? 'bg-orange-600/10 border-orange-600/50' :
-                                  'bg-card border-border'
+                            i === 1 ? 'bg-slate-400/10 border-slate-400/50' :
+                              i === 2 ? 'bg-orange-600/10 border-orange-600/50' :
+                                'bg-card border-border'
                             }`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${i === 0 ? 'bg-yellow-500 text-white' :
-                                i === 1 ? 'bg-slate-400 text-white' :
-                                  i === 2 ? 'bg-orange-600 text-white' :
-                                    'bg-secondary text-muted-foreground'
+                              i === 1 ? 'bg-slate-400 text-white' :
+                                i === 2 ? 'bg-orange-600 text-white' :
+                                  'bg-secondary text-muted-foreground'
                               }`}>
                               {i + 1}
                             </span>

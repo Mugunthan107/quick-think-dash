@@ -26,14 +26,7 @@ const Index = () => {
             <Play className="w-5 h-5 mr-2" />
             Enter Test PIN
           </Button>
-          <Button
-            onClick={() => navigate('/admin-login')}
-            variant="outline"
-            className="w-full h-12 border-border text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-all"
-          >
-            <Shield className="w-4 h-4 mr-2" />
-            Admin Login
-          </Button>
+
         </div>
 
         <p className="text-[11px] text-muted-foreground/60 mt-10 sm:mt-12">

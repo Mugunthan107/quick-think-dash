@@ -13,7 +13,8 @@ create table public.exam_results (
   started_at timestamp with time zone default timezone('utc'::text, now()) not null,
   completed_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(test_pin, student_name)
+  unique(test_pin, student_name),
+  status text default 'APPROVED'
 );
 alter table public.test_sessions enable row level security;
 alter table public.exam_results enable row level security;
