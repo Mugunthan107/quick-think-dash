@@ -103,7 +103,7 @@ const BubbleGame = () => {
 
     const penalty = level * 10;
     const newScore = Math.max(0, score - penalty);
-    const newLevel = Math.max(1, level - 2);
+    const newLevel = Math.max(1, level - 1);
 
     setScore(newScore);
     if (currentStudent) {
@@ -113,8 +113,11 @@ const BubbleGame = () => {
     setTimeout(() => setFlash(null), 500);
     setTimeout(() => {
       setLevel(newLevel);
+      if (newLevel === level) {
+        startRound(newLevel);
+      }
     }, 800);
-  }, [score, level, currentStudent, updateStudentScore]);
+  }, [score, level, currentStudent, updateStudentScore, startRound]);
 
   useEffect(() => {
     if (!gameActive) return;
@@ -264,7 +267,8 @@ const BubbleGame = () => {
                   key={bubble.id}
                   onClick={() => handleBubbleClick(bubble)}
                   disabled={bubble.selected || transitioning}
-                  className={`w-[90px] h-[90px] sm:w-[130px] sm:h-[130px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none font-semibold
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  className={`w-[90px] h-[90px] sm:w-[130px] sm:h-[130px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none font-semibold touch-manipulation
                     ${bubble.selected
                       ? 'bg-bubble-selected text-bubble-selected-foreground scale-90 shadow-inner cursor-default ring-2 ring-success/40'
                       : bubble.wrong
