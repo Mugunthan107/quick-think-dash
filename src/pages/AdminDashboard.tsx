@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X } from 'lucide-react';
+import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X, Bell, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -145,15 +145,32 @@ const AdminDashboard = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage tests and monitor progress</p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => { adminLogout(); navigate('/'); }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <LogOut className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Logout</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowRequestsModal(true)}
+                className={`rounded-full hover:bg-secondary relative ${pendingStudents.length > 0 ? 'text-accent' : 'text-muted-foreground'}`}
+              >
+                <Bell className="w-5 h-5" />
+                {pendingStudents.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-accent-foreground text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {pendingStudents.length}
+                  </span>
+                )}
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { adminLogout(); navigate('/'); }}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+          </div>
         </div>
 
         {/* Test PIN Section */}
@@ -399,6 +416,61 @@ const AdminDashboard = () => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Join Requests Modal */}
+        {showRequestsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-card w-full max-w-md rounded-2xl shadow-2xl border border-border flex flex-col animate-in zoom-in-95 duration-200">
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <h2 className="text-lg font-bold flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-accent" />
+                  Join Requests
+                </h2>
+                <Button variant="ghost" size="icon" onClick={() => setShowRequestsModal(false)} className="rounded-full hover:bg-secondary">
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <div className="p-4 max-h-[60vh] overflow-y-auto">
+                {pendingStudents.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    No pending requests.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingStudents.map(student => (
+                      <div key={student.username} className="flex items-center justify-between p-3 bg-secondary/30 rounded-xl border border-border">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                            <Users className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <span className="font-semibold">{student.username}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive hover:bg-destructive/10 rounded-full w-8 h-8"
+                            onClick={() => rejectStudent(student.username)}
+                          >
+                            <X className="w-5 h-5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            className="bg-green-600 hover:bg-green-700 text-white rounded-full w-8 h-8"
+                            onClick={() => approveStudent(student.username)}
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
