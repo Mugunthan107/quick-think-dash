@@ -10,12 +10,14 @@ export interface Student {
   completedAt: number | null;
   startedAt: number;
   isFinished: boolean;
+  status: 'APPROVED' | 'PENDING';
 }
 
 export interface TestSession {
   pin: string;
   createdAt: number;
   isActive: boolean;
+  status: 'WAITING' | 'STARTED' | 'FINISHED';
 }
 
 interface GameState {
@@ -23,6 +25,8 @@ interface GameState {
   currentTest: TestSession | null;
   students: Student[];
   currentStudent: Student | null;
+  pendingStudents: Student[];
+  sessions: TestSession[];
 }
 
 interface GameContextType extends GameState {
@@ -30,16 +34,18 @@ interface GameContextType extends GameState {
   adminLogout: () => void;
   createTestPin: () => Promise<string>;
   verifyTestPin: (pin: string) => Promise<boolean>;
-  joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string }>;
+  joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string; pending?: boolean }>;
+  startTest: () => Promise<void>;
   updateStudentScore: (username: string, score: number, level: number) => Promise<void>;
   finishTest: (username: string) => Promise<void>;
   getLeaderboard: () => Student[];
   deleteAllUsers: () => Promise<void>;
   deleteSession: (pin: string) => Promise<void>;
-  sessions: TestSession[];
   setCurrentStudent: (s: Student | null) => void;
   fetchSessions: () => Promise<void>;
   switchSession: (s: TestSession | null) => void;
+  approveStudent: (username: string) => Promise<void>;
+  rejectStudent: (username: string) => Promise<void>;
 }
 
 const ADMIN_PASSWORD = 'admin123';
@@ -57,6 +63,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [currentTest, setCurrentTest] = useState<TestSession | null>(null);
   const [sessions, setSessions] = useState<TestSession[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [pendingStudents, setPendingStudents] = useState<Student[]>([]);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
 
   // Fetch all active sessions
@@ -77,6 +84,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         pin: row.pin,
         createdAt: new Date(row.created_at).getTime(),
         isActive: row.is_active,
+        status: row.status || 'WAITING',
       }));
       setSessions(mappedSessions);
       // Automatically select the most recent session if none selected
@@ -107,22 +115,53 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
         startedAt: new Date(row.started_at).getTime(),
         isFinished: !!row.completed_at,
+        status: row.status || 'APPROVED',
       }));
-      setStudents(mappedStudents);
+      setStudents(mappedStudents.filter(s => s.status === 'APPROVED'));
+      setPendingStudents(mappedStudents.filter(s => s.status === 'PENDING'));
     }
   }, []);
 
   // Poll for updates if there's an active test (for both admin and students)
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: NodeJS.Timeout | undefined;
+
+    const fetchTestStatus = async (pin: string) => {
+      const { data, error } = await supabase
+        .from('test_sessions')
+        .select('*')
+        .eq('pin', pin)
+        .single();
+
+      if (!error && data) {
+        setCurrentTest(prev => {
+          if (!prev) return null;
+          // Only update if status/isActive changed to avoid unnecessary re-renders
+          if (prev.status !== data.status || prev.isActive !== data.is_active) {
+            return {
+              ...prev,
+              isActive: data.is_active,
+              status: data.status || 'WAITING'
+            };
+          }
+          return prev;
+        });
+      }
+    };
+
     if (currentTest) {
       fetchStudents(currentTest.pin); // Initial fetch
+      fetchTestStatus(currentTest.pin);
+
       interval = setInterval(() => {
         fetchStudents(currentTest.pin);
-      }, 5000); // Poll every 5 seconds
+        fetchTestStatus(currentTest.pin);
+      }, 1000); // Poll every 1 second
     }
-    return () => clearInterval(interval);
-  }, [currentTest, fetchStudents]);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [currentTest?.pin, fetchStudents]);
 
   // Initial load for admin
   useEffect(() => {
@@ -143,6 +182,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setAdminLoggedIn(false);
     setCurrentTest(null);
     setStudents([]);
+    setPendingStudents([]);
     setSessions([]);
   }, []);
 
@@ -151,19 +191,38 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     const { error } = await supabase
       .from('test_sessions')
-      .insert([{ pin, is_active: true }]);
+      .insert([{ pin, is_active: true, status: 'WAITING' }]);
 
     if (error) {
-      toast.error('Failed to create test session');
+      console.error('Error creating test session:', error);
+      toast.error('Failed to create test session: ' + error.message);
       throw error;
     }
 
-    const newTest = { pin, createdAt: Date.now(), isActive: true };
+    const newTest: TestSession = { pin, createdAt: Date.now(), isActive: true, status: 'WAITING' };
     setCurrentTest(newTest);
     setStudents([]);
+    setPendingStudents([]);
     await fetchSessions(); // Refresh list
     return pin;
   }, [fetchSessions]);
+
+  const startTest = useCallback(async () => {
+    if (!currentTest) return;
+
+    const { error } = await supabase
+      .from('test_sessions')
+      .update({ status: 'STARTED' })
+      .eq('pin', currentTest.pin);
+
+    if (error) {
+      toast.error('Failed to start test');
+      return;
+    }
+
+    setCurrentTest(prev => prev ? { ...prev, status: 'STARTED' } : null);
+    toast.success('Test started!');
+  }, [currentTest]);
 
   const verifyTestPin = useCallback(async (pin: string) => {
     const { data, error } = await supabase
@@ -199,17 +258,48 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, error: 'Test is no longer active' };
     }
 
+    // Check status
+    const isLateJoin = testData.status === 'STARTED';
+    const status = isLateJoin ? 'PENDING' : 'APPROVED';
+
     // Join the test
     const { error: joinError } = await supabase
       .from('exam_results')
       .insert([{
         test_pin: pin,
         student_name: trimmed,
-        started_at: new Date().toISOString()
+        started_at: new Date().toISOString(),
+        status: status
       }]);
 
     if (joinError) {
       if (joinError.code === '23505') { // Unique violation
+        // Check if existing user is approved
+        const { data: existingUser } = await supabase
+          .from('exam_results')
+          .select('status')
+          .eq('test_pin', pin)
+          .eq('student_name', trimmed)
+          .single();
+
+        if (existingUser && existingUser.status === 'APPROVED') {
+          // Allow re-login
+          const student: Student = {
+            username: trimmed,
+            testPin: pin,
+            score: 0,
+            level: 1,
+            completedAt: null,
+            startedAt: Date.now(),
+            isFinished: false,
+            status: 'APPROVED'
+          };
+          setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active, status: testData.status || 'WAITING' });
+          setCurrentStudent(student);
+          return { success: true };
+        } else if (existingUser && existingUser.status === 'PENDING') {
+          return { success: true, pending: true };
+        }
         return { success: false, error: 'Username already taken for this test' };
       }
       return { success: false, error: joinError.message };
@@ -223,12 +313,31 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       completedAt: null,
       startedAt: Date.now(),
       isFinished: false,
+      status: status
     };
 
-    setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active });
+    if (isLateJoin) {
+      return { success: true, pending: true };
+    }
+
+    setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active, status: testData.status || 'WAITING' });
     setCurrentStudent(student);
     return { success: true };
   }, []);
+
+  const approveStudent = useCallback(async (username: string) => {
+    if (!currentTest) return;
+    await supabase.from('exam_results').update({ status: 'APPROVED' }).eq('test_pin', currentTest.pin).eq('student_name', username);
+    setPendingStudents(prev => prev.filter(s => s.username !== username));
+    fetchStudents(currentTest.pin);
+  }, [currentTest, fetchStudents]);
+
+  const rejectStudent = useCallback(async (username: string) => {
+    if (!currentTest) return;
+    await supabase.from('exam_results').delete().eq('test_pin', currentTest.pin).eq('student_name', username);
+    setPendingStudents(prev => prev.filter(s => s.username !== username));
+    fetchStudents(currentTest.pin);
+  }, [currentTest, fetchStudents]);
 
   const updateStudentScore = useCallback(async (username: string, score: number, level: number) => {
     if (!currentStudent) return;
@@ -259,8 +368,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }, [currentStudent]);
 
   const getLeaderboard = useCallback(() => {
-    // Return locally filtered/sorted students
-    // This assumes 'students' state is being refreshed by the poller or initial fetch
     return [...students]
       .filter(s => s.isFinished)
       .sort((a, b) => {
@@ -275,7 +382,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const deleteAllUsers = useCallback(async () => {
     if (!currentTest) return;
 
-    // Delete all results for current test
     const { error } = await supabase
       .from('exam_results')
       .delete()
@@ -287,7 +393,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setStudents([]);
-    // setCurrentStudent(null); // Keep admin state
+    setPendingStudents([]);
   }, [currentTest]);
 
   const deleteSession = useCallback(async (pin: string) => {
@@ -304,6 +410,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     if (currentTest?.pin === pin) {
       setCurrentTest(null);
       setStudents([]);
+      setPendingStudents([]);
     }
     await fetchSessions();
     toast.success('Session deleted');
@@ -317,11 +424,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         sessions,
         students,
         currentStudent,
+        pendingStudents,
         adminLogin,
         adminLogout,
         createTestPin,
         verifyTestPin,
         joinTest,
+        startTest,
         updateStudentScore,
         finishTest,
         getLeaderboard,
@@ -330,6 +439,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setCurrentStudent,
         fetchSessions,
         switchSession: setCurrentTest,
+        approveStudent,
+        rejectStudent,
       }}
     >
       {children}
