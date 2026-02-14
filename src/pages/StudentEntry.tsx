@@ -46,7 +46,7 @@ const StudentEntry = () => {
     try {
       const result = await joinTest(pin.trim(), username.trim());
       if (result.success) {
-        navigate('/game');
+        navigate('/lobby');
       } else {
         setError(result.error || 'Failed to join');
       }

@@ -16,6 +16,7 @@ export interface TestSession {
   pin: string;
   createdAt: number;
   isActive: boolean;
+  status: 'WAITING' | 'STARTED' | 'FINISHED';
 }
 
 interface GameState {
@@ -31,6 +32,7 @@ interface GameContextType extends GameState {
   createTestPin: () => Promise<string>;
   verifyTestPin: (pin: string) => Promise<boolean>;
   joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string }>;
+  startTest: () => Promise<void>;
   updateStudentScore: (username: string, score: number, level: number) => Promise<void>;
   finishTest: (username: string) => Promise<void>;
   getLeaderboard: () => Student[];
@@ -77,6 +79,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         pin: row.pin,
         createdAt: new Date(row.created_at).getTime(),
         isActive: row.is_active,
+        status: row.status || 'WAITING',
       }));
       setSessions(mappedSessions);
       // Automatically select the most recent session if none selected
@@ -115,14 +118,41 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   // Poll for updates if there's an active test (for both admin and students)
   useEffect(() => {
     let interval: NodeJS.Timeout;
+
+    const fetchTestStatus = async (pin: string) => {
+      const { data, error } = await supabase
+        .from('test_sessions')
+        .select('*')
+        .eq('pin', pin)
+        .single();
+
+      if (!error && data) {
+        setCurrentTest(prev => {
+          if (!prev) return null;
+          // Only update if status changed to avoid unnecessary re-renders
+          if (prev.status !== data.status || prev.isActive !== data.is_active) {
+            return {
+              ...prev,
+              isActive: data.is_active,
+              status: data.status || 'WAITING'
+            };
+          }
+          return prev;
+        });
+      }
+    };
+
     if (currentTest) {
       fetchStudents(currentTest.pin); // Initial fetch
+      fetchTestStatus(currentTest.pin);
+
       interval = setInterval(() => {
         fetchStudents(currentTest.pin);
-      }, 5000); // Poll every 5 seconds
+        fetchTestStatus(currentTest.pin);
+      }, 1000); // Poll every 1 second for faster updates
     }
     return () => clearInterval(interval);
-  }, [currentTest, fetchStudents]);
+  }, [currentTest?.pin, fetchStudents]);
 
   // Initial load for admin
   useEffect(() => {
@@ -151,19 +181,37 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     const { error } = await supabase
       .from('test_sessions')
-      .insert([{ pin, is_active: true }]);
+      .insert([{ pin, is_active: true, status: 'WAITING' }]);
 
     if (error) {
-      toast.error('Failed to create test session');
+      console.error('Error creating test session:', error);
+      toast.error('Failed to create test session: ' + error.message);
       throw error;
     }
 
-    const newTest = { pin, createdAt: Date.now(), isActive: true };
+    const newTest: TestSession = { pin, createdAt: Date.now(), isActive: true, status: 'WAITING' };
     setCurrentTest(newTest);
     setStudents([]);
     await fetchSessions(); // Refresh list
     return pin;
   }, [fetchSessions]);
+
+  const startTest = useCallback(async () => {
+    if (!currentTest) return;
+
+    const { error } = await supabase
+      .from('test_sessions')
+      .update({ status: 'STARTED' })
+      .eq('pin', currentTest.pin);
+
+    if (error) {
+      toast.error('Failed to start test');
+      return;
+    }
+
+    setCurrentTest(prev => prev ? { ...prev, status: 'STARTED' } : null);
+    toast.success('Test started!');
+  }, [currentTest]);
 
   const verifyTestPin = useCallback(async (pin: string) => {
     const { data, error } = await supabase
@@ -322,6 +370,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         createTestPin,
         verifyTestPin,
         joinTest,
+        startTest,
         updateStudentScore,
         finishTest,
         getLeaderboard,
