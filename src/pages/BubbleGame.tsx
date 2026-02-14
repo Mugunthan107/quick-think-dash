@@ -94,6 +94,28 @@ const BubbleGame = () => {
     startRound(level);
   }, [level, startRound]);
 
+  const failLevel = useCallback(() => {
+    setGameActive(false);
+    setTransitioning(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+    setFlash('wrong');
+    setStreak(0);
+
+    const penalty = level * 10;
+    const newScore = Math.max(0, score - penalty);
+    const newLevel = Math.max(1, level - 2);
+
+    setScore(newScore);
+    if (currentStudent) {
+      updateStudentScore(currentStudent.username, newScore, newLevel);
+    }
+
+    setTimeout(() => setFlash(null), 500);
+    setTimeout(() => {
+      setLevel(newLevel);
+    }, 800);
+  }, [score, level, currentStudent, updateStudentScore]);
+
   useEffect(() => {
     if (!gameActive) return;
     timerRef.current = setInterval(() => {
@@ -106,19 +128,7 @@ const BubbleGame = () => {
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [gameActive, bubbles]);
-
-  const failLevel = useCallback(() => {
-    setGameActive(false);
-    setTransitioning(true);
-    if (timerRef.current) clearInterval(timerRef.current);
-    setFlash('wrong');
-    setStreak(0);
-    setTimeout(() => setFlash(null), 500);
-    setTimeout(() => {
-      setLevel(prev => Math.max(1, prev - 2));
-    }, 800);
-  }, []);
+  }, [gameActive, bubbles, failLevel]);
 
   const handleFinish = useCallback(() => {
     setFinished(true);
@@ -215,19 +225,17 @@ const BubbleGame = () => {
         </div>
 
         {/* Main Game Card */}
-        <div className={`bg-card/80 backdrop-blur-sm rounded-2xl relative flex flex-col items-center shadow-2xl border border-border overflow-hidden transition-all duration-300 ${
-          flash === 'wrong' ? 'border-destructive/50' : flash === 'correct' ? 'border-success/50' : ''
-        }`}>
-          
+        <div className={`bg-card/80 backdrop-blur-sm rounded-2xl relative flex flex-col items-center shadow-2xl border border-border overflow-hidden transition-all duration-300 ${flash === 'wrong' ? 'border-destructive/50' : flash === 'correct' ? 'border-success/50' : ''
+          }`}>
+
           {/* Header Section */}
           <div className="w-full px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                <div className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
-                  config.label === 'EASY' ? 'bg-success/15 text-success' :
+                <div className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider ${config.label === 'EASY' ? 'bg-success/15 text-success' :
                   config.label === 'MEDIUM' ? 'bg-accent/15 text-accent' :
-                  'bg-destructive/15 text-destructive'
-                }`}>
+                    'bg-destructive/15 text-destructive'
+                  }`}>
                   {config.label}
                 </div>
                 <span className="text-xs sm:text-sm font-semibold text-foreground">Level {level} / {MAX_LEVEL}</span>
@@ -290,9 +298,8 @@ const BubbleGame = () => {
                     className="transition-all duration-1000 ease-linear"
                   />
                 </svg>
-                <span className={`absolute inset-0 flex items-center justify-center font-mono font-bold text-xs sm:text-sm ${
-                  timeLeft <= 5 ? 'text-destructive' : 'text-foreground'
-                }`}>
+                <span className={`absolute inset-0 flex items-center justify-center font-mono font-bold text-xs sm:text-sm ${timeLeft <= 5 ? 'text-destructive' : 'text-foreground'
+                  }`}>
                   {timeLeft}
                 </span>
               </div>
@@ -320,9 +327,8 @@ const BubbleGame = () => {
 
           {/* Flash overlay */}
           {flash && (
-            <div className={`absolute inset-0 pointer-events-none animate-fade-in rounded-2xl ${
-              flash === 'wrong' ? 'bg-destructive/10' : 'bg-success/10'
-            }`} />
+            <div className={`absolute inset-0 pointer-events-none animate-fade-in rounded-2xl ${flash === 'wrong' ? 'bg-destructive/10' : 'bg-success/10'
+              }`} />
           )}
         </div>
       </div>
