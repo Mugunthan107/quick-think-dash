@@ -371,8 +371,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return [...students]
       .filter(s => s.isFinished)
       .sort((a, b) => {
-        // Primary: Level (Descending - higher is better)
-        if (b.level !== a.level) return b.level - a.level;
+        // Primary: Score (Descending - higher is better)
+        if (b.score !== a.score) return b.score - a.score;
 
         // Secondary: Duration (Ascending - lower is better)
         const timeA = a.completedAt! - a.startedAt;

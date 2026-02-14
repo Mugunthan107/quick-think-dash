@@ -17,7 +17,9 @@ import {
 import { useEffect, useState } from 'react';
 import CountdownOverlay from '@/components/CountdownOverlay';
 
-const AdminDashboard = () => {
+import AshuLogin from './AshuLogin';
+
+const AshuDashboard = () => {
   const {
     adminLoggedIn,
     currentTest,
@@ -37,14 +39,15 @@ const AdminDashboard = () => {
   } = useGame();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!adminLoggedIn) {
-      navigate('/admin-login');
-    }
-  }, [adminLoggedIn, navigate]);
+  // Remove redirect effect
+  // useEffect(() => {
+  //   if (!adminLoggedIn) {
+  //     navigate('/admin-login');
+  //   }
+  // }, [adminLoggedIn, navigate]);
 
   if (!adminLoggedIn) {
-    return null;
+    return <AshuLogin />;
   }
 
   const [showCountdown, setShowCountdown] = useState(false);
@@ -479,4 +482,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default AshuDashboard;

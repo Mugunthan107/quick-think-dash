@@ -12,7 +12,7 @@ interface BubbleData {
   order: number | null;
 }
 
-const MAX_LEVEL = 15;
+const MAX_LEVEL = 30;
 const TIME_PER_ROUND = 15;
 
 function getLevelConfig(level: number) {
@@ -94,6 +94,15 @@ const BubbleGame = () => {
     startRound(level);
   }, [level, startRound]);
 
+  const handleFinish = useCallback(() => {
+    setFinished(true);
+    setGameActive(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (currentStudent) {
+      finishTest(currentStudent.username);
+    }
+  }, [currentStudent, finishTest]);
+
   const failLevel = useCallback(() => {
     setGameActive(false);
     setTransitioning(true);
@@ -101,23 +110,23 @@ const BubbleGame = () => {
     setFlash('wrong');
     setStreak(0);
 
-    const penalty = level * 10;
-    const newScore = Math.max(0, score - penalty);
-    const newLevel = Math.max(1, level - 1);
+    // No penalty, just move to next level
+    const newLevel = level + 1;
 
-    setScore(newScore);
     if (currentStudent) {
-      updateStudentScore(currentStudent.username, newScore, newLevel);
+      updateStudentScore(currentStudent.username, score, newLevel);
     }
 
     setTimeout(() => setFlash(null), 500);
     setTimeout(() => {
-      setLevel(newLevel);
-      if (newLevel === level) {
-        startRound(newLevel);
+      if (level >= MAX_LEVEL) {
+        handleFinish();
+      } else {
+        setLevel(newLevel);
+        // startRound is triggered by useEffect on level change
       }
     }, 800);
-  }, [score, level, currentStudent, updateStudentScore, startRound]);
+  }, [score, level, currentStudent, updateStudentScore, handleFinish]);
 
   useEffect(() => {
     if (!gameActive) return;
@@ -133,14 +142,7 @@ const BubbleGame = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [gameActive, bubbles, failLevel]);
 
-  const handleFinish = useCallback(() => {
-    setFinished(true);
-    setGameActive(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (currentStudent) {
-      finishTest(currentStudent.username);
-    }
-  }, [currentStudent, finishTest]);
+
 
   const handleBubbleClick = useCallback((clicked: BubbleData) => {
     if (!gameActive || clicked.selected || transitioning) return;

@@ -8,8 +8,8 @@ import Index from "./pages/Index";
 import StudentEntry from "./pages/StudentEntry";
 import WaitingApproval from "./pages/WaitingApproval";
 import BubbleGame from "./pages/BubbleGame";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
+import AshuLogin from "./pages/AshuLogin";
+import AshuDashboard from "./pages/AshuDashboard";
 import Lobby from "./pages/Lobby";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
@@ -23,14 +23,20 @@ const App = () => (
       <Toaster />
       <AnimatedBackground />
       <GameProvider>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/student" element={<StudentEntry />} />
             <Route path="/waiting-approval" element={<WaitingApproval />} />
             <Route path="/game" element={<BubbleGame />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            {/* Ashu Routes */}
+            <Route path="/ashu" element={<AshuDashboard />} />
+            {/* No separate login route needed if Dashboard handles it */}
             <Route path="/lobby" element={<Lobby />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/supabase-test" element={<SupabaseTest />} />

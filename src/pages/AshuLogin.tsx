@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
-const AdminLogin = () => {
+const AshuLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -15,7 +15,7 @@ const AdminLogin = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (adminLogin(password)) {
-      navigate('/admin');
+      // No navigation needed, parent component will re-render
     } else {
       setError('Invalid password');
       setPassword('');
@@ -38,7 +38,7 @@ const AdminLogin = () => {
             <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Admin Login</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Ashu Login</h1>
             <p className="text-[10px] sm:text-xs text-muted-foreground">Manage tests and view results</p>
           </div>
         </div>
@@ -78,4 +78,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default AshuLogin;
