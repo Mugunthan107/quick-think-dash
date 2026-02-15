@@ -372,6 +372,7 @@ const AshuDashboard = () => {
                           </div>
                           <div className="text-right shrink-0">
                             <div className="font-mono font-bold text-lg">{s.score}</div>
+                            <div className="text-xs text-success font-medium">{s.correctAnswers || 0} / 30</div>
                             <div className="text-xs text-muted-foreground">{timeTaken}s</div>
                           </div>
                         </div>
@@ -413,6 +414,7 @@ const AshuDashboard = () => {
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm shrink-0">
                       <span className="text-muted-foreground hidden sm:inline">Lvl {s.level}</span>
+                      <span className="text-success font-medium hidden sm:inline">{s.correctAnswers || 0} / 30</span>
                       <span className="font-mono font-bold text-foreground">{s.score}</span>
                       <span className="text-muted-foreground w-12 sm:w-14 text-right">{timeTaken}s</span>
                     </div>

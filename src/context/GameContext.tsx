@@ -10,6 +10,7 @@ export interface Student {
   completedAt: number | null;
   startedAt: number;
   isFinished: boolean;
+  correctAnswers: number;
   status: 'APPROVED' | 'PENDING';
 }
 
@@ -36,7 +37,7 @@ interface GameContextType extends GameState {
   verifyTestPin: (pin: string) => Promise<boolean>;
   joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string; pending?: boolean }>;
   startTest: () => Promise<void>;
-  updateStudentScore: (username: string, score: number, level: number) => Promise<void>;
+  updateStudentScore: (username: string, score: number, level: number, correctAnswers: number) => Promise<void>;
   finishTest: (username: string) => Promise<void>;
   getLeaderboard: () => Student[];
   deleteAllUsers: () => Promise<void>;
@@ -115,6 +116,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
         startedAt: new Date(row.started_at).getTime(),
         isFinished: !!row.completed_at,
+        correctAnswers: row.correct_answers || 0,
         status: row.status || 'APPROVED',
       }));
       setStudents(mappedStudents.filter(s => s.status === 'APPROVED'));
@@ -269,37 +271,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         test_pin: pin,
         student_name: trimmed,
         started_at: new Date().toISOString(),
-        status: status
+        status: status,
+        correct_answers: 0,
       }]);
 
     if (joinError) {
       if (joinError.code === '23505') { // Unique violation
-        // Check if existing user is approved
-        const { data: existingUser } = await supabase
-          .from('exam_results')
-          .select('status')
-          .eq('test_pin', pin)
-          .eq('student_name', trimmed)
-          .single();
-
-        if (existingUser && existingUser.status === 'APPROVED') {
-          // Allow re-login
-          const student: Student = {
-            username: trimmed,
-            testPin: pin,
-            score: 0,
-            level: 1,
-            completedAt: null,
-            startedAt: Date.now(),
-            isFinished: false,
-            status: 'APPROVED'
-          };
-          setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active, status: testData.status || 'WAITING' });
-          setCurrentStudent(student);
-          return { success: true };
-        } else if (existingUser && existingUser.status === 'PENDING') {
-          return { success: true, pending: true };
-        }
         return { success: false, error: 'Username already taken for this test' };
       }
       return { success: false, error: joinError.message };
@@ -313,6 +290,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       completedAt: null,
       startedAt: Date.now(),
       isFinished: false,
+      correctAnswers: 0,
       status: status
     };
 
@@ -339,15 +317,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     fetchStudents(currentTest.pin);
   }, [currentTest, fetchStudents]);
 
-  const updateStudentScore = useCallback(async (username: string, score: number, level: number) => {
+  const updateStudentScore = useCallback(async (username: string, score: number, level: number, correctAnswers: number) => {
     if (!currentStudent) return;
 
     // Optimistic update
-    setCurrentStudent(prev => prev ? { ...prev, score, level } : null);
+    setCurrentStudent(prev => prev ? { ...prev, score, level, correctAnswers } : null);
 
     await supabase
       .from('exam_results')
-      .update({ score, level })
+      .update({ score, level, correct_answers: correctAnswers })
       .eq('test_pin', currentStudent.testPin)
       .eq('student_name', username);
   }, [currentStudent]);
