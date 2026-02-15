@@ -255,9 +255,17 @@ const BubbleGame = () => {
             </div>
 
             {/* Score display */}
-            <div className="text-right ml-4 sm:ml-6">
-              <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5">SCORE</span>
-              <span className="font-mono font-bold text-xl sm:text-2xl text-foreground">{score}</span>
+            <div className="text-right ml-4 sm:ml-6 flex flex-col items-end gap-2">
+              <div>
+                <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5">SCORE</span>
+                <span className="font-mono font-bold text-xl sm:text-2xl text-foreground">{score}</span>
+              </div>
+              <button
+                onClick={handleFinish}
+                className="text-[10px] sm:text-xs text-destructive hover:text-destructive/80 transition-colors bg-destructive/10 hover:bg-destructive/20 px-2.5 py-1 rounded-md font-medium"
+              >
+                End Test
+              </button>
             </div>
           </div>
 
@@ -270,15 +278,29 @@ const BubbleGame = () => {
                   onClick={() => handleBubbleClick(bubble)}
                   disabled={bubble.selected || transitioning}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
-                  className={`w-[90px] h-[90px] sm:w-[130px] sm:h-[130px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none font-semibold touch-manipulation
+                  className={`w-[90px] h-[90px] sm:w-[130px] sm:h-[130px] rounded-3xl flex flex-col items-center justify-center transition-all duration-300 select-none font-semibold touch-manipulation border-2 border-transparent
                     ${bubble.selected
-                      ? 'bg-bubble-selected text-bubble-selected-foreground scale-90 shadow-inner cursor-default ring-2 ring-success/40'
+                      ? 'bg-bubble-selected text-bubble-selected-foreground scale-90 shadow-inner cursor-default border-success/40'
                       : bubble.wrong
-                        ? 'bg-destructive/20 text-destructive animate-shake ring-2 ring-destructive/40'
-                        : 'bg-bubble text-bubble-foreground hover:scale-110 hover:shadow-lg hover:shadow-accent/10 cursor-pointer shadow-md active:scale-95'
+                        ? 'bg-destructive/20 text-destructive animate-shake border-destructive/40'
+                        : 'bg-bubble text-bubble-foreground hover:scale-105 hover:shadow-lg hover:shadow-accent/10 cursor-pointer shadow-md active:scale-95'
                     }`}
                 >
-                  <span className="text-sm sm:text-xl leading-tight">{bubble.text}</span>
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                    {(() => {
+                      const parts = bubble.text.split(' ');
+                      if (parts.length === 3) {
+                        return (
+                          <>
+                            <span className="text-sm sm:text-xl leading-tight font-medium">{parts[0]}</span>
+                            <span className="text-xl sm:text-3xl font-bold text-accent leading-none">{parts[1]}</span>
+                            <span className="text-sm sm:text-xl leading-tight font-medium">{parts[2]}</span>
+                          </>
+                        );
+                      }
+                      return <span className="text-sm sm:text-xl leading-tight">{bubble.text}</span>;
+                    })()}
+                  </div>
                   {bubble.selected && bubble.order && (
                     <span className="text-[8px] sm:text-[10px] mt-1 opacity-60 font-mono">#{bubble.order}</span>
                   )}
@@ -319,16 +341,6 @@ const BubbleGame = () => {
               </div>
               <span className="text-foreground font-bold">LOW</span> → <span className="text-foreground font-bold">HIGH</span>
             </div>
-          </div>
-
-          {/* Finish button */}
-          <div className="absolute top-3 sm:top-6 right-3 sm:right-8">
-            <button
-              onClick={handleFinish}
-              className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 sm:px-3 py-1 sm:py-1.5 rounded-md hover:bg-secondary"
-            >
-              End Test
-            </button>
           </div>
 
           {/* Flash overlay */}
