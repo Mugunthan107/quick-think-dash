@@ -50,6 +50,8 @@ const AshuDashboard = () => {
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
+  const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
+  const [numGames, setNumGames] = useState(1);
 
   // Notify on new pending students
   useEffect(() => {
@@ -69,8 +71,10 @@ const AshuDashboard = () => {
 
   const handleCreatePin = async () => {
     try {
-      const pin = await createTestPin();
-      toast.success(`Test PIN created: ${pin}`);
+      const pin = await createTestPin(numGames);
+      toast.success(`Test PIN created: ${pin} (${numGames} game${numGames > 1 ? 's' : ''})`);
+      setShowCreatePinDialog(false);
+      setNumGames(1);
     } catch (e) {
       toast.error('Failed to create PIN');
     }
@@ -280,7 +284,7 @@ const AshuDashboard = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button onClick={handleCreatePin} variant="outline" size="sm" className="flex-1 border-border text-foreground hover:bg-secondary rounded-lg text-xs sm:text-sm">
+                <Button onClick={() => setShowCreatePinDialog(true)} variant="outline" size="sm" className="flex-1 border-border text-foreground hover:bg-secondary rounded-lg text-xs sm:text-sm">
                   <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   New Session
                 </Button>
@@ -293,7 +297,7 @@ const AshuDashboard = () => {
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground text-sm mb-4">No active session selected</p>
-              <Button onClick={handleCreatePin} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl h-12 px-6">
+              <Button onClick={() => setShowCreatePinDialog(true)} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl h-12 px-6">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Test PIN
               </Button>
@@ -475,6 +479,56 @@ const AshuDashboard = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create PIN Dialog */}
+        {showCreatePinDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-card w-full max-w-sm rounded-2xl shadow-2xl border border-border animate-in zoom-in-95 duration-200 p-6">
+              <h2 className="text-lg font-bold text-foreground mb-1">Create New Session</h2>
+              <p className="text-sm text-muted-foreground mb-6">How many games should students play?</p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block font-medium">Number of Games</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setNumGames(n)}
+                        className={`flex-1 h-14 rounded-xl font-bold text-lg transition-all ${
+                          numGames === n
+                            ? 'bg-accent text-accent-foreground scale-105 shadow-lg shadow-accent/20'
+                            : 'bg-secondary text-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {numGames === 1 ? 'Students pick one game' : `Students play ${numGames} games. Leaderboard averages results.`}
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-xl"
+                    onClick={() => { setShowCreatePinDialog(false); setNumGames(1); }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl"
+                    onClick={handleCreatePin}
+                  >
+                    Create PIN
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

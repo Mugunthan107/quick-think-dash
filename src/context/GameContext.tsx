@@ -19,6 +19,7 @@ export interface TestSession {
   createdAt: number;
   isActive: boolean;
   status: 'WAITING' | 'STARTED' | 'FINISHED';
+  numGames: number;
 }
 
 interface GameState {
@@ -33,7 +34,7 @@ interface GameState {
 interface GameContextType extends GameState {
   adminLogin: (password: string) => boolean;
   adminLogout: () => void;
-  createTestPin: () => Promise<string>;
+  createTestPin: (numGames?: number) => Promise<string>;
   verifyTestPin: (pin: string) => Promise<boolean>;
   joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string; pending?: boolean }>;
   startTest: () => Promise<void>;
@@ -86,6 +87,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         createdAt: new Date(row.created_at).getTime(),
         isActive: row.is_active,
         status: row.status || 'WAITING',
+        numGames: row.num_games || 1,
       }));
       setSessions(mappedSessions);
       // Automatically select the most recent session if none selected
@@ -188,12 +190,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setSessions([]);
   }, []);
 
-  const createTestPin = useCallback(async () => {
+  const createTestPin = useCallback(async (numGames: number = 1) => {
     const pin = Math.floor(100000 + Math.random() * 900000).toString();
 
     const { error } = await supabase
       .from('test_sessions')
-      .insert([{ pin, is_active: true, status: 'WAITING' }]);
+      .insert([{ pin, is_active: true, status: 'WAITING', num_games: numGames }]);
 
     if (error) {
       console.error('Error creating test session:', error);
@@ -201,11 +203,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
 
-    const newTest: TestSession = { pin, createdAt: Date.now(), isActive: true, status: 'WAITING' };
+    const newTest: TestSession = { pin, createdAt: Date.now(), isActive: true, status: 'WAITING', numGames };
     setCurrentTest(newTest);
     setStudents([]);
     setPendingStudents([]);
-    await fetchSessions(); // Refresh list
+    await fetchSessions();
     return pin;
   }, [fetchSessions]);
 
@@ -298,7 +300,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return { success: true, pending: true };
     }
 
-    setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active, status: testData.status || 'WAITING' });
+    setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active, status: testData.status || 'WAITING', numGames: testData.num_games || 1 });
     setCurrentStudent(student);
     return { success: true };
   }, []);
