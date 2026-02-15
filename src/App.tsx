@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import StudentEntry from "./pages/StudentEntry";
 import WaitingApproval from "./pages/WaitingApproval";
 import BubbleGame from "./pages/BubbleGame";
+import CrossMathGame from "./pages/CrossMathGame";
+import GameSelector from "./pages/GameSelector";
 import AshuLogin from "./pages/AshuLogin";
 import AshuDashboard from "./pages/AshuDashboard";
 import Lobby from "./pages/Lobby";
@@ -34,6 +36,8 @@ const App = () => (
             <Route path="/student" element={<StudentEntry />} />
             <Route path="/waiting-approval" element={<WaitingApproval />} />
             <Route path="/game" element={<BubbleGame />} />
+            <Route path="/crossmath" element={<CrossMathGame />} />
+            <Route path="/select-game" element={<GameSelector />} />
             {/* Ashu Routes */}
             <Route path="/ashu" element={<AshuDashboard />} />
             {/* No separate login route needed if Dashboard handles it */}

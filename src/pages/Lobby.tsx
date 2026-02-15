@@ -24,7 +24,7 @@ const Lobby = () => {
 
     return (
         <>
-            {showCountdown && <CountdownOverlay onComplete={() => navigate('/game')} />}
+            {showCountdown && <CountdownOverlay onComplete={() => navigate('/select-game')} />}
 
             <div className="min-h-screen p-4 sm:p-6 bg-background">
                 <div className="max-w-4xl mx-auto space-y-8 animate-fade-in text-center mt-8">
