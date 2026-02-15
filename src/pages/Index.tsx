@@ -1,21 +1,25 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Shield, Play, Brain } from 'lucide-react';
+import { Shield, Play } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
-      <div className="text-center animate-fade-in w-full max-w-sm px-2">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-accent/15 flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-accent/10">
-          <Brain className="w-8 h-8 sm:w-10 sm:h-10 text-accent" />
+      <div className="text-center animate-fade-in w-full max-w-2xl px-4">
+        <div className="flex justify-center mb-12">
+          <img
+            src="/favicon-round.png"
+            alt="MindSprint Logo"
+            className="w-32 h-32 sm:w-40 sm:h-40 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-300"
+          />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 tracking-tight">
-          Cognitive Assessment
+        <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6 tracking-tight">
+          MindSprint Challenge
         </h1>
-        <p className="text-muted-foreground text-sm mb-8 sm:mb-10 max-w-xs mx-auto">
-          Test your mental math speed and accuracy across 15 levels of increasing difficulty
+        <p className="text-muted-foreground text-base leading-relaxed mb-12 max-w-sm mx-auto">
+          Push your mental agility to the limit. Solve rapid-fire math problems across escalating levels of difficulty.
         </p>
 
         <div className="flex flex-col gap-3 w-full max-w-72 mx-auto">

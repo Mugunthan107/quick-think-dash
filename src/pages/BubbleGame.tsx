@@ -13,7 +13,7 @@ interface BubbleData {
 }
 
 const MAX_LEVEL = 30;
-const TIME_PER_ROUND = 15;
+const TIME_PER_ROUND = 10;
 
 function getLevelConfig(level: number) {
   if (level <= 5) return { max: 9, ops: ['+', '-'], decimalAllowed: false, label: 'EASY' };

@@ -46,10 +46,6 @@ const AshuDashboard = () => {
   //   }
   // }, [adminLoggedIn, navigate]);
 
-  if (!adminLoggedIn) {
-    return <AshuLogin />;
-  }
-
   const [showCountdown, setShowCountdown] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
@@ -66,6 +62,10 @@ const AshuDashboard = () => {
       });
     }
   }, [pendingStudents.length]);
+
+  if (!adminLoggedIn) {
+    return <AshuLogin />;
+  }
 
   const handleCreatePin = async () => {
     try {
