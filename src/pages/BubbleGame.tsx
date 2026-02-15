@@ -278,7 +278,7 @@ const BubbleGame = () => {
                   onClick={() => handleBubbleClick(bubble)}
                   disabled={bubble.selected || transitioning}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
-                  className={`w-[90px] h-[90px] sm:w-[130px] sm:h-[130px] rounded-3xl flex flex-col items-center justify-center transition-all duration-300 select-none font-semibold touch-manipulation border-2 border-transparent
+                  className={`w-[90px] h-[90px] sm:w-[130px] sm:h-[130px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none font-semibold touch-manipulation border-2 border-transparent
                     ${bubble.selected
                       ? 'bg-bubble-selected text-bubble-selected-foreground scale-90 shadow-inner cursor-default border-success/40'
                       : bubble.wrong
