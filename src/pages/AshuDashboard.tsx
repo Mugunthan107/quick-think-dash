@@ -189,7 +189,10 @@ const AshuDashboard = () => {
                 value={currentTest?.pin}
                 onValueChange={(value) => {
                   const selected = sessions.find(s => s.pin === value);
-                  if (selected) setCurrentStudent(null);
+                  if (selected) {
+                    setCurrentStudent(null);
+                    switchSession(selected);
+                  }
                 }}
               >
                 <SelectTrigger className="w-[140px] sm:w-[180px] h-8 text-xs">
@@ -495,7 +498,7 @@ const AshuDashboard = () => {
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block font-medium">Number of Games</label>
                   <div className="flex gap-2">
-                    {[1, 2, 3].map(n => (
+                    {[1, 2].map(n => (
                       <button
                         key={n}
                         onClick={() => setNumGames(n)}

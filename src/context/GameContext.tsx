@@ -29,6 +29,7 @@ interface GameState {
   currentStudent: Student | null;
   pendingStudents: Student[];
   sessions: TestSession[];
+  completedGames: string[];
 }
 
 interface GameContextType extends GameState {
@@ -48,9 +49,14 @@ interface GameContextType extends GameState {
   switchSession: (s: TestSession | null) => void;
   approveStudent: (username: string) => Promise<void>;
   rejectStudent: (username: string) => Promise<void>;
+  addCompletedGame: (gameId: string) => void;
+  getNextGame: () => string | null;
+  resetCompletedGames: () => void;
 }
 
 const ADMIN_PASSWORD = 'admin123';
+
+const AVAILABLE_GAMES = ['bubble', 'crossmath'];
 
 const GameContext = createContext<GameContextType | null>(null);
 
@@ -67,6 +73,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [pendingStudents, setPendingStudents] = useState<Student[]>([]);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+  const [completedGames, setCompletedGames] = useState<string[]>([]);
 
   // Fetch all active sessions
   const fetchSessions = useCallback(async () => {
@@ -90,14 +97,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         numGames: row.num_games || 1,
       }));
       setSessions(mappedSessions);
-      // Automatically select the most recent session if none selected
       if (!currentTest && mappedSessions.length > 0) {
         setCurrentTest(mappedSessions[0]);
       }
     }
   }, [currentTest]);
 
-  // Fetch students for the current test periodically or on change
+  // Fetch students for the current test
   const fetchStudents = useCallback(async (pin: string) => {
     const { data, error } = await supabase
       .from('exam_results')
@@ -126,7 +132,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Poll for updates if there's an active test (for both admin and students)
+  // Poll for updates
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
 
@@ -140,7 +146,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       if (!error && data) {
         setCurrentTest(prev => {
           if (!prev) return null;
-          // Only update if status/isActive changed to avoid unnecessary re-renders
           if (prev.status !== data.status || prev.isActive !== data.is_active) {
             return {
               ...prev,
@@ -154,13 +159,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     };
 
     if (currentTest) {
-      fetchStudents(currentTest.pin); // Initial fetch
+      fetchStudents(currentTest.pin);
       fetchTestStatus(currentTest.pin);
 
       interval = setInterval(() => {
         fetchStudents(currentTest.pin);
         fetchTestStatus(currentTest.pin);
-      }, 1000); // Poll every 1 second
+      }, 1000);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -191,11 +196,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const createTestPin = useCallback(async (numGames: number = 1) => {
+    // Cap numGames at available games count
+    const cappedNumGames = Math.min(numGames, AVAILABLE_GAMES.length);
     const pin = Math.floor(100000 + Math.random() * 900000).toString();
 
     const { error } = await supabase
       .from('test_sessions')
-      .insert([{ pin, is_active: true, status: 'WAITING', num_games: numGames }]);
+      .insert([{ pin, is_active: true, status: 'WAITING', num_games: cappedNumGames }]);
 
     if (error) {
       console.error('Error creating test session:', error);
@@ -203,7 +210,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
 
-    const newTest: TestSession = { pin, createdAt: Date.now(), isActive: true, status: 'WAITING', numGames };
+    const newTest: TestSession = { pin, createdAt: Date.now(), isActive: true, status: 'WAITING', numGames: cappedNumGames };
     setCurrentTest(newTest);
     setStudents([]);
     setPendingStudents([]);
@@ -262,11 +269,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, error: 'Test is no longer active' };
     }
 
-    // Check status
     const isLateJoin = testData.status === 'STARTED';
     const status = isLateJoin ? 'PENDING' : 'APPROVED';
 
-    // Join the test
+    // Try to join
     const { error: joinError } = await supabase
       .from('exam_results')
       .insert([{
@@ -278,7 +284,44 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       }]);
 
     if (joinError) {
-      if (joinError.code === '23505') { // Unique violation
+      if (joinError.code === '23505') {
+        // Unique violation - check if user exists and is approved (re-login scenario)
+        const { data: existingUser } = await supabase
+          .from('exam_results')
+          .select('*')
+          .eq('test_pin', pin)
+          .eq('student_name', trimmed)
+          .single();
+
+        if (existingUser && existingUser.status === 'APPROVED') {
+          // Re-login as existing approved user
+          const student: Student = {
+            username: trimmed,
+            testPin: pin,
+            score: existingUser.score || 0,
+            level: existingUser.level || 1,
+            completedAt: existingUser.completed_at ? new Date(existingUser.completed_at).getTime() : null,
+            startedAt: new Date(existingUser.started_at).getTime(),
+            isFinished: !!existingUser.completed_at,
+            correctAnswers: existingUser.correct_answers || 0,
+            status: 'APPROVED'
+          };
+          setCurrentTest({
+            pin,
+            createdAt: new Date(testData.created_at).getTime(),
+            isActive: testData.is_active,
+            status: testData.status || 'WAITING',
+            numGames: testData.num_games || 1
+          });
+          setCurrentStudent(student);
+          setCompletedGames([]);
+          return { success: true };
+        }
+
+        if (existingUser && existingUser.status === 'PENDING') {
+          return { success: true, pending: true };
+        }
+
         return { success: false, error: 'Username already taken for this test' };
       }
       return { success: false, error: joinError.message };
@@ -302,6 +345,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active, status: testData.status || 'WAITING', numGames: testData.num_games || 1 });
     setCurrentStudent(student);
+    setCompletedGames([]);
     return { success: true };
   }, []);
 
@@ -322,7 +366,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const updateStudentScore = useCallback(async (username: string, score: number, level: number, correctAnswers: number) => {
     if (!currentStudent) return;
 
-    // Optimistic update
     setCurrentStudent(prev => prev ? { ...prev, score, level, correctAnswers } : null);
 
     await supabase
@@ -336,8 +379,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     if (!currentStudent) return;
 
     const now = new Date();
-
-    // Optimistic update
     setCurrentStudent(prev => prev ? { ...prev, isFinished: true, completedAt: now.getTime() } : null);
 
     await supabase
@@ -351,10 +392,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return [...students]
       .filter(s => s.isFinished)
       .sort((a, b) => {
-        // Primary: Score (Descending - higher is better)
         if (b.score !== a.score) return b.score - a.score;
-
-        // Secondary: Duration (Ascending - lower is better)
         const timeA = a.completedAt! - a.startedAt;
         const timeB = b.completedAt! - b.startedAt;
         return timeA - timeB;
@@ -398,6 +436,26 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     toast.success('Session deleted');
   }, [currentTest, fetchSessions]);
 
+  // Multi-game tracking
+  const addCompletedGame = useCallback((gameId: string) => {
+    setCompletedGames(prev => {
+      if (prev.includes(gameId)) return prev;
+      return [...prev, gameId];
+    });
+  }, []);
+
+  const getNextGame = useCallback((): string | null => {
+    if (!currentTest) return null;
+    const numGames = currentTest.numGames;
+    const remaining = AVAILABLE_GAMES.filter(g => !completedGames.includes(g));
+    if (completedGames.length >= numGames || remaining.length === 0) return null;
+    return remaining[0];
+  }, [currentTest, completedGames]);
+
+  const resetCompletedGames = useCallback(() => {
+    setCompletedGames([]);
+  }, []);
+
   return (
     <GameContext.Provider
       value={{
@@ -407,6 +465,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         students,
         currentStudent,
         pendingStudents,
+        completedGames,
         adminLogin,
         adminLogout,
         createTestPin,
@@ -423,10 +482,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         switchSession: setCurrentTest,
         approveStudent,
         rejectStudent,
+        addCompletedGame,
+        getNextGame,
+        resetCompletedGames,
       }}
     >
       {children}
     </GameContext.Provider>
   );
 };
-

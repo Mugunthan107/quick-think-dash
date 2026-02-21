@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { ArrowLeft, Brain, Grid3X3 } from 'lucide-react';
+import { ArrowLeft, Brain, Grid3X3, CheckCircle2 } from 'lucide-react';
 
 const GameSelector = () => {
   const navigate = useNavigate();
-  const { currentStudent, currentTest } = useGame();
+  const { currentStudent, currentTest, completedGames } = useGame();
 
   if (!currentStudent || !currentTest) {
     navigate('/');
@@ -30,6 +30,20 @@ const GameSelector = () => {
     },
   ];
 
+  const numGames = currentTest.numGames;
+  const allDone = completedGames.length >= numGames;
+
+  // If all games completed, redirect to leaderboard
+  if (allDone) {
+    navigate('/leaderboard');
+    return null;
+  }
+
+  // Filter available games: show only uncompleted ones when numGames > 1
+  const availableGames = numGames > 1
+    ? games.filter(g => !completedGames.includes(g.id))
+    : games;
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
       <div className="w-full max-w-md animate-fade-in">
@@ -41,11 +55,33 @@ const GameSelector = () => {
           Back
         </button>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Choose Your Game</h1>
-        <p className="text-muted-foreground text-sm mb-6">Select a game to begin, {currentStudent.username}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+          {numGames > 1 && completedGames.length > 0 ? 'Next Game' : 'Choose Your Game'}
+        </h1>
+        <p className="text-muted-foreground text-sm mb-2">
+          {numGames > 1
+            ? `Game ${completedGames.length + 1} of ${numGames} — ${currentStudent.username}`
+            : `Select a game to begin, ${currentStudent.username}`
+          }
+        </p>
+
+        {/* Show completed games */}
+        {completedGames.length > 0 && (
+          <div className="mb-4 space-y-1">
+            {completedGames.map(gId => {
+              const game = games.find(g => g.id === gId);
+              return (
+                <div key={gId} className="flex items-center gap-2 text-xs text-success">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{game?.name || gId} — Completed</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="space-y-3">
-          {games.map(game => (
+          {availableGames.map(game => (
             <button
               key={game.id}
               onClick={() => navigate(game.route)}
@@ -69,7 +105,7 @@ const GameSelector = () => {
         <div className="mt-6 bg-secondary/50 rounded-xl p-3 border border-border/50">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Test PIN: <span className="font-mono font-bold text-accent">{currentTest.pin}</span></span>
-            <span>Status: <span className="font-semibold text-success">{currentTest.status}</span></span>
+            <span>Games: <span className="font-semibold text-foreground">{completedGames.length}/{numGames}</span></span>
           </div>
         </div>
       </div>
