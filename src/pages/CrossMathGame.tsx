@@ -6,22 +6,17 @@ import { Clock, Trophy, Target, GripHorizontal } from 'lucide-react';
 // ─── Types ──────────────────────────────────────────────
 interface CrossMathPuzzle {
   id: number;
-  // Horizontal: a op1 b = r1
   a: number;
   op1: string;
   b: number;
   r1: number;
-  // Vertical from 'a': a op2 c = r2
   op2: string;
   c: number;
   r2: number;
-  // Vertical from 'b': b op3 d = r3
   op3: string;
   d: number;
   r3: number;
-  // Which cells are blank (indices into the values array)
   blanks: number[];
-  // All values in order: [a, b, r1, c, r2, d, r3]
   values: number[];
   difficulty: 'easy' | 'medium' | 'hard';
 }
@@ -92,14 +87,14 @@ function generatePuzzle(index: number): CrossMathPuzzle {
       else if (op1 === '/') { b = randInt(2, 9); a = b * randInt(2, 8); }
       else { a = randInt(5, 30); b = randInt(3, 20); }
       if (op2 === '*') { c = randInt(2, 6); }
-      else if (op2 === '/') { c = randInt(2, 6); const mult = randInt(2, 5); a = c * mult; /* adjust a */ }
+      else if (op2 === '/') { c = randInt(2, 6); a = c * randInt(2, 5); }
       else { c = randInt(2, 15); }
       d = randInt(2, 12);
     }
 
     // Ensure subtraction doesn't go negative
     if (op1 === '-' && a < b) [a, b] = [b, a];
-    if (op2 === '-' && a < c) { const t = c; c = a > 1 ? randInt(1, a - 1) : 1; }
+    if (op2 === '-' && a < c) { c = a > 1 ? randInt(1, a - 1) : 1; }
     if (op3 === '-' && b < d) { d = b > 1 ? randInt(1, b - 1) : 1; }
 
     // Ensure division is clean
@@ -114,7 +109,7 @@ function generatePuzzle(index: number): CrossMathPuzzle {
     attempts < 100
   );
 
-  // If we still have bad values, fallback to simple addition
+  // Fallback to simple addition
   if (r1 < 0 || r2 < 0 || r3 < 0 || !Number.isInteger(r1) || !Number.isInteger(r2) || !Number.isInteger(r3)) {
     a = randInt(2, 10); b = randInt(1, 8); c = randInt(1, 8); d = randInt(1, 8);
     op1 = '+'; op2 = '+'; op3 = '+';
@@ -123,15 +118,13 @@ function generatePuzzle(index: number): CrossMathPuzzle {
 
   const values = [a, b, r1, c, r2, d, r3];
 
-  // Choose blanks based on difficulty
   let numBlanks: number;
   if (difficulty === 'easy') numBlanks = 2;
   else if (difficulty === 'medium') numBlanks = 3;
   else numBlanks = 4;
 
-  // Pick random blank positions (0=a, 1=b, 2=r1, 3=c, 4=r2, 5=d, 6=r3)
   const allPositions = [0, 1, 2, 3, 4, 5, 6];
-  const shuffled = allPositions.sort(() => Math.random() - 0.5);
+  const shuffled = [...allPositions].sort(() => Math.random() - 0.5);
   const blanks = shuffled.slice(0, numBlanks);
 
   return {
@@ -162,7 +155,7 @@ function generateDistractors(correctValues: number[], count: number): number[] {
 
 // ─── Component ──────────────────────────────────────────
 const CrossMathGame = () => {
-  const { currentStudent, updateStudentScore, finishTest, currentTest } = useGame();
+  const { currentStudent, updateStudentScore, finishTest, addCompletedGame, getNextGame } = useGame();
   const navigate = useNavigate();
 
   const [puzzles] = useState<CrossMathPuzzle[]>(() =>
@@ -193,7 +186,6 @@ const CrossMathGame = () => {
 
   const puzzle = puzzles[currentQ];
 
-  // Get current answers for this puzzle
   const getCurrentAnswers = useCallback((): (number | null)[] => {
     return answers.get(currentQ) || puzzle.blanks.map(() => null);
   }, [answers, currentQ, puzzle]);
@@ -201,7 +193,6 @@ const CrossMathGame = () => {
   const currentAnswers = getCurrentAnswers();
   const allFilled = currentAnswers.every(a => a !== null);
 
-  // Available options for current puzzle
   const correctValues = puzzle.blanks.map(bi => puzzle.values[bi]);
   const [options] = useState<Map<number, number[]>>(() => {
     const m = new Map<number, number[]>();
@@ -229,7 +220,6 @@ const CrossMathGame = () => {
     const current = [...currentAnswers];
 
     if (current[blankIndex] !== null) {
-      // Remove the value from this cell
       current[blankIndex] = null;
       setAnswers(prev => new Map(prev).set(currentQ, current));
       return;
@@ -244,14 +234,12 @@ const CrossMathGame = () => {
 
   const checkAnswer = useCallback(() => {
     const current = getCurrentAnswers();
-    let allCorrect = true;
     for (let i = 0; i < puzzle.blanks.length; i++) {
       if (current[i] !== puzzle.values[puzzle.blanks[i]]) {
-        allCorrect = false;
-        break;
+        return false;
       }
     }
-    return allCorrect;
+    return true;
   }, [getCurrentAnswers, puzzle]);
 
   const handleSubmit = useCallback(() => {
@@ -277,15 +265,24 @@ const CrossMathGame = () => {
       setShowResult(null);
       setSelectedOption(null);
       if (currentQ + 1 >= TOTAL_QUESTIONS) {
-        // Finish
         setFinished(true);
         if (timerRef.current) clearInterval(timerRef.current);
         if (currentStudent) finishTest(currentStudent.username);
+        addCompletedGame('crossmath');
       } else {
         setCurrentQ(prev => prev + 1);
       }
     }, 800);
-  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentScore, finishTest]);
+  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentScore, finishTest, addCompletedGame]);
+
+  const handlePostFinish = useCallback(() => {
+    const nextGame = getNextGame();
+    if (nextGame) {
+      navigate('/select-game');
+    } else {
+      navigate('/leaderboard');
+    }
+  }, [getNextGame, navigate]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -294,23 +291,22 @@ const CrossMathGame = () => {
   };
 
   // ─── Render Cell ──────────────────────────────────────
-  const renderCell = (value: number | string, isBlank: boolean, blankIndex?: number) => {
+  const renderCell = (value: number | string, isBlankCell: boolean, blankIndex?: number) => {
     if (typeof value === 'string') {
-      // Operator or equals
       return (
-        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-accent font-bold text-lg sm:text-xl">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-accent font-bold text-lg sm:text-xl shrink-0">
           {value}
         </div>
       );
     }
-    if (isBlank && blankIndex !== undefined) {
+    if (isBlankCell && blankIndex !== undefined) {
       const filledValue = currentAnswers[blankIndex];
       const isWrong = showResult === 'wrong' && filledValue !== null;
       const isRight = showResult === 'correct' && filledValue !== null;
       return (
         <button
           onClick={() => handleCellTap(blankIndex)}
-          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 border-dashed flex items-center justify-center font-bold text-base sm:text-lg transition-all
+          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 border-dashed flex items-center justify-center font-bold text-base sm:text-lg transition-all shrink-0
             ${filledValue !== null
               ? isRight ? 'bg-success/20 border-success text-success' :
                 isWrong ? 'bg-destructive/20 border-destructive text-destructive animate-shake' :
@@ -322,15 +318,13 @@ const CrossMathGame = () => {
         </button>
       );
     }
-    // Fixed value cell
     return (
-      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-secondary border border-border flex items-center justify-center font-bold text-base sm:text-lg text-foreground">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-secondary border border-border flex items-center justify-center font-bold text-base sm:text-lg text-foreground shrink-0">
         {value}
       </div>
     );
   };
 
-  // ─── Get blank index for a position ───────────────────
   const getBlankIndex = (position: number): number => {
     return puzzle.blanks.indexOf(position);
   };
@@ -366,10 +360,10 @@ const CrossMathGame = () => {
             </div>
           </div>
           <button
-            onClick={() => navigate('/leaderboard')}
+            onClick={handlePostFinish}
             className="bg-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:bg-accent/90 transition-all hover:scale-105 text-base sm:text-lg"
           >
-            View Leaderboard
+            {getNextGame() ? 'Next Game →' : 'View Leaderboard'}
           </button>
         </div>
       </div>
@@ -393,6 +387,7 @@ const CrossMathGame = () => {
               setFinished(true);
               if (timerRef.current) clearInterval(timerRef.current);
               if (currentStudent) finishTest(currentStudent.username);
+              addCompletedGame('crossmath');
             }}
             className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary border border-border/50"
           >
@@ -426,11 +421,11 @@ const CrossMathGame = () => {
             </div>
           </div>
 
-          {/* Cross Math Grid */}
+          {/* Cross Math Grid - Fixed layout */}
           <div className="px-4 sm:px-6 py-4 sm:py-6">
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1.5">
               {/* Row 1: a op1 b = r1 */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5 justify-center">
                 {renderCell(puzzle.a, isBlank(0), getBlankIndex(0) >= 0 ? getBlankIndex(0) : undefined)}
                 {renderCell(opSymbol(puzzle.op1), false)}
                 {renderCell(puzzle.b, isBlank(1), getBlankIndex(1) >= 0 ? getBlankIndex(1) : undefined)}
@@ -438,44 +433,44 @@ const CrossMathGame = () => {
                 {renderCell(puzzle.r1, isBlank(2), getBlankIndex(2) >= 0 ? getBlankIndex(2) : undefined)}
               </div>
 
-              {/* Row 2: op2 spacing op3 */}
-              <div className="flex items-center gap-1">
-                <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-accent font-bold text-sm">
+              {/* Row 2: op2 (under a) and op3 (under b) */}
+              <div className="flex items-center gap-1.5 justify-center">
+                <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-accent font-bold text-sm shrink-0">
                   {opSymbol(puzzle.op2)}
                 </div>
-                <div className="w-10 sm:w-12" />
-                <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-accent font-bold text-sm">
+                <div className="w-10 sm:w-12 shrink-0" />
+                <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-accent font-bold text-sm shrink-0">
                   {opSymbol(puzzle.op3)}
                 </div>
-                <div className="w-10 sm:w-12" />
-                <div className="w-10 sm:w-12" />
+                <div className="w-10 sm:w-12 shrink-0" />
+                <div className="w-10 sm:w-12 shrink-0" />
               </div>
 
-              {/* Row 3: c spacing d */}
-              <div className="flex items-center gap-1">
+              {/* Row 3: c (under a) and d (under b) */}
+              <div className="flex items-center gap-1.5 justify-center">
                 {renderCell(puzzle.c, isBlank(3), getBlankIndex(3) >= 0 ? getBlankIndex(3) : undefined)}
-                <div className="w-10 sm:w-12" />
+                <div className="w-10 sm:w-12 shrink-0" />
                 {renderCell(puzzle.d, isBlank(5), getBlankIndex(5) >= 0 ? getBlankIndex(5) : undefined)}
-                <div className="w-10 sm:w-12" />
-                <div className="w-10 sm:w-12" />
+                <div className="w-10 sm:w-12 shrink-0" />
+                <div className="w-10 sm:w-12 shrink-0" />
               </div>
 
-              {/* Row 4: = spacing = */}
-              <div className="flex items-center gap-1">
-                <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-muted-foreground font-bold text-sm">=</div>
-                <div className="w-10 sm:w-12" />
-                <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-muted-foreground font-bold text-sm">=</div>
-                <div className="w-10 sm:w-12" />
-                <div className="w-10 sm:w-12" />
+              {/* Row 4: = (under a col) and = (under b col) */}
+              <div className="flex items-center gap-1.5 justify-center">
+                <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-muted-foreground font-bold text-sm shrink-0">=</div>
+                <div className="w-10 sm:w-12 shrink-0" />
+                <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-muted-foreground font-bold text-sm shrink-0">=</div>
+                <div className="w-10 sm:w-12 shrink-0" />
+                <div className="w-10 sm:w-12 shrink-0" />
               </div>
 
-              {/* Row 5: r2 spacing r3 */}
-              <div className="flex items-center gap-1">
+              {/* Row 5: r2 (under a col) and r3 (under b col) */}
+              <div className="flex items-center gap-1.5 justify-center">
                 {renderCell(puzzle.r2, isBlank(4), getBlankIndex(4) >= 0 ? getBlankIndex(4) : undefined)}
-                <div className="w-10 sm:w-12" />
+                <div className="w-10 sm:w-12 shrink-0" />
                 {renderCell(puzzle.r3, isBlank(6), getBlankIndex(6) >= 0 ? getBlankIndex(6) : undefined)}
-                <div className="w-10 sm:w-12" />
-                <div className="w-10 sm:w-12" />
+                <div className="w-10 sm:w-12 shrink-0" />
+                <div className="w-10 sm:w-12 shrink-0" />
               </div>
             </div>
 
@@ -493,10 +488,6 @@ const CrossMathGame = () => {
             <div className="bg-secondary/50 rounded-xl p-3 sm:p-4 border border-border/50">
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                 {currentOptions.map((val, i) => {
-                  const isUsed = usedValues.includes(val) &&
-                    usedValues.filter(v => v === val).length > currentOptions.slice(0, i).filter(v => v === val).length
-                      ? false : usedValues.includes(val);
-                  // Better: count usage
                   const usedCount = usedValues.filter(v => v === val).length;
                   const availCount = currentOptions.slice(0, i + 1).filter(v => v === val).length;
                   const isThisUsed = availCount <= usedCount;
