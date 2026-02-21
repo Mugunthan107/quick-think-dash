@@ -60,7 +60,11 @@ function createExpression(level: number): BubbleData {
 }
 
 const BubbleGame = () => {
+<<<<<<< HEAD
   const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest } = useGame();
+=======
+  const { currentStudent, updateStudentScore, finishTest, addCompletedGame, getNextGame } = useGame();
+>>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
   const navigate = useNavigate();
 
   const [level, setLevel] = useState(1);
@@ -142,7 +146,21 @@ const BubbleGame = () => {
       // Just local play
       navigate('/select-game');
     }
+<<<<<<< HEAD
   }, [score, correctCount, currentStudent, currentTest, submitGameResult, finishTest, navigate]);
+=======
+    addCompletedGame('bubble');
+  }, [currentStudent, finishTest, addCompletedGame]);
+
+  const handlePostFinish = useCallback(() => {
+    const nextGame = getNextGame();
+    if (nextGame) {
+      navigate('/select-game');
+    } else {
+      navigate('/leaderboard');
+    }
+  }, [getNextGame, navigate]);
+>>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
 
   const failLevel = useCallback(() => {
     setGameActive(false);
@@ -151,7 +169,6 @@ const BubbleGame = () => {
     setFlash('wrong');
     setStreak(0);
 
-    // No penalty, just move to next level
     const newLevel = level + 1;
 
     if (currentStudent) {
@@ -164,7 +181,6 @@ const BubbleGame = () => {
         handleFinish();
       } else {
         setLevel(newLevel);
-        // startRound is triggered by useEffect on level change
       }
     }, 800);
   }, [score, level, currentStudent, updateStudentScore, handleFinish, correctCount]);
@@ -183,8 +199,6 @@ const BubbleGame = () => {
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [gameActive, bubbles, failLevel]);
-
-
 
   const handleBubbleClick = useCallback((clicked: BubbleData) => {
     if (!gameActive || clicked.selected || transitioning) return;
@@ -205,7 +219,7 @@ const BubbleGame = () => {
         let bonus = 0;
         if (streak >= 9) bonus = 5;
 
-        const newScore = score + points + bonus; // Removed + timeLeft as per user request
+        const newScore = score + points + bonus;
         const newCorrectCount = correctCount + 1;
 
         setScore(newScore);
@@ -234,7 +248,7 @@ const BubbleGame = () => {
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-6 sm:mb-8 animate-pulse-ring">
             <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-success" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">Test Complete!</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">Mind Sprint Complete!</h1>
           <p className="text-muted-foreground mb-2">Great work, {currentStudent?.username}!</p>
           <div className="flex items-center justify-center gap-6 my-6 sm:my-8">
             <div className="text-center">
@@ -251,10 +265,10 @@ const BubbleGame = () => {
             </div>
           </div>
           <button
-            onClick={() => navigate('/leaderboard')}
+            onClick={handlePostFinish}
             className="bg-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:bg-accent/90 transition-all hover:scale-105 text-base sm:text-lg"
           >
-            View Leaderboard
+            {getNextGame() ? 'Next Game →' : 'View Leaderboard'}
           </button>
         </div>
       </div>
@@ -303,7 +317,6 @@ const BubbleGame = () => {
                 </div>
                 <span className="text-xs sm:text-sm font-semibold text-foreground">Level {level} / {MAX_LEVEL}</span>
               </div>
-              {/* Progress bar */}
               <div className="w-full max-w-[200px] sm:max-w-[300px] h-1.5 sm:h-2 bg-secondary rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
@@ -312,14 +325,13 @@ const BubbleGame = () => {
               </div>
             </div>
 
-            {/* Score display */}
             <div className="text-right ml-4 sm:ml-6">
               <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5">SCORE</span>
               <span className="font-mono font-bold text-xl sm:text-2xl text-foreground">{score}</span>
             </div>
           </div>
 
-          {/* Game Area - Responsive bubbles */}
+          {/* Game Area */}
           <div className="w-full px-4 sm:px-8 py-2 sm:py-4">
             <div className="flex flex-wrap justify-center gap-3 sm:gap-6 py-4 sm:py-8">
               {bubbles.map((bubble) => (
@@ -347,7 +359,6 @@ const BubbleGame = () => {
 
           {/* Bottom Bar */}
           <div className="w-full px-4 sm:px-8 pb-4 sm:pb-6 flex items-end justify-between">
-            {/* Timer */}
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="relative w-10 h-10 sm:w-12 sm:h-12">
                 <svg className="w-10 h-10 sm:w-12 sm:h-12 -rotate-90" viewBox="0 0 48 48">
@@ -369,7 +380,6 @@ const BubbleGame = () => {
               </div>
             </div>
 
-            {/* Instruction */}
             <div className="text-right text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
               <div className="flex items-center gap-1 sm:gap-1.5 justify-end mb-0.5 sm:mb-1">
                 <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -378,9 +388,6 @@ const BubbleGame = () => {
               <span className="text-foreground font-bold">LOW</span> → <span className="text-foreground font-bold">HIGH</span>
             </div>
           </div>
-
-          {/* Finish button */}
-
 
           {/* Flash overlay */}
           {flash && (
