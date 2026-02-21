@@ -30,6 +30,10 @@ const GameSelector = () => {
     },
   ];
 
+  // Filter out games already played
+  const playedGameIds = currentStudent.gameHistory?.map(g => g.gameId) || [];
+  const availableGames = games.filter(g => !playedGameIds.includes(g.id));
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
       <div className="w-full max-w-md animate-fade-in">
@@ -42,10 +46,12 @@ const GameSelector = () => {
         </button>
 
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Choose Your Game</h1>
-        <p className="text-muted-foreground text-sm mb-6">Select a game to begin, {currentStudent.username}</p>
+        <p className="text-muted-foreground text-sm mb-6">
+          Game {playedGameIds.length + 1} of {currentTest.numGames}
+        </p>
 
         <div className="space-y-3">
-          {games.map(game => (
+          {availableGames.map(game => (
             <button
               key={game.id}
               onClick={() => navigate(game.route)}
@@ -64,6 +70,11 @@ const GameSelector = () => {
               </div>
             </button>
           ))}
+          {availableGames.length === 0 && (
+            <div className="text-center p-4 text-muted-foreground">
+              All games completed!
+            </div>
+          )}
         </div>
 
         <div className="mt-6 bg-secondary/50 rounded-xl p-3 border border-border/50">

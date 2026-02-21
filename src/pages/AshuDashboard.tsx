@@ -103,18 +103,24 @@ const AshuDashboard = () => {
     doc.text(`Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 30);
     doc.text(`Total Students: ${students.length}`, 14, 36);
 
-    const tableColumn = ["Rank", "Student Name", "Score", "Level", "Time (seconds)"];
+    const tableColumn = ["Rank", "Student Name", "Avg Score", "Games Played", "Total Time (s)", "Breakdown"];
     const tableRows = leaderboard.map((student, index) => {
-      const timeTaken = student.completedAt
-        ? ((student.completedAt - student.startedAt) / 1000).toFixed(1)
-        : 'N/A';
+      const totalTime = student.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || 0;
+      const timeTaken = totalTime.toFixed(1);
+
+      // Create breakdown string
+      const breakdown = student.gameHistory?.map(g => {
+        const gameName = g.gameId === 'bubble' ? 'Bubble' : g.gameId === 'crossmath' ? 'Cross' : g.gameId;
+        return `${gameName}: ${g.correctAnswers}✓`;
+      }).join(', ') || 'N/A';
 
       return [
         index + 1,
         student.username,
-        student.score,
-        student.level,
-        timeTaken
+        student.score, // This is now average score
+        student.gamesPlayed || 0,
+        timeTaken,
+        breakdown
       ];
     });
 
@@ -499,11 +505,10 @@ const AshuDashboard = () => {
                       <button
                         key={n}
                         onClick={() => setNumGames(n)}
-                        className={`flex-1 h-14 rounded-xl font-bold text-lg transition-all ${
-                          numGames === n
+                        className={`flex-1 h-14 rounded-xl font-bold text-lg transition-all ${numGames === n
                             ? 'bg-accent text-accent-foreground scale-105 shadow-lg shadow-accent/20'
                             : 'bg-secondary text-foreground hover:bg-secondary/80'
-                        }`}
+                          }`}
                       >
                         {n}
                       </button>

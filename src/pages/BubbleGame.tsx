@@ -60,12 +60,13 @@ function createExpression(level: number): BubbleData {
 }
 
 const BubbleGame = () => {
-  const { currentStudent, updateStudentScore, finishTest } = useGame();
+  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest } = useGame();
   const navigate = useNavigate();
 
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIME_PER_ROUND);
+  const [elapsed, setElapsed] = useState(0); // Track total time
   const [bubbles, setBubbles] = useState<BubbleData[]>([]);
   const [correctCount, setCorrectCount] = useState(0);
   const [clickOrder, setClickOrder] = useState(0);
@@ -100,10 +101,48 @@ const BubbleGame = () => {
     setFinished(true);
     setGameActive(false);
     if (timerRef.current) clearInterval(timerRef.current);
-    if (currentStudent) {
-      finishTest(currentStudent.username);
+
+    // Submit result
+    if (currentStudent && currentTest) {
+      // Calculate final time taken (roughly, since we reset time each round, 
+      // but we can estimate or just use a placeholder if not tracking exact total seconds across rounds in state)
+      // For BubbleGame, let's say 10s per round * rounds played? Or just 0 if not tracking.
+      // Better: we should have tracked total time. 
+      // Since we didn't track total time across levels, let's just assume a fixed time or 0 for now 
+      // OR better, we can add a 'totalTime' state if needed. 
+      // For now, let's use 0 or a placeholder as the user didn't explicitly ask for accurate time tracking *within* this game, 
+      // but likely expects it.  
+      // Let's add totalTime state to BubbleGame quickly?
+      // Actually, let's just pass 0 for now if safe, or maybe 300s?
+      // The user wants "time i want all a added for both". 
+      // Since BubbleGame didn't have a 'total elapsed' timer visible, I'll pass 0.
+      // Wait, let's add a quick startTime ref to get decent time.
+
+      const timeTaken = 0; // Placeholder, see logic below
+
+      submitGameResult(currentStudent.username, {
+        gameId: 'bubble',
+        score: score,
+        timeTaken: elapsed, // Use tracked time
+        correctAnswers: correctCount,
+        totalQuestions: 30, // MAX_LEVEL
+        completedAt: Date.now()
+      }).then(() => {
+        // Check if we need to play more games
+        const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
+        if (gamesPlayed < currentTest.numGames) {
+          // Go back to lobby/selector
+          navigate('/select-game');
+        } else {
+          finishTest(currentStudent.username);
+          navigate('/leaderboard');
+        }
+      });
+    } else {
+      // Just local play
+      navigate('/select-game');
     }
-  }, [currentStudent, finishTest]);
+  }, [score, correctCount, currentStudent, currentTest, submitGameResult, finishTest, navigate]);
 
   const failLevel = useCallback(() => {
     setGameActive(false);
@@ -133,6 +172,7 @@ const BubbleGame = () => {
   useEffect(() => {
     if (!gameActive) return;
     timerRef.current = setInterval(() => {
+      setElapsed(prev => prev + 1);
       setTimeLeft(prev => {
         if (prev <= 1) {
           failLevel();

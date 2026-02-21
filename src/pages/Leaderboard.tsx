@@ -43,32 +43,39 @@ const Leaderboard = () => {
                 <div
                   key={s.username}
                   className={`flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all bg-card/80 backdrop-blur-sm ${i === 0
-                      ? 'border border-accent/20'
-                      : isCurrentUser
-                        ? 'border border-accent/15'
-                        : 'border border-border'
+                    ? 'border border-accent/20'
+                    : isCurrentUser
+                      ? 'border border-accent/15'
+                      : 'border border-border'
                     }`}
                 >
                   <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     <span className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 ${i === 0 ? 'bg-accent text-accent-foreground' :
-                        i === 1 ? 'bg-muted-foreground/20 text-foreground' :
-                          i === 2 ? 'bg-muted text-muted-foreground' :
-                            'bg-muted text-muted-foreground'
+                      i === 1 ? 'bg-muted-foreground/20 text-foreground' :
+                        i === 2 ? 'bg-muted text-muted-foreground' :
+                          'bg-muted text-muted-foreground'
                       }`}>
                       {i + 1}
                     </span>
                     <div className="min-w-0">
                       <span className="font-medium text-foreground text-sm truncate block">{s.username}</span>
                       {isCurrentUser && <span className="text-[10px] text-accent font-semibold">(You)</span>}
+                      {s.gamesPlayed ? <span className="text-[10px] text-muted-foreground">{s.gamesPlayed} games</span> : null}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm shrink-0">
-                    <span className="text-muted-foreground hidden sm:inline">Lvl {s.level}</span>
-                    <span className="text-success font-medium hidden sm:inline">{s.correctAnswers || 0} / 30</span>
-                    <span className="font-mono font-bold text-foreground">{s.score}</span>
+                    <div className="text-right">
+                      <span className="font-mono font-bold text-foreground block">{s.score}</span>
+                      <span className="text-[9px] text-muted-foreground uppercase">Avg</span>
+                    </div>
+
                     <div className="flex items-center gap-1 text-muted-foreground w-12 sm:w-16 justify-end">
                       <Clock className="w-3 h-3" />
-                      <span className="text-[10px] sm:text-xs">{timeTaken}s</span>
+                      <span className="text-[10px] sm:text-xs">
+                        {s.gameHistory
+                          ? s.gameHistory.reduce((acc, g) => acc + g.timeTaken, 0).toFixed(1)
+                          : timeTaken}s
+                      </span>
                     </div>
                   </div>
                 </div>

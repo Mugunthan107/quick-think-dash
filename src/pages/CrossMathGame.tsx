@@ -162,7 +162,7 @@ function generateDistractors(correctValues: number[], count: number): number[] {
 
 // ─── Component ──────────────────────────────────────────
 const CrossMathGame = () => {
-  const { currentStudent, updateStudentScore, finishTest, currentTest } = useGame();
+  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest } = useGame();
   const navigate = useNavigate();
 
   const [puzzles] = useState<CrossMathPuzzle[]>(() =>
@@ -280,12 +280,28 @@ const CrossMathGame = () => {
         // Finish
         setFinished(true);
         if (timerRef.current) clearInterval(timerRef.current);
-        if (currentStudent) finishTest(currentStudent.username);
+
+        submitGameResult(currentStudent.username, {
+          gameId: 'crossmath',
+          score: newScore,
+          timeTaken: elapsed,
+          correctAnswers: newCorrect,
+          totalQuestions: TOTAL_QUESTIONS,
+          completedAt: Date.now()
+        }).then(() => {
+          const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
+          if (gamesPlayed < currentTest.numGames) {
+            navigate('/select-game');
+          } else {
+            finishTest(currentStudent.username);
+            navigate('/leaderboard');
+          }
+        });
       } else {
         setCurrentQ(prev => prev + 1);
       }
     }, 800);
-  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentScore, finishTest]);
+  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, currentTest, updateStudentScore, submitGameResult, finishTest, elapsed, navigate]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -314,7 +330,7 @@ const CrossMathGame = () => {
             ${filledValue !== null
               ? isRight ? 'bg-success/20 border-success text-success' :
                 isWrong ? 'bg-destructive/20 border-destructive text-destructive animate-shake' :
-                'bg-accent/15 border-accent text-accent'
+                  'bg-accent/15 border-accent text-accent'
               : 'border-muted-foreground/40 text-muted-foreground hover:border-accent hover:bg-accent/5'
             }`}
         >
@@ -392,7 +408,27 @@ const CrossMathGame = () => {
             onClick={() => {
               setFinished(true);
               if (timerRef.current) clearInterval(timerRef.current);
-              if (currentStudent) finishTest(currentStudent.username);
+
+              if (currentStudent) {
+                submitGameResult(currentStudent.username, {
+                  gameId: 'crossmath',
+                  score: score,
+                  timeTaken: elapsed,
+                  correctAnswers: correctCount,
+                  totalQuestions: TOTAL_QUESTIONS,
+                  completedAt: Date.now()
+                }).then(() => {
+                  const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
+                  if (gamesPlayed < (currentTest?.numGames || 1)) {
+                    navigate('/select-game');
+                  } else {
+                    finishTest(currentStudent.username);
+                    navigate('/leaderboard');
+                  }
+                });
+              } else {
+                navigate('/select-game');
+              }
             }}
             className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary border border-border/50"
           >
@@ -411,7 +447,7 @@ const CrossMathGame = () => {
                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider
                   ${puzzle.difficulty === 'easy' ? 'bg-success/15 text-success' :
                     puzzle.difficulty === 'medium' ? 'bg-accent/15 text-accent' :
-                    'bg-destructive/15 text-destructive'}`}>
+                      'bg-destructive/15 text-destructive'}`}>
                   {puzzle.difficulty}
                 </span>
                 <span className="text-xs sm:text-sm font-semibold text-foreground">Q{currentQ + 1} / {TOTAL_QUESTIONS}</span>
@@ -495,7 +531,7 @@ const CrossMathGame = () => {
                 {currentOptions.map((val, i) => {
                   const isUsed = usedValues.includes(val) &&
                     usedValues.filter(v => v === val).length > currentOptions.slice(0, i).filter(v => v === val).length
-                      ? false : usedValues.includes(val);
+                    ? false : usedValues.includes(val);
                   // Better: count usage
                   const usedCount = usedValues.filter(v => v === val).length;
                   const availCount = currentOptions.slice(0, i + 1).filter(v => v === val).length;
