@@ -63,19 +63,38 @@ const Leaderboard = () => {
                       {s.gamesPlayed ? <span className="text-[10px] text-muted-foreground">{s.gamesPlayed} games</span> : null}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm shrink-0">
-                    <div className="text-right">
-                      <span className="font-mono font-bold text-foreground block">{s.score}</span>
-                      <span className="text-[9px] text-muted-foreground uppercase">Avg</span>
-                    </div>
+                  <div className="flex items-center gap-3 sm:gap-6 text-[10px] sm:text-xs overflow-x-auto no-scrollbar py-1 flex-1 justify-end">
+                    {s.gameHistory?.[0] && (
+                      <div className="flex flex-col items-center gap-0.5 px-2 py-1 bg-secondary/50 rounded-lg border border-border/50 shrink-0">
+                        <span className="text-[8px] font-bold text-accent uppercase leading-none">G1</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-success font-medium">{s.gameHistory[0].correctAnswers}/{s.gameHistory[0].totalQuestions}</span>
+                          <span className="font-mono font-bold text-foreground">{s.gameHistory[0].score}</span>
+                          <span className="text-muted-foreground">{s.gameHistory[0].timeTaken.toFixed(1)}s</span>
+                        </div>
+                      </div>
+                    )}
 
-                    <div className="flex items-center gap-1 text-muted-foreground w-12 sm:w-16 justify-end">
-                      <Clock className="w-3 h-3" />
-                      <span className="text-[10px] sm:text-xs">
-                        {s.gameHistory
-                          ? s.gameHistory.reduce((acc, g) => acc + g.timeTaken, 0).toFixed(1)
-                          : timeTaken}s
-                      </span>
+                    {s.gameHistory?.[1] && (
+                      <div className="flex flex-col items-center gap-0.5 px-2 py-1 bg-secondary/50 rounded-lg border border-border/50 shrink-0">
+                        <span className="text-[8px] font-bold text-emerald-400 uppercase leading-none">G2</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-bold text-foreground">{s.gameHistory[1].score}</span>
+                          <span className="text-muted-foreground">{s.gameHistory[1].timeTaken.toFixed(1)}s</span>
+                          <span className="text-success font-medium">{s.gameHistory[1].correctAnswers}/{s.gameHistory[1].totalQuestions}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col items-end gap-0.5 pl-3 border-l border-border/50 shrink-0">
+                      <span className="text-[8px] font-bold text-success uppercase leading-none">Total</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-foreground text-sm sm:text-base">{s.score}</span>
+                        <div className="flex items-center gap-0.5 text-muted-foreground font-mono">
+                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                          <span>{s.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0).toFixed(1)}s</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

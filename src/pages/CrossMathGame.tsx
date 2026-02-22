@@ -139,27 +139,24 @@ function generatePuzzle(index: number): CrossMathPuzzle {
 }
 
 function generateDistractors(correctValues: number[], count: number): number[] {
-  const distractors = new Set<number>(correctValues);
+  const options = [...correctValues];
+  const distractors = new Set<number>();
   let attempts = 0;
-  while (distractors.size < correctValues.length + count && attempts < 100) {
+  while (distractors.size < count && attempts < 100) {
     const base = correctValues[Math.floor(Math.random() * correctValues.length)];
-    const offset = randInt(1, 5) * (Math.random() > 0.5 ? 1 : -1);
+    const offset = randInt(1, 10) * (Math.random() > 0.5 ? 1 : -1);
     const val = base + offset;
-    if (val >= 0 && val <= 200 && Number.isInteger(val)) {
+    if (val >= 0 && val <= 200 && Number.isInteger(val) && !correctValues.includes(val)) {
       distractors.add(val);
     }
     attempts++;
   }
-  return Array.from(distractors).sort(() => Math.random() - 0.5);
+  return [...options, ...Array.from(distractors)].sort(() => Math.random() - 0.5);
 }
 
 // ─── Component ──────────────────────────────────────────
 const CrossMathGame = () => {
-<<<<<<< HEAD
-  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest } = useGame();
-=======
-  const { currentStudent, updateStudentScore, finishTest, addCompletedGame, getNextGame } = useGame();
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
+  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
   const navigate = useNavigate();
 
   const [puzzles] = useState<CrossMathPuzzle[]>(() =>
@@ -186,7 +183,7 @@ const CrossMathGame = () => {
       setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [currentStudent, navigate]);
+  }, [navigate]);
 
   const puzzle = puzzles[currentQ];
 
@@ -236,13 +233,39 @@ const CrossMathGame = () => {
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, value: number) => {
+    e.dataTransfer.setData('text/plain', value.toString());
+    setSelectedOption(value);
+  };
+
+  const handleDrop = (e: React.DragEvent, blankIndex: number) => {
+    e.preventDefault();
+    const value = parseInt(e.dataTransfer.getData('text/plain'));
+    if (isNaN(value)) return;
+
+    const current = [...currentAnswers];
+    current[blankIndex] = value;
+    setAnswers(prev => new Map(prev).set(currentQ, current));
+    setSelectedOption(null);
+  };
+
   const checkAnswer = useCallback(() => {
     const current = getCurrentAnswers();
-    for (let i = 0; i < puzzle.blanks.length; i++) {
-      if (current[i] !== puzzle.values[puzzle.blanks[i]]) {
-        return false;
-      }
-    }
+    // Reconstruct all 7 values
+    const v = [...puzzle.values];
+    puzzle.blanks.forEach((pos, i) => {
+      v[pos] = current[i]!;
+    });
+
+    const [a, b, r1, c, r2, d, r3] = v;
+
+    // Check Row 1: a op1 b = r1
+    if (compute(a, puzzle.op1, b) !== r1) return false;
+    // Check Col 1: a op2 c = r2
+    if (compute(a, puzzle.op2, c) !== r2) return false;
+    // Check Col 2: b op3 d = r3
+    if (compute(b, puzzle.op3, d) !== r3) return false;
+
     return true;
   }, [getCurrentAnswers, puzzle]);
 
@@ -271,8 +294,6 @@ const CrossMathGame = () => {
       if (currentQ + 1 >= TOTAL_QUESTIONS) {
         setFinished(true);
         if (timerRef.current) clearInterval(timerRef.current);
-<<<<<<< HEAD
-
         submitGameResult(currentStudent.username, {
           gameId: 'crossmath',
           score: newScore,
@@ -281,6 +302,7 @@ const CrossMathGame = () => {
           totalQuestions: TOTAL_QUESTIONS,
           completedAt: Date.now()
         }).then(() => {
+          addCompletedGame('crossmath');
           const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
           if (gamesPlayed < currentTest.numGames) {
             navigate('/select-game');
@@ -289,18 +311,11 @@ const CrossMathGame = () => {
             navigate('/leaderboard');
           }
         });
-=======
-        if (currentStudent) finishTest(currentStudent.username);
-        addCompletedGame('crossmath');
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
       } else {
         setCurrentQ(prev => prev + 1);
       }
     }, 800);
-<<<<<<< HEAD
-  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, currentTest, updateStudentScore, submitGameResult, finishTest, elapsed, navigate]);
-=======
-  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentScore, finishTest, addCompletedGame]);
+  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, currentTest, updateStudentScore, submitGameResult, finishTest, elapsed, navigate, addCompletedGame]);
 
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
@@ -310,7 +325,6 @@ const CrossMathGame = () => {
       navigate('/leaderboard');
     }
   }, [getNextGame, navigate]);
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -334,6 +348,8 @@ const CrossMathGame = () => {
       return (
         <button
           onClick={() => handleCellTap(blankIndex)}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => handleDrop(e, blankIndex)}
           className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 border-dashed flex items-center justify-center font-bold text-base sm:text-lg transition-all shrink-0
             ${filledValue !== null
               ? isRight ? 'bg-success/20 border-success text-success' :
@@ -414,8 +430,6 @@ const CrossMathGame = () => {
             onClick={() => {
               setFinished(true);
               if (timerRef.current) clearInterval(timerRef.current);
-<<<<<<< HEAD
-
               if (currentStudent) {
                 submitGameResult(currentStudent.username, {
                   gameId: 'crossmath',
@@ -425,6 +439,7 @@ const CrossMathGame = () => {
                   totalQuestions: TOTAL_QUESTIONS,
                   completedAt: Date.now()
                 }).then(() => {
+                  addCompletedGame('crossmath');
                   const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
                   if (gamesPlayed < (currentTest?.numGames || 1)) {
                     navigate('/select-game');
@@ -436,10 +451,6 @@ const CrossMathGame = () => {
               } else {
                 navigate('/select-game');
               }
-=======
-              if (currentStudent) finishTest(currentStudent.username);
-              addCompletedGame('crossmath');
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
             }}
             className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary border border-border/50"
           >
@@ -540,13 +551,6 @@ const CrossMathGame = () => {
             <div className="bg-secondary/50 rounded-xl p-3 sm:p-4 border border-border/50">
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                 {currentOptions.map((val, i) => {
-<<<<<<< HEAD
-                  const isUsed = usedValues.includes(val) &&
-                    usedValues.filter(v => v === val).length > currentOptions.slice(0, i).filter(v => v === val).length
-                    ? false : usedValues.includes(val);
-                  // Better: count usage
-=======
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
                   const usedCount = usedValues.filter(v => v === val).length;
                   const availCount = currentOptions.slice(0, i + 1).filter(v => v === val).length;
                   const isThisUsed = availCount <= usedCount;
@@ -554,14 +558,16 @@ const CrossMathGame = () => {
                   return (
                     <button
                       key={`${val}-${i}`}
+                      draggable
+                      onDragStart={(e) => !isThisUsed && handleDragStart(e, val)}
                       onClick={() => !isThisUsed && handleOptionTap(val)}
                       disabled={isThisUsed}
                       className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl font-bold text-base sm:text-lg transition-all select-none touch-manipulation
                         ${isThisUsed
                           ? 'bg-muted/30 text-muted-foreground/30 cursor-not-allowed scale-90'
                           : selectedOption === val
-                            ? 'bg-accent text-accent-foreground scale-110 shadow-lg shadow-accent/30 ring-2 ring-accent/50'
-                            : 'bg-card border border-border text-foreground hover:border-accent hover:scale-105 cursor-pointer shadow-sm'
+                            ? 'bg-accent text-accent-foreground scale-110 shadow-lg shadow-accent/30 ring-2 ring-accent/50 cursor-grab active:cursor-grabbing'
+                            : 'bg-card border border-border text-foreground hover:border-accent hover:scale-105 cursor-grab active:cursor-grabbing shadow-sm'
                         }`}
                     >
                       {val}

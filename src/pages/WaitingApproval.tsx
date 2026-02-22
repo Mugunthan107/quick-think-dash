@@ -18,30 +18,40 @@ const WaitingApproval = () => {
             return;
         }
 
-        const checkStatus = async () => {
-            const { data, error } = await supabase
-                .from('exam_results')
-                .select('status')
-                .eq('test_pin', pin)
-                .eq('student_name', username)
-                .single();
+        const channel = supabase
+            .channel(`player-approval-${username}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'exam_results',
+                    filter: `test_pin=eq.${pin}`
+                },
+                (payload) => {
+                    const data = payload.new as any;
+                    if (!data) return;
 
-            if (error || !data) {
-                setIsRejected(true);
-                return;
-            }
+                    // Manually check if this update is for the current student
+                    if (data.student_name !== username) return;
 
-            if (data.status === 'APPROVED') {
-                // Re-login via joinTest which handles existing approved users
-                const result = await joinTest(pin, username);
-                if (result.success) {
-                    navigate('/lobby');
+                    if (data.status === 'APPROVED') {
+                        joinTest(pin, username).then(result => {
+                            if (result.success) {
+                                navigate('/lobby');
+                            }
+                        });
+                    } else if (!data.status) {
+                        // Likely deleted/rejected
+                        setIsRejected(true);
+                    }
                 }
-            }
-        };
+            )
+            .subscribe();
 
-        const interval = setInterval(checkStatus, 2000);
-        return () => clearInterval(interval);
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [pin, username, navigate, joinTest]);
 
     if (isRejected) {

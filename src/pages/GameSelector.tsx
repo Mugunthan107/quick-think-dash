@@ -30,13 +30,9 @@ const GameSelector = () => {
     },
   ];
 
-<<<<<<< HEAD
-  // Filter out games already played
-  const playedGameIds = currentStudent.gameHistory?.map(g => g.gameId) || [];
-  const availableGames = games.filter(g => !playedGameIds.includes(g.id));
-=======
   const numGames = currentTest.numGames;
-  const allDone = completedGames.length >= numGames;
+  const playedGameIds = currentStudent.gameHistory?.map(g => g.gameId) || [];
+  const allDone = playedGameIds.length >= numGames;
 
   // If all games completed, redirect to leaderboard
   if (allDone) {
@@ -46,9 +42,8 @@ const GameSelector = () => {
 
   // Filter available games: show only uncompleted ones when numGames > 1
   const availableGames = numGames > 1
-    ? games.filter(g => !completedGames.includes(g.id))
+    ? games.filter(g => !playedGameIds.includes(g.id))
     : games;
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
@@ -61,26 +56,20 @@ const GameSelector = () => {
           Back
         </button>
 
-<<<<<<< HEAD
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Choose Your Game</h1>
-        <p className="text-muted-foreground text-sm mb-6">
-          Game {playedGameIds.length + 1} of {currentTest.numGames}
-        </p>
-=======
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          {numGames > 1 && completedGames.length > 0 ? 'Next Game' : 'Choose Your Game'}
+          {numGames > 1 && playedGameIds.length > 0 ? 'Next Game' : 'Choose Your Game'}
         </h1>
         <p className="text-muted-foreground text-sm mb-2">
           {numGames > 1
-            ? `Game ${completedGames.length + 1} of ${numGames} — ${currentStudent.username}`
+            ? `Game ${playedGameIds.length + 1} of ${numGames} — ${currentStudent.username}`
             : `Select a game to begin, ${currentStudent.username}`
           }
         </p>
 
         {/* Show completed games */}
-        {completedGames.length > 0 && (
+        {playedGameIds.length > 0 && (
           <div className="mb-4 space-y-1">
-            {completedGames.map(gId => {
+            {playedGameIds.map(gId => {
               const game = games.find(g => g.id === gId);
               return (
                 <div key={gId} className="flex items-center gap-2 text-xs text-success">
@@ -91,7 +80,6 @@ const GameSelector = () => {
             })}
           </div>
         )}
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
 
         <div className="space-y-3">
           {availableGames.map(game => (

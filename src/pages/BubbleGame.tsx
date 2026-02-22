@@ -18,8 +18,8 @@ const TIME_PER_ROUND = 10;
 function getLevelConfig(level: number) {
   if (level <= 5) return { max: 9, ops: ['+', '-'], decimalAllowed: false, label: 'EASY' };
   if (level <= 10) return { max: 15, ops: ['+', '-'], decimalAllowed: true, label: 'EASY' };
-  if (level <= 20) return { max: 25, ops: ['+', '-', '×', '/'], decimalAllowed: true, label: 'MEDIUM' };
-  return { max: 25, ops: ['×', '/'], decimalAllowed: true, label: 'HARD' };
+  if (level <= 20) return { max: 25, ops: ['+', '-', '×', '÷'], decimalAllowed: true, label: 'MEDIUM' };
+  return { max: 25, ops: ['×', '÷'], decimalAllowed: true, label: 'HARD' };
 }
 
 function getNum(max: number, allowDecimal: boolean) {
@@ -33,7 +33,7 @@ function createExpression(level: number): BubbleData {
   const op = config.ops[Math.floor(Math.random() * config.ops.length)];
   let a: number, b: number, result: number;
 
-  if (op === '/') {
+  if (op === '÷') {
     b = getNum(5, false);
     const multiplier = getNum(6, false);
     a = b * multiplier;
@@ -60,11 +60,7 @@ function createExpression(level: number): BubbleData {
 }
 
 const BubbleGame = () => {
-<<<<<<< HEAD
-  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest } = useGame();
-=======
-  const { currentStudent, updateStudentScore, finishTest, addCompletedGame, getNextGame } = useGame();
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
+  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
   const navigate = useNavigate();
 
   const [level, setLevel] = useState(1);
@@ -80,6 +76,7 @@ const BubbleGame = () => {
   const [transitioning, setTransitioning] = useState(false);
   const [streak, setStreak] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef(Date.now());
 
   useEffect(() => {
     if (!currentStudent) {
@@ -108,34 +105,17 @@ const BubbleGame = () => {
 
     // Submit result
     if (currentStudent && currentTest) {
-      // Calculate final time taken (roughly, since we reset time each round, 
-      // but we can estimate or just use a placeholder if not tracking exact total seconds across rounds in state)
-      // For BubbleGame, let's say 10s per round * rounds played? Or just 0 if not tracking.
-      // Better: we should have tracked total time. 
-      // Since we didn't track total time across levels, let's just assume a fixed time or 0 for now 
-      // OR better, we can add a 'totalTime' state if needed. 
-      // For now, let's use 0 or a placeholder as the user didn't explicitly ask for accurate time tracking *within* this game, 
-      // but likely expects it.  
-      // Let's add totalTime state to BubbleGame quickly?
-      // Actually, let's just pass 0 for now if safe, or maybe 300s?
-      // The user wants "time i want all a added for both". 
-      // Since BubbleGame didn't have a 'total elapsed' timer visible, I'll pass 0.
-      // Wait, let's add a quick startTime ref to get decent time.
-
-      const timeTaken = 0; // Placeholder, see logic below
-
       submitGameResult(currentStudent.username, {
         gameId: 'bubble',
         score: score,
-        timeTaken: elapsed, // Use tracked time
+        timeTaken: elapsed,
         correctAnswers: correctCount,
-        totalQuestions: 30, // MAX_LEVEL
+        totalQuestions: 30,
         completedAt: Date.now()
       }).then(() => {
-        // Check if we need to play more games
+        addCompletedGame('bubble');
         const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
         if (gamesPlayed < currentTest.numGames) {
-          // Go back to lobby/selector
           navigate('/select-game');
         } else {
           finishTest(currentStudent.username);
@@ -143,14 +123,9 @@ const BubbleGame = () => {
         }
       });
     } else {
-      // Just local play
       navigate('/select-game');
     }
-<<<<<<< HEAD
-  }, [score, correctCount, currentStudent, currentTest, submitGameResult, finishTest, navigate]);
-=======
-    addCompletedGame('bubble');
-  }, [currentStudent, finishTest, addCompletedGame]);
+  }, [score, correctCount, currentStudent, currentTest, submitGameResult, finishTest, navigate, elapsed, addCompletedGame]);
 
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
@@ -160,7 +135,6 @@ const BubbleGame = () => {
       navigate('/leaderboard');
     }
   }, [getNextGame, navigate]);
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
 
   const failLevel = useCallback(() => {
     setGameActive(false);
@@ -187,8 +161,11 @@ const BubbleGame = () => {
 
   useEffect(() => {
     if (!gameActive) return;
+    if (elapsed === 0) startTimeRef.current = Date.now();
+
     timerRef.current = setInterval(() => {
-      setElapsed(prev => prev + 1);
+      const currentElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      setElapsed(currentElapsed);
       setTimeLeft(prev => {
         if (prev <= 1) {
           failLevel();
@@ -198,7 +175,7 @@ const BubbleGame = () => {
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [gameActive, bubbles, failLevel]);
+  }, [gameActive, failLevel]);
 
   const handleBubbleClick = useCallback((clicked: BubbleData) => {
     if (!gameActive || clicked.selected || transitioning) return;

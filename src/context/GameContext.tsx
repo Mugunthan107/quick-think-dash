@@ -20,6 +20,7 @@ export interface Student {
   startedAt: number;
   isFinished: boolean;
   correctAnswers: number;
+  totalQuestions: number;
   status: 'APPROVED' | 'PENDING';
   gameHistory: GameResult[];
   gamesPlayed: number;
@@ -64,6 +65,8 @@ interface GameContextType extends GameState {
   addCompletedGame: (gameId: string) => void;
   getNextGame: () => string | null;
   resetCompletedGames: () => void;
+  getGameLeaderboard: (gameId: string) => Student[];
+  fetchStudents: (pin: string) => Promise<void>;
 }
 
 const ADMIN_PASSWORD = 'admin123';
@@ -109,7 +112,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         numGames: row.num_games || 1,
       }));
       setSessions(mappedSessions);
-      if (!currentTest && mappedSessions.length > 0) {
+      if (!currentTest && mappedSessions.length > 0 && sessions.length === 0) {
         setCurrentTest(mappedSessions[0]);
       }
     }
@@ -139,61 +142,81 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           startedAt: new Date(row.started_at).getTime(),
           isFinished: !!row.completed_at,
           correctAnswers: row.correct_answers || 0,
+          totalQuestions: gameHistory.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
           status: row.status || 'APPROVED',
           gameHistory: gameHistory,
           gamesPlayed: gameHistory.length,
         };
       });
-      setStudents(mappedStudents.filter(s => s.status === 'APPROVED'));
-      setPendingStudents(mappedStudents.filter(s => s.status === 'PENDING'));
+      setStudents(mappedStudents.filter(s => s.status.toUpperCase() === 'APPROVED'));
+      setPendingStudents(mappedStudents.filter(s => s.status.toUpperCase() === 'PENDING'));
     }
   }, []);
 
-  // Poll for updates
+  // Subscribe to real-time updates
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
+    if (!currentTest?.pin) return;
 
-    const fetchTestStatus = async (pin: string) => {
-      const { data, error } = await supabase
-        .from('test_sessions')
-        .select('*')
-        .eq('pin', pin)
-        .single();
+    // Fetch initial data
+    fetchStudents(currentTest.pin);
 
-      if (!error && data) {
-        setCurrentTest(prev => {
-          if (!prev) return null;
-<<<<<<< HEAD
-          // Only update if status/isActive changed to avoid unnecessary re-renders
-          if (prev.status !== data.status || prev.isActive !== data.is_active || prev.numGames !== data.num_games) {
-=======
-          if (prev.status !== data.status || prev.isActive !== data.is_active) {
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
-            return {
+    // Subscribe to session changes
+    const sessionChannel = supabase
+      .channel(`session-${currentTest.pin}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'test_sessions',
+          filter: `pin=eq.${currentTest.pin}`
+        },
+        (payload) => {
+          const data = payload.new as any;
+          if (data) {
+            setCurrentTest(prev => prev ? {
               ...prev,
               isActive: data.is_active,
               status: data.status || 'WAITING',
               numGames: data.num_games || 1,
-            };
+            } : null);
           }
-          return prev;
-        });
-      }
-    };
+        }
+      )
+      .subscribe();
 
-    if (currentTest) {
-      fetchStudents(currentTest.pin);
-      fetchTestStatus(currentTest.pin);
+    // Subscribe to student/result changes
+    const resultsChannel = supabase
+      .channel(`results-${currentTest.pin}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'exam_results',
+          filter: `test_pin=eq.${currentTest.pin}`
+        },
+        (payload) => {
+          console.log('Real-time result change:', payload);
+          fetchStudents(currentTest.pin!);
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Results channel status: ${status}`);
+      });
 
-      interval = setInterval(() => {
-        fetchStudents(currentTest.pin);
-        fetchTestStatus(currentTest.pin);
-      }, 1000);
-    }
     return () => {
-      if (interval) clearInterval(interval);
+      supabase.removeChannel(sessionChannel);
+      supabase.removeChannel(resultsChannel);
     };
   }, [currentTest?.pin, fetchStudents]);
+
+  // Handle session status changes for redirection (Lobby logic)
+  useEffect(() => {
+    if (!currentStudent) return;
+
+    // This is handled by pages (Lobby, etc) observing currentTest.status
+  }, [currentTest?.status, currentStudent]);
 
   // Initial load for admin
   useEffect(() => {
@@ -309,22 +332,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       }]);
 
     if (joinError) {
-<<<<<<< HEAD
       if (joinError.code === '23505') { // Unique violation
         // Check if student exists to possibly resume
         const { data: existingStudent } = await supabase
-=======
-      if (joinError.code === '23505') {
-        // Unique violation - check if user exists and is approved (re-login scenario)
-        const { data: existingUser } = await supabase
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
           .from('exam_results')
           .select('*')
           .eq('test_pin', pin)
           .eq('student_name', trimmed)
           .single();
 
-<<<<<<< HEAD
         if (existingStudent) {
           const student: Student = {
             username: trimmed,
@@ -335,45 +351,29 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             startedAt: new Date(existingStudent.started_at).getTime(),
             isFinished: !!existingStudent.completed_at,
             correctAnswers: existingStudent.correct_answers || 0,
+            totalQuestions: (existingStudent.game_history || []).reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
             status: existingStudent.status || 'APPROVED',
             gameHistory: existingStudent.game_history || [],
             gamesPlayed: (existingStudent.game_history || []).length
           };
-          setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active, status: testData.status || 'WAITING', numGames: testData.num_games || 1 });
-          setCurrentStudent(student);
-          return { success: true, pending: student.status === 'PENDING' };
-        }
-=======
-        if (existingUser && existingUser.status === 'APPROVED') {
-          // Re-login as existing approved user
-          const student: Student = {
-            username: trimmed,
-            testPin: pin,
-            score: existingUser.score || 0,
-            level: existingUser.level || 1,
-            completedAt: existingUser.completed_at ? new Date(existingUser.completed_at).getTime() : null,
-            startedAt: new Date(existingUser.started_at).getTime(),
-            isFinished: !!existingUser.completed_at,
-            correctAnswers: existingUser.correct_answers || 0,
-            status: 'APPROVED'
-          };
-          setCurrentTest({
-            pin,
-            createdAt: new Date(testData.created_at).getTime(),
-            isActive: testData.is_active,
-            status: testData.status || 'WAITING',
-            numGames: testData.num_games || 1
-          });
-          setCurrentStudent(student);
-          setCompletedGames([]);
-          return { success: true };
-        }
 
-        if (existingUser && existingUser.status === 'PENDING') {
+          if (student.status === 'APPROVED') {
+            setCurrentTest({
+              pin,
+              createdAt: new Date(testData.created_at).getTime(),
+              isActive: testData.is_active,
+              status: testData.status || 'WAITING',
+              numGames: testData.num_games || 1
+            });
+            setCurrentStudent(student);
+            // Don't reset completed games here if we want to resume, 
+            // but for now let's keep it simple.
+            setCompletedGames(student.gameHistory.map(g => g.gameId));
+            return { success: true };
+          }
+
           return { success: true, pending: true };
         }
-
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
         return { success: false, error: 'Username already taken for this test' };
       }
       return { success: false, error: joinError.message };
@@ -388,6 +388,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       startedAt: Date.now(),
       isFinished: false,
       correctAnswers: 0,
+      totalQuestions: 0,
       status: status,
       gameHistory: [],
       gamesPlayed: 0
@@ -420,14 +421,24 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   // Deprecated/Legacy: keeping for backward compatibility but simpler apps should use submitGameResult
   const updateStudentScore = useCallback(async (username: string, score: number, level: number, correctAnswers: number) => {
     if (!currentStudent) return;
-<<<<<<< HEAD
-=======
 
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
-    setCurrentStudent(prev => prev ? { ...prev, score, level, correctAnswers } : null);
+    // Sum up previous games + current game progress
+    const prevHistory = currentStudent.gameHistory || [];
+    const prevScore = prevHistory.reduce((acc, g) => acc + g.score, 0);
+    const prevCorrect = prevHistory.reduce((acc, g) => acc + g.correctAnswers, 0);
+
+    const totalScore = prevScore + score;
+    const totalCorrect = prevCorrect + correctAnswers;
+
+    setCurrentStudent(prev => prev ? { ...prev, score: totalScore, level, correctAnswers: totalCorrect } : null);
+
     await supabase
       .from('exam_results')
-      .update({ score, level, correct_answers: correctAnswers })
+      .update({
+        score: totalScore,
+        level,
+        correct_answers: totalCorrect
+      })
       .eq('test_pin', currentStudent.testPin)
       .eq('student_name', username);
   }, [currentStudent]);
@@ -435,17 +446,18 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const submitGameResult = useCallback(async (username: string, result: GameResult) => {
     if (!currentStudent) return;
 
-    // Helper to calculate average score and total time
+    // Helper to calculate total score and total time
     const newHistory = [...(currentStudent.gameHistory || []), result];
     const totalScore = newHistory.reduce((acc, curr) => acc + curr.score, 0);
-    const avgScore = Math.round(totalScore / newHistory.length);
     const totalCorrect = newHistory.reduce((acc, curr) => acc + curr.correctAnswers, 0);
+    const totalQuestions = newHistory.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
 
     // Optimistic update
     setCurrentStudent(prev => prev ? {
       ...prev,
-      score: avgScore,
+      score: totalScore,
       correctAnswers: totalCorrect,
+      totalQuestions: totalQuestions,
       gameHistory: newHistory,
       gamesPlayed: newHistory.length
     } : null);
@@ -454,7 +466,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     await supabase
       .from('exam_results')
       .update({
-        score: avgScore,
+        score: totalScore,
         correct_answers: totalCorrect,
         game_history: newHistory
       })
@@ -481,17 +493,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       .filter(s => s.isFinished)
       .sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
-<<<<<<< HEAD
-
         // Secondary: Total Time (Ascending - lower is better)
-        // Calculate total time from history
         const timeA = a.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || (a.completedAt! - a.startedAt) / 1000;
         const timeB = b.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || (b.completedAt! - b.startedAt) / 1000;
-
-=======
-        const timeA = a.completedAt! - a.startedAt;
-        const timeB = b.completedAt! - b.startedAt;
->>>>>>> 5773f20c0f00fc54925a06320c7b528794977d9e
         return timeA - timeB;
       });
   }, [students]);
@@ -553,6 +557,28 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setCompletedGames([]);
   }, []);
 
+  const getGameLeaderboard = useCallback((gameId: string) => {
+    return students
+      .filter(s => s.gameHistory.some(g => g.gameId === gameId))
+      .sort((a, b) => {
+        const resA = a.gameHistory.find(g => g.gameId === gameId)!;
+        const resB = b.gameHistory.find(g => g.gameId === gameId)!;
+        if (resB.score !== resA.score) return resB.score - resA.score;
+        return resA.timeTaken - resB.timeTaken;
+      });
+  }, [students]);
+
+  const switchSession = useCallback((session: TestSession | null) => {
+    setCurrentTest(session);
+    setStudents([]);
+    setPendingStudents([]);
+    setCurrentStudent(null);
+    setCompletedGames([]);
+    if (session) {
+      fetchStudents(session.pin);
+    }
+  }, [fetchStudents]);
+
   return (
     <GameContext.Provider
       value={{
@@ -577,12 +603,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         deleteSession,
         setCurrentStudent,
         fetchSessions,
-        switchSession: setCurrentTest,
+        switchSession,
         approveStudent,
         rejectStudent,
         addCompletedGame,
         getNextGame,
         resetCompletedGames,
+        getGameLeaderboard,
+        fetchStudents,
       }}
     >
       {children}

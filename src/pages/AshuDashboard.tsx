@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X, Bell, Check } from 'lucide-react';
+import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -35,7 +35,9 @@ const AshuDashboard = () => {
     setCurrentStudent,
     startTest,
     approveStudent,
-    rejectStudent
+    rejectStudent,
+    getGameLeaderboard,
+    fetchStudents
   } = useGame();
   const navigate = useNavigate();
 
@@ -50,6 +52,7 @@ const AshuDashboard = () => {
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
+  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
   const [numGames, setNumGames] = useState(1);
 
@@ -293,6 +296,15 @@ const AshuDashboard = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => currentTest && fetchStudents(currentTest.pin)}
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1 border-border text-muted-foreground hover:bg-secondary rounded-lg text-xs"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                  Refresh List
+                </Button>
                 <Button onClick={() => setShowCreatePinDialog(true)} variant="outline" size="sm" className="flex-1 border-border text-foreground hover:bg-secondary rounded-lg text-xs sm:text-sm">
                   <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   New Session
@@ -341,7 +353,27 @@ const AshuDashboard = () => {
                 </Button>
               </div>
 
-              <div className="p-4 border-b border-border bg-secondary/30 shrink-0">
+              <div className="p-4 border-b border-border bg-secondary/30 shrink-0 space-y-4">
+                <div className="flex gap-2 p-1 bg-background rounded-lg border border-border">
+                  <button
+                    onClick={() => setLeaderboardTab('overall')}
+                    className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${leaderboardTab === 'overall' ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary'}`}
+                  >
+                    Overall (Avg)
+                  </button>
+                  <button
+                    onClick={() => setLeaderboardTab('bubble')}
+                    className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${leaderboardTab === 'bubble' ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary'}`}
+                  >
+                    Bubble
+                  </button>
+                  <button
+                    onClick={() => setLeaderboardTab('crossmath')}
+                    className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${leaderboardTab === 'crossmath' ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary'}`}
+                  >
+                    CrossMath
+                  </button>
+                </div>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -355,12 +387,26 @@ const AshuDashboard = () => {
 
               <div className="overflow-y-auto p-4 flex-1">
                 <div className="space-y-2">
-                  {students
-                    .filter(s => s.isFinished) // Only show finished students
+                  {(leaderboardTab === 'overall'
+                    ? getLeaderboard()
+                    : getGameLeaderboard(leaderboardTab)
+                  )
                     .filter(s => s.username.toLowerCase().includes(leaderboardSearch.toLowerCase()))
-                    .sort((a, b) => b.score - a.score) // Simple sort by score for preview
                     .map((s, i) => {
-                      const timeTaken = s.completedAt ? ((s.completedAt - s.startedAt) / 1000).toFixed(1) : '-';
+                      const history = s.gameHistory.find(g => g.gameId === leaderboardTab) || {
+                        score: s.score,
+                        timeTaken: s.completedAt ? (s.completedAt - s.startedAt) / 1000 : 0,
+                        correctAnswers: s.correctAnswers,
+                        totalQuestions: 30,
+                        completedAt: s.completedAt || Date.now()
+                      };
+                      const displayScore = leaderboardTab === 'overall' ? s.score : history.score;
+                      const displayCorrect = leaderboardTab === 'overall' ? s.correctAnswers : history.correctAnswers;
+                      const displayTotal = leaderboardTab === 'overall' ? 30 : history.totalQuestions;
+                      const timeTaken = leaderboardTab === 'overall'
+                        ? s.gameHistory.reduce((acc, g) => acc + g.timeTaken, 0).toFixed(1)
+                        : history.timeTaken.toFixed(1);
+
                       return (
                         <div
                           key={s.username}
@@ -380,12 +426,14 @@ const AshuDashboard = () => {
                             </span>
                             <div className="min-w-0">
                               <span className="font-semibold block truncate">{s.username}</span>
-                              <span className="text-xs text-muted-foreground">Level {s.level}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {leaderboardTab === 'overall' ? `Level ${s.level}` : `Played ${new Date(history.completedAt!).toLocaleTimeString()}`}
+                              </span>
                             </div>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="font-mono font-bold text-lg">{s.score}</div>
-                            <div className="text-xs text-success font-medium">{s.correctAnswers || 0} / 30</div>
+                            <div className="font-mono font-bold text-lg">{displayScore}</div>
+                            <div className="text-xs text-success font-medium">{displayCorrect} / {displayTotal}</div>
                             <div className="text-xs text-muted-foreground">{timeTaken}s</div>
                           </div>
                         </div>
@@ -425,11 +473,34 @@ const AshuDashboard = () => {
                       </span>
                       <span className="font-medium text-foreground text-sm truncate">{s.username}</span>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm shrink-0">
-                      <span className="text-muted-foreground hidden sm:inline">Lvl {s.level}</span>
-                      <span className="text-success font-medium hidden sm:inline">{s.correctAnswers || 0} / 30</span>
-                      <span className="font-mono font-bold text-foreground">{s.score}</span>
-                      <span className="text-muted-foreground w-12 sm:w-14 text-right">{timeTaken}s</span>
+                    <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm overflow-x-auto no-scrollbar py-1 flex-1 justify-end">
+                      {s.gameHistory?.[0] && (
+                        <div className="flex items-center gap-2 px-2 py-1 bg-background/40 rounded-lg border border-border/50 shrink-0">
+                          <span className="text-[10px] font-bold text-accent uppercase">G1</span>
+                          <span className="text-success font-medium">{s.gameHistory[0].correctAnswers}/{s.gameHistory[0].totalQuestions}</span>
+                          <span className="font-mono font-bold text-foreground">{s.gameHistory[0].score}</span>
+                          <span className="text-muted-foreground">{s.gameHistory[0].timeTaken.toFixed(1)}s</span>
+                        </div>
+                      )}
+
+                      {s.gameHistory?.[1] && (
+                        <div className="flex items-center gap-2 px-2 py-1 bg-background/40 rounded-lg border border-border/50 shrink-0">
+                          <span className="text-[10px] font-bold text-emerald-400 uppercase">G2</span>
+                          <span className="font-mono font-bold text-foreground">{s.gameHistory[1].score}</span>
+                          <span className="text-muted-foreground">{s.gameHistory[1].timeTaken.toFixed(1)}s</span>
+                          <span className="text-success font-medium">{s.gameHistory[1].correctAnswers}/{s.gameHistory[1].totalQuestions}</span>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col items-end gap-0.5 pl-3 border-l border-border/50 shrink-0">
+                        <span className="text-[8px] font-bold text-success uppercase leading-none">Total</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-foreground text-base">{s.score}</span>
+                          <span className="text-muted-foreground font-mono text-xs">
+                            {s.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0).toFixed(1)}s
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
@@ -509,8 +580,8 @@ const AshuDashboard = () => {
                         key={n}
                         onClick={() => setNumGames(n)}
                         className={`flex-1 h-14 rounded-xl font-bold text-lg transition-all ${numGames === n
-                            ? 'bg-accent text-accent-foreground scale-105 shadow-lg shadow-accent/20'
-                            : 'bg-secondary text-foreground hover:bg-secondary/80'
+                          ? 'bg-accent text-accent-foreground scale-105 shadow-lg shadow-accent/20'
+                          : 'bg-secondary text-foreground hover:bg-secondary/80'
                           }`}
                       >
                         {n}
