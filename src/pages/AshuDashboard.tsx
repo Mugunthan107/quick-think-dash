@@ -113,9 +113,9 @@ const AshuDashboard = () => {
 
       // Create breakdown string
       const breakdown = student.gameHistory?.map(g => {
-        const gameName = g.gameId === 'bubble' ? 'Bubble' : g.gameId === 'crossmath' ? 'Cross' : g.gameId;
-        return `${gameName}: ${g.correctAnswers}/${g.totalQuestions}`;
-      }).join(', ') || 'N/A';
+        const gameName = g.gameId === 'bubble' ? 'G1' : g.gameId === 'crossmath' ? 'G2' : g.gameId;
+        return `${gameName}: ${g.correctAnswers}/${g.totalQuestions} (${g.score}pts, ${g.timeTaken.toFixed(1)}s)`;
+      }).join(' | ') || 'N/A';
 
       return [
         index + 1,
