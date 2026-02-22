@@ -57,10 +57,12 @@ const Leaderboard = () => {
                       }`}>
                       {i + 1}
                     </span>
-                    <div className="min-w-0">
+                    <div className="flex-1 min-w-0 mx-2 sm:mx-4">
                       <span className="font-medium text-foreground text-sm truncate block">{s.username}</span>
-                      {isCurrentUser && <span className="text-[10px] text-accent font-semibold">(You)</span>}
-                      {s.gamesPlayed ? <span className="text-[10px] text-muted-foreground">{s.gamesPlayed} games</span> : null}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {isCurrentUser && <span className="text-[10px] text-accent font-semibold shrink-0">(You)</span>}
+                        {s.gamesPlayed ? <span className="text-[10px] text-muted-foreground shrink-0">{s.gamesPlayed} games</span> : null}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 sm:gap-6 text-[10px] sm:text-xs overflow-x-auto no-scrollbar py-1 flex-1 justify-end">

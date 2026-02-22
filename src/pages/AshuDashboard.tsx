@@ -132,7 +132,11 @@ const AshuDashboard = () => {
       body: tableRows,
       startY: 45,
       theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 3 },
+      styles: { fontSize: 10, cellPadding: 3, overflow: 'linebreak' },
+      columnStyles: {
+        1: { cellWidth: 50 }, // Constrain Student Name column
+        5: { cellWidth: 'auto' }
+      },
       headStyles: { fillColor: [41, 128, 185], textColor: 255 },
       alternateRowStyles: { fillColor: [245, 245, 245] }
     });
@@ -424,8 +428,8 @@ const AshuDashboard = () => {
                               }`}>
                               {i + 1}
                             </span>
-                            <div className="min-w-0">
-                              <span className="font-semibold block truncate">{s.username}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold block truncate pr-2">{s.username}</span>
                               <span className="text-xs text-muted-foreground">
                                 {leaderboardTab === 'overall' ? `Level ${s.level}` : `Played ${new Date(history.completedAt!).toLocaleTimeString()}`}
                               </span>
@@ -471,7 +475,7 @@ const AshuDashboard = () => {
                         }`}>
                         {i + 1}
                       </span>
-                      <span className="font-medium text-foreground text-sm truncate">{s.username}</span>
+                      <span className="font-medium text-foreground text-sm truncate flex-1 min-w-0 pr-4">{s.username}</span>
                     </div>
                     <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm overflow-x-auto no-scrollbar py-1 flex-1 justify-end">
                       {s.gameHistory?.[0] && (
