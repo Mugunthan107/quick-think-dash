@@ -225,7 +225,7 @@ const BubbleGame = () => {
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-6 sm:mb-8 animate-pulse-ring">
             <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-success" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">Mind Sprint Complete!</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">Bubble Complete!</h1>
           <p className="text-muted-foreground mb-2">Great work, {currentStudent?.username}!</p>
           <div className="flex items-center justify-center gap-6 my-6 sm:my-8">
             <div className="text-center">

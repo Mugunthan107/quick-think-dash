@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { ArrowLeft, Brain, Grid3X3, CheckCircle2 } from 'lucide-react';
@@ -6,15 +7,10 @@ const GameSelector = () => {
   const navigate = useNavigate();
   const { currentStudent, currentTest, completedGames } = useGame();
 
-  if (!currentStudent || !currentTest) {
-    navigate('/');
-    return null;
-  }
-
   const games = [
     {
       id: 'bubble',
-      name: 'Mind Sprint',
+      name: 'Bubble',
       description: 'Sort math expressions from lowest to highest value across 30 levels',
       icon: Brain,
       route: '/game',
@@ -30,13 +26,18 @@ const GameSelector = () => {
     },
   ];
 
-  const numGames = currentTest.numGames;
-  const playedGameIds = currentStudent.gameHistory?.map(g => g.gameId) || [];
-  const allDone = playedGameIds.length >= numGames;
+  const numGames = currentTest?.numGames || 1;
+  const playedGameIds = currentStudent?.gameHistory?.map(g => g.gameId) || [];
 
-  // If all games completed, redirect to leaderboard
-  if (allDone) {
-    navigate('/leaderboard');
+  useEffect(() => {
+    if (!currentStudent || !currentTest) {
+      navigate('/');
+    } else if (playedGameIds.length >= numGames) {
+      navigate('/leaderboard');
+    }
+  }, [currentStudent, currentTest, playedGameIds, navigate, numGames]);
+
+  if (!currentStudent || !currentTest || playedGameIds.length >= numGames) {
     return null;
   }
 

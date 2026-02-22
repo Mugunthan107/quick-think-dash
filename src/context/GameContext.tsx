@@ -318,7 +318,47 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const isLateJoin = testData.status === 'STARTED';
     const status = isLateJoin ? 'PENDING' : 'APPROVED';
 
-    // Try to join
+    // Check if student exists to possibly resume
+    const { data: existingStudent } = await supabase
+      .from('exam_results')
+      .select('*')
+      .eq('test_pin', pin)
+      .eq('student_name', trimmed)
+      .single();
+
+    if (existingStudent) {
+      const student: Student = {
+        username: trimmed,
+        testPin: pin,
+        score: existingStudent.score,
+        level: existingStudent.level,
+        completedAt: existingStudent.completed_at ? new Date(existingStudent.completed_at).getTime() : null,
+        startedAt: new Date(existingStudent.started_at).getTime(),
+        isFinished: !!existingStudent.completed_at,
+        correctAnswers: existingStudent.correct_answers || 0,
+        totalQuestions: (existingStudent.game_history || []).reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
+        status: existingStudent.status || 'APPROVED',
+        gameHistory: existingStudent.game_history || [],
+        gamesPlayed: (existingStudent.game_history || []).length
+      };
+
+      if (student.status === 'APPROVED') {
+        setCurrentTest({
+          pin,
+          createdAt: new Date(testData.created_at).getTime(),
+          isActive: testData.is_active,
+          status: testData.status || 'WAITING',
+          numGames: testData.num_games || 1
+        });
+        setCurrentStudent(student);
+        setCompletedGames(student.gameHistory.map(g => g.gameId));
+        return { success: true };
+      }
+
+      return { success: true, pending: true };
+    }
+
+    // Try to join if not exists
     const { error: joinError } = await supabase
       .from('exam_results')
       .insert([{
@@ -332,50 +372,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       }]);
 
     if (joinError) {
-      if (joinError.code === '23505') { // Unique violation
-        // Check if student exists to possibly resume
-        const { data: existingStudent } = await supabase
-          .from('exam_results')
-          .select('*')
-          .eq('test_pin', pin)
-          .eq('student_name', trimmed)
-          .single();
-
-        if (existingStudent) {
-          const student: Student = {
-            username: trimmed,
-            testPin: pin,
-            score: existingStudent.score,
-            level: existingStudent.level,
-            completedAt: existingStudent.completed_at ? new Date(existingStudent.completed_at).getTime() : null,
-            startedAt: new Date(existingStudent.started_at).getTime(),
-            isFinished: !!existingStudent.completed_at,
-            correctAnswers: existingStudent.correct_answers || 0,
-            totalQuestions: (existingStudent.game_history || []).reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
-            status: existingStudent.status || 'APPROVED',
-            gameHistory: existingStudent.game_history || [],
-            gamesPlayed: (existingStudent.game_history || []).length
-          };
-
-          if (student.status === 'APPROVED') {
-            setCurrentTest({
-              pin,
-              createdAt: new Date(testData.created_at).getTime(),
-              isActive: testData.is_active,
-              status: testData.status || 'WAITING',
-              numGames: testData.num_games || 1
-            });
-            setCurrentStudent(student);
-            // Don't reset completed games here if we want to resume, 
-            // but for now let's keep it simple.
-            setCompletedGames(student.gameHistory.map(g => g.gameId));
-            return { success: true };
-          }
-
-          return { success: true, pending: true };
-        }
-        return { success: false, error: 'Username already taken for this test' };
-      }
       return { success: false, error: joinError.message };
     }
 
