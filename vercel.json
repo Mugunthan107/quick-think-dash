@@ -1,19 +1,5 @@
 {
-    "cleanUrls": true,
-    "trailingSlash": false,
     "rewrites": [
-        {
-            "source": "/ashu",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/student",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/leaderboard",
-            "destination": "/index.html"
-        },
         {
             "source": "/(.*)",
             "destination": "/index.html"
