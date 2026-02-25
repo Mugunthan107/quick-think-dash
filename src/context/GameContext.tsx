@@ -12,6 +12,7 @@ export interface GameResult {
 }
 
 export interface Student {
+  id?: number;
   username: string;
   testPin: string;
   score: number;
@@ -134,6 +135,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       const mappedStudents: Student[] = data.map((row: any) => {
         const gameHistory = row.game_history || [];
         return {
+          id: row.id,
           username: row.student_name,
           testPin: row.test_pin,
           score: row.score,
@@ -197,8 +199,62 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           filter: `test_pin=eq.${currentTest.pin}`
         },
         (payload) => {
-          console.log('Real-time result change:', payload);
-          fetchStudents(currentTest.pin!);
+          console.log('Real-time update:', payload.eventType, payload);
+
+          const mapRecordToStudent = (row: any): Student => {
+            const gameHistory = row.game_history || [];
+            return {
+              id: row.id,
+              username: row.student_name,
+              testPin: row.test_pin,
+              score: row.score,
+              level: row.level,
+              completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
+              startedAt: new Date(row.started_at).getTime(),
+              isFinished: !!row.completed_at,
+              correctAnswers: row.correct_answers || 0,
+              totalQuestions: gameHistory.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
+              status: row.status || 'APPROVED',
+              gameHistory: gameHistory,
+              gamesPlayed: gameHistory.length,
+            };
+          };
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const newStudent = mapRecordToStudent(payload.new);
+
+            // Update current student if matches
+            if (currentStudent && newStudent.username === currentStudent.username) {
+              setCurrentStudent(prev => {
+                if (!prev) return newStudent;
+                // Only update if data is newer or different (optional check)
+                return { ...prev, ...newStudent };
+              });
+            }
+
+            const updateList = (prev: Student[]) => {
+              const exists = prev.find(s => s.username === newStudent.username);
+              if (exists) {
+                return prev.map(s => s.username === newStudent.username ? newStudent : s);
+              }
+              return [...prev, newStudent];
+            };
+
+            const removeFromList = (prev: Student[]) => prev.filter(s => s.username !== newStudent.username);
+
+            if (newStudent.status.toUpperCase() === 'APPROVED') {
+              setStudents(prev => updateList(prev));
+              setPendingStudents(prev => removeFromList(prev));
+            } else {
+              setPendingStudents(prev => updateList(prev));
+              setStudents(prev => removeFromList(prev));
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldId = payload.old.id;
+            const oldName = (payload.old as any).student_name;
+            setStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
+            setPendingStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
+          }
         }
       )
       .subscribe((status) => {
@@ -209,7 +265,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       supabase.removeChannel(sessionChannel);
       supabase.removeChannel(resultsChannel);
     };
-  }, [currentTest?.pin, fetchStudents]);
+  }, [currentTest?.pin, currentStudent, fetchStudents]);
 
   // Handle session status changes for redirection (Lobby logic)
   useEffect(() => {
@@ -300,10 +356,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, error: 'Username is required' };
     }
 
-    // Check if test exists
+    // Step 1: Verify test pin and status in one go
     const { data: testData, error: testError } = await supabase
       .from('test_sessions')
-      .select('*')
+      .select('pin, is_active, status, created_at, num_games')
       .eq('pin', pin)
       .single();
 
@@ -318,16 +374,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const isLateJoin = testData.status === 'STARTED';
     const status = isLateJoin ? 'PENDING' : 'APPROVED';
 
-    // Check if student exists to possibly resume
+    // Step 2: Use upsert with onConflict to handle join/resume in one DB trip
+    // Note: We need to specify the conflict constraint column(s)
+
+    // Check if student exists
     const { data: existingStudent } = await supabase
       .from('exam_results')
       .select('*')
       .eq('test_pin', pin)
       .eq('student_name', trimmed)
-      .single();
+      .maybeSingle();
 
     if (existingStudent) {
       const student: Student = {
+        id: existingStudent.id,
         username: trimmed,
         testPin: pin,
         score: existingStudent.score,
@@ -347,7 +407,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           pin,
           createdAt: new Date(testData.created_at).getTime(),
           isActive: testData.is_active,
-          status: testData.status || 'WAITING',
+          status: testData.status as any || 'WAITING',
           numGames: testData.num_games || 1
         });
         setCurrentStudent(student);
@@ -358,8 +418,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return { success: true, pending: true };
     }
 
-    // Try to join if not exists
-    const { error: joinError } = await supabase
+    // Join new student
+    const { data: insertedData, error: insertError } = await supabase
       .from('exam_results')
       .insert([{
         test_pin: pin,
@@ -369,13 +429,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         correct_answers: 0,
         game_history: [],
         score: 0
-      }]);
+      }])
+      .select()
+      .single();
 
-    if (joinError) {
-      return { success: false, error: joinError.message };
+    if (insertError || !insertedData) {
+      // Handle the race condition where someone else joined with same name between our check and insert
+      if (insertError?.code === '23505') {
+        return { success: false, error: 'Username already taken' };
+      }
+      return { success: false, error: insertError?.message || 'Failed to join' };
     }
 
-    const student: Student = {
+    const newStudent: Student = {
+      id: insertedData.id,
       username: trimmed,
       testPin: pin,
       score: 0,
@@ -390,29 +457,34 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       gamesPlayed: 0
     };
 
-    if (isLateJoin) {
-      return { success: true, pending: true };
+    if (!isLateJoin) {
+      setCurrentTest({
+        pin,
+        createdAt: new Date(testData.created_at).getTime(),
+        isActive: testData.is_active,
+        status: (testData.status as any) || 'WAITING',
+        numGames: testData.num_games || 1
+      });
+      setCurrentStudent(newStudent);
+      setCompletedGames([]);
     }
 
-    setCurrentTest({ pin, createdAt: new Date(testData.created_at).getTime(), isActive: testData.is_active, status: testData.status || 'WAITING', numGames: testData.num_games || 1 });
-    setCurrentStudent(student);
-    setCompletedGames([]);
-    return { success: true };
+    return { success: true, pending: isLateJoin };
   }, []);
 
   const approveStudent = useCallback(async (username: string) => {
     if (!currentTest) return;
     await supabase.from('exam_results').update({ status: 'APPROVED' }).eq('test_pin', currentTest.pin).eq('student_name', username);
     setPendingStudents(prev => prev.filter(s => s.username !== username));
-    fetchStudents(currentTest.pin);
-  }, [currentTest, fetchStudents]);
+    // Real-time listener will handle the actual state sync for everyone
+  }, [currentTest]);
 
   const rejectStudent = useCallback(async (username: string) => {
     if (!currentTest) return;
     await supabase.from('exam_results').delete().eq('test_pin', currentTest.pin).eq('student_name', username);
     setPendingStudents(prev => prev.filter(s => s.username !== username));
-    fetchStudents(currentTest.pin);
-  }, [currentTest, fetchStudents]);
+    // Real-time listener will handle the actual state sync for everyone
+  }, [currentTest]);
 
   // Deprecated/Legacy: keeping for backward compatibility but simpler apps should use submitGameResult
   const updateStudentScore = useCallback(async (username: string, score: number, level: number, correctAnswers: number) => {
