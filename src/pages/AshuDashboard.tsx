@@ -406,7 +406,7 @@ const AshuDashboard = () => {
                       };
                       const displayScore = leaderboardTab === 'overall' ? s.score : history.score;
                       const displayCorrect = leaderboardTab === 'overall' ? s.correctAnswers : history.correctAnswers;
-                      const displayTotal = leaderboardTab === 'overall' ? 30 : history.totalQuestions;
+                      const displayTotal = leaderboardTab === 'overall' ? s.totalQuestions : history.totalQuestions;
                       const timeTaken = leaderboardTab === 'overall'
                         ? s.gameHistory.reduce((acc, g) => acc + g.timeTaken, 0).toFixed(1)
                         : history.timeTaken.toFixed(1);
@@ -431,7 +431,7 @@ const AshuDashboard = () => {
                             <div className="flex-1 min-w-0">
                               <span className="font-semibold block truncate pr-2">{s.username}</span>
                               <span className="text-xs text-muted-foreground">
-                                {leaderboardTab === 'overall' ? `Level ${s.level}` : `Played ${new Date(history.completedAt!).toLocaleTimeString()}`}
+                                {leaderboardTab === 'overall' ? '' : `Played ${new Date(history.completedAt!).toLocaleTimeString()}`}
                               </span>
                             </div>
                           </div>
