@@ -33,7 +33,7 @@ const GameSelector = () => {
     if (!currentStudent || !currentTest) {
       navigate('/');
     } else if (playedGameIds.length >= numGames) {
-      navigate('/leaderboard');
+      navigate('/');
     }
   }, [currentStudent, currentTest, playedGameIds, navigate, numGames]);
 

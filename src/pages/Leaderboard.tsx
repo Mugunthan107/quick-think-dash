@@ -1,10 +1,18 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { ArrowLeft, Trophy, Medal, Clock } from 'lucide-react';
 
 const Leaderboard = () => {
-  const { getLeaderboard, currentStudent } = useGame();
+  const { getLeaderboard, currentStudent, adminLoggedIn } = useGame();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      navigate('/');
+    }
+  }, [adminLoggedIn, navigate]);
+
   const leaderboard = getLeaderboard();
 
   return (

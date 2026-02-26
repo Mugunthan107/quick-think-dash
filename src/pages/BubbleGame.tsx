@@ -116,27 +116,20 @@ const BubbleGame = () => {
                 completedAt: Date.now()
             }).then(() => {
                 addCompletedGame('bubble');
-                const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
-                if (gamesPlayed < currentTest.numGames) {
-                    navigate('/select-game');
-                } else {
-                    finishTest(currentStudent.username);
-                    navigate('/leaderboard');
-                }
+                // No automatic navigation here - wait for user to click button in finished screen
             });
-        } else {
-            navigate('/select-game');
         }
-    }, [score, correctCount, currentStudent, currentTest, submitGameResult, finishTest, navigate, elapsed, addCompletedGame]);
+    }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
 
     const handlePostFinish = useCallback(() => {
         const nextGame = getNextGame();
         if (nextGame) {
             navigate('/select-game');
         } else {
-            navigate('/leaderboard');
+            if (currentStudent) finishTest(currentStudent.username);
+            navigate('/');
         }
-    }, [getNextGame, navigate]);
+    }, [getNextGame, navigate, currentStudent, finishTest]);
 
     const failLevel = useCallback(() => {
         setGameActive(false);
@@ -256,7 +249,7 @@ const BubbleGame = () => {
                         onClick={handlePostFinish}
                         className="bg-accent text-accent-foreground px-8 py-3.5 rounded-xl font-semibold hover:bg-accent/90 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg border border-accent/20 shadow-lg shadow-accent/20"
                     >
-                        {getNextGame() ? 'Next Game →' : 'View Leaderboard'}
+                        {getNextGame() ? 'Next Game →' : 'Finish'}
                     </button>
                 </div>
             </div>

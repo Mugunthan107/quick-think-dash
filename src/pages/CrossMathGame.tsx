@@ -303,28 +303,23 @@ const CrossMathGame = () => {
           completedAt: Date.now()
         }).then(() => {
           addCompletedGame('crossmath');
-          const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
-          if (gamesPlayed < currentTest.numGames) {
-            navigate('/select-game');
-          } else {
-            finishTest(currentStudent.username);
-            navigate('/leaderboard');
-          }
+          // No automatic navigation - let the user click the button
         });
       } else {
         setCurrentQ(prev => prev + 1);
       }
     }, 800);
-  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, currentTest, updateStudentScore, submitGameResult, finishTest, elapsed, navigate, addCompletedGame]);
+  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentScore, submitGameResult, elapsed, addCompletedGame]);
 
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
     if (nextGame) {
       navigate('/select-game');
     } else {
-      navigate('/leaderboard');
+      if (currentStudent) finishTest(currentStudent.username);
+      navigate('/');
     }
-  }, [getNextGame, navigate]);
+  }, [getNextGame, navigate, currentStudent, finishTest]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -407,7 +402,7 @@ const CrossMathGame = () => {
             onClick={handlePostFinish}
             className="bg-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:bg-accent/90 transition-all hover:scale-105 text-base sm:text-lg"
           >
-            {getNextGame() ? 'Next Game →' : 'View Leaderboard'}
+            {getNextGame() ? 'Next Game →' : 'Finish'}
           </button>
         </div>
       </div>
@@ -440,16 +435,9 @@ const CrossMathGame = () => {
                   completedAt: Date.now()
                 }).then(() => {
                   addCompletedGame('crossmath');
-                  const gamesPlayed = (currentStudent.gameHistory?.length || 0) + 1;
-                  if (gamesPlayed < (currentTest?.numGames || 1)) {
-                    navigate('/select-game');
-                  } else {
-                    finishTest(currentStudent.username);
-                    navigate('/leaderboard');
-                  }
                 });
               } else {
-                navigate('/select-game');
+                navigate('/');
               }
             }}
             className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary border border-border/50"
