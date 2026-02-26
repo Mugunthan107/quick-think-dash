@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
 import supabase from '../utils/supabase';
 import { toast } from 'sonner';
 
@@ -155,11 +155,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const currentStudentRef = useRef<Student | null>(null);
+
+  // Sync ref with state
+  useEffect(() => {
+    currentStudentRef.current = currentStudent;
+  }, [currentStudent]);
+
   // Subscribe to real-time updates
   useEffect(() => {
     if (!currentTest?.pin) return;
 
-    // Fetch initial data
+    console.log(`[GameContext] Initializing subscription for PIN: ${currentTest.pin}`);
+
+    // Fetch initial data ONCE when pin changes
     fetchStudents(currentTest.pin);
 
     // Subscribe to session changes
@@ -199,8 +208,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           filter: `test_pin=eq.${currentTest.pin}`
         },
         (payload) => {
-          console.log('Real-time update:', payload.eventType, payload);
-
           const mapRecordToStudent = (row: any): Student => {
             const gameHistory = row.game_history || [];
             return {
@@ -223,13 +230,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             const newStudent = mapRecordToStudent(payload.new);
 
-            // Update current student if matches
-            if (currentStudent && newStudent.username === currentStudent.username) {
-              setCurrentStudent(prev => {
-                if (!prev) return newStudent;
-                // Only update if data is newer or different (optional check)
-                return { ...prev, ...newStudent };
-              });
+            // USE REF to check identity without triggering re-subscription
+            const activeStudent = currentStudentRef.current;
+            if (activeStudent && newStudent.username === activeStudent.username) {
+              setCurrentStudent(newStudent);
             }
 
             const updateList = (prev: Student[]) => {
@@ -258,14 +262,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
       )
       .subscribe((status) => {
-        console.log(`Results channel status: ${status}`);
+        console.log(`[GameContext] Results channel status for ${currentTest.pin}: ${status}`);
       });
 
     return () => {
+      console.log(`[GameContext] Cleaning up subscription for PIN: ${currentTest.pin}`);
       supabase.removeChannel(sessionChannel);
       supabase.removeChannel(resultsChannel);
     };
-  }, [currentTest?.pin, currentStudent, fetchStudents]);
+  }, [currentTest?.pin, fetchStudents]);
 
   // Handle session status changes for redirection (Lobby logic)
   useEffect(() => {
