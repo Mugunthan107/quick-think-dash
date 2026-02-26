@@ -18,22 +18,22 @@ const WaitingApproval = () => {
             return;
         }
 
+        console.log(`[WaitingApproval] Subscribing to approval for ${username} in test ${pin}`);
         const channel = supabase
             .channel(`player-approval-${username}`)
             .on(
                 'postgres_changes',
                 {
-                    event: '*',
+                    event: 'UPDATE', // Only care about status updates
                     schema: 'public',
                     table: 'exam_results',
-                    filter: `test_pin=eq.${pin}`
+                    filter: `student_name=eq.${username}`
                 },
                 (payload) => {
                     const data = payload.new as any;
-                    if (!data) return;
+                    if (!data || data.test_pin !== pin) return; // Basic pin safety
 
-                    // Manually check if this update is for the current student
-                    if (data.student_name !== username) return;
+                    console.log(`[WaitingApproval] Received status update for ${username}: ${data.status}`);
 
                     if (data.status === 'APPROVED') {
                         joinTest(pin, username).then(result => {
@@ -41,13 +41,14 @@ const WaitingApproval = () => {
                                 navigate('/lobby');
                             }
                         });
-                    } else if (!data.status) {
-                        // Likely deleted/rejected
+                    } else if (data.status === 'REJECTED') {
                         setIsRejected(true);
                     }
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log(`[WaitingApproval] Channel status for ${username}: ${status}`);
+            });
 
         return () => {
             supabase.removeChannel(channel);

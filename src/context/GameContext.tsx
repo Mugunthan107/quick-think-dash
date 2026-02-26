@@ -113,11 +113,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         numGames: row.num_games || 1,
       }));
       setSessions(mappedSessions);
-      if (!currentTest && mappedSessions.length > 0 && sessions.length === 0) {
-        setCurrentTest(mappedSessions[0]);
-      }
     }
-  }, [currentTest]);
+  }, []);
 
   // Fetch students for the current test
   const fetchStudents = useCallback(async (pin: string) => {
@@ -164,23 +161,24 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   // Subscribe to real-time updates
   useEffect(() => {
-    if (!currentTest?.pin) return;
+    const pin = currentTest?.pin;
+    if (!pin) return;
 
-    console.log(`[GameContext] Initializing subscription for PIN: ${currentTest.pin}`);
+    console.log(`[GameContext] Initializing subscription for PIN: ${pin}`);
 
     // Fetch initial data ONCE when pin changes
-    fetchStudents(currentTest.pin);
+    fetchStudents(pin);
 
-    // Subscribe to session changes
+    // Subscribe to session changes (All users need this to know when test starts)
     const sessionChannel = supabase
-      .channel(`session-${currentTest.pin}`)
+      .channel(`session-${pin}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'test_sessions',
-          filter: `pin=eq.${currentTest.pin}`
+          filter: `pin=eq.${pin}`
         },
         (payload) => {
           const data = payload.new as any;
@@ -196,81 +194,86 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       )
       .subscribe();
 
-    // Subscribe to student/result changes
-    const resultsChannel = supabase
-      .channel(`results-${currentTest.pin}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'exam_results',
-          filter: `test_pin=eq.${currentTest.pin}`
-        },
-        (payload) => {
-          const mapRecordToStudent = (row: any): Student => {
-            const gameHistory = row.game_history || [];
-            return {
-              id: row.id,
-              username: row.student_name,
-              testPin: row.test_pin,
-              score: row.score,
-              level: row.level,
-              completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
-              startedAt: new Date(row.started_at).getTime(),
-              isFinished: !!row.completed_at,
-              correctAnswers: row.correct_answers || 0,
-              totalQuestions: gameHistory.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
-              status: row.status || 'APPROVED',
-              gameHistory: gameHistory,
-              gamesPlayed: gameHistory.length,
+    let resultsChannel: any = null;
+
+    // ONLY Admin needs to see all student score updates in real-time
+    // Students only update via their own actions or approval listener
+    if (adminLoggedIn) {
+      resultsChannel = supabase
+        .channel(`results-${pin}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'exam_results',
+            filter: `test_pin=eq.${pin}`
+          },
+          (payload) => {
+            const mapRecordToStudent = (row: any): Student => {
+              const gameHistory = row.game_history || [];
+              return {
+                id: row.id,
+                username: row.student_name,
+                testPin: row.test_pin,
+                score: row.score,
+                level: row.level,
+                completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
+                startedAt: new Date(row.started_at).getTime(),
+                isFinished: !!row.completed_at,
+                correctAnswers: row.correct_answers || 0,
+                totalQuestions: gameHistory.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
+                status: row.status || 'APPROVED',
+                gameHistory: gameHistory,
+                gamesPlayed: gameHistory.length,
+              };
             };
-          };
 
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            const newStudent = mapRecordToStudent(payload.new);
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const newStudent = mapRecordToStudent(payload.new);
 
-            // USE REF to check identity without triggering re-subscription
-            const activeStudent = currentStudentRef.current;
-            if (activeStudent && newStudent.username === activeStudent.username) {
-              setCurrentStudent(newStudent);
-            }
-
-            const updateList = (prev: Student[]) => {
-              const exists = prev.find(s => s.username === newStudent.username);
-              if (exists) {
-                return prev.map(s => s.username === newStudent.username ? newStudent : s);
+              // Update current student identity check using Ref
+              const activeStudent = currentStudentRef.current;
+              if (activeStudent && newStudent.username === activeStudent.username) {
+                setCurrentStudent(newStudent);
               }
-              return [...prev, newStudent];
-            };
 
-            const removeFromList = (prev: Student[]) => prev.filter(s => s.username !== newStudent.username);
+              const updateList = (prev: Student[]) => {
+                const exists = prev.find(s => s.username === newStudent.username);
+                if (exists) {
+                  return prev.map(s => s.username === newStudent.username ? newStudent : s);
+                }
+                return [...prev, newStudent];
+              };
 
-            if (newStudent.status.toUpperCase() === 'APPROVED') {
-              setStudents(prev => updateList(prev));
-              setPendingStudents(prev => removeFromList(prev));
-            } else {
-              setPendingStudents(prev => updateList(prev));
-              setStudents(prev => removeFromList(prev));
+              const removeFromList = (prev: Student[]) => prev.filter(s => s.username !== newStudent.username);
+
+              if (newStudent.status.toUpperCase() === 'APPROVED') {
+                setStudents(prev => updateList(prev));
+                setPendingStudents(prev => removeFromList(prev));
+              } else {
+                setPendingStudents(prev => updateList(prev));
+                setStudents(prev => removeFromList(prev));
+              }
+            } else if (payload.eventType === 'DELETE') {
+              const oldId = payload.old.id;
+              const oldName = (payload.old as any).student_name;
+              setStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
+              setPendingStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
             }
-          } else if (payload.eventType === 'DELETE') {
-            const oldId = payload.old.id;
-            const oldName = (payload.old as any).student_name;
-            setStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
-            setPendingStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
           }
-        }
-      )
-      .subscribe((status) => {
-        console.log(`[GameContext] Results channel status for ${currentTest.pin}: ${status}`);
-      });
+        )
+        .subscribe((status) => {
+          console.log(`[GameContext] Results channel status for ${pin}: ${status}`);
+        });
+    }
 
     return () => {
-      console.log(`[GameContext] Cleaning up subscription for PIN: ${currentTest.pin}`);
-      supabase.removeChannel(sessionChannel);
-      supabase.removeChannel(resultsChannel);
+      console.log(`[GameContext] Cleaning up subscription for PIN: ${pin}`);
+      if (sessionChannel) supabase.removeChannel(sessionChannel);
+      if (resultsChannel) supabase.removeChannel(resultsChannel);
     };
-  }, [currentTest?.pin, fetchStudents]);
+  }, [currentTest?.pin, adminLoggedIn, fetchStudents]);
 
   // Handle session status changes for redirection (Lobby logic)
   useEffect(() => {
