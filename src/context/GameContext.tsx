@@ -167,7 +167,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     console.log(`[GameContext] Initializing subscription for PIN: ${pin}`);
 
     // Fetch initial data ONCE when pin changes
-    fetchStudents(pin);
+    // Only Admin needs the full list of students. Students only need their own data.
+    if (adminLoggedIn) {
+      fetchStudents(pin);
+    }
 
     // Subscribe to session changes (All users need this to know when test starts)
     const sessionChannel = supabase
