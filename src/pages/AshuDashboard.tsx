@@ -37,7 +37,8 @@ const AshuDashboard = () => {
     approveStudent,
     rejectStudent,
     getGameLeaderboard,
-    fetchStudents
+    fetchStudents,
+    fetchSessions
   } = useGame();
   const navigate = useNavigate();
 
@@ -54,7 +55,13 @@ const AshuDashboard = () => {
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
   const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
-  const [numGames, setNumGames] = useState(1);
+  const [selectedGames, setSelectedGames] = useState<string[]>(['bubble']);
+
+  const availableGamesList = [
+    { id: 'bubble', name: 'Mind Sprint' },
+    { id: 'crossmath', name: 'Cross Math' },
+    { id: 'numlink', name: 'NumLink' },
+  ];
 
   // Notify on new pending students
   useEffect(() => {
@@ -74,10 +81,10 @@ const AshuDashboard = () => {
 
   const handleCreatePin = async () => {
     try {
-      const pin = await createTestPin(numGames);
-      toast.success(`Test PIN created: ${pin} (${numGames} game${numGames > 1 ? 's' : ''})`);
+      const pin = await createTestPin(selectedGames);
+      toast.success(`Test PIN created: ${pin} (${selectedGames.length} game${selectedGames.length > 1 ? 's' : ''})`);
       setShowCreatePinDialog(false);
-      setNumGames(1);
+      setSelectedGames(['bubble']);
     } catch (e) {
       toast.error('Failed to create PIN');
     }
@@ -197,7 +204,7 @@ const AshuDashboard = () => {
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider">Test Session</h2>
-            {sessions.length > 0 && (
+            {sessions.length > 0 ? (
               <Select
                 value={currentTest?.pin}
                 onValueChange={(value) => {
@@ -214,11 +221,21 @@ const AshuDashboard = () => {
                 <SelectContent>
                   {sessions.map((session) => (
                     <SelectItem key={session.pin} value={session.pin}>
-                      PIN: {session.pin}
+                      PIN: {session.pin} {session.isActive ? '(Active)' : '(Inactive)'}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchSessions}
+                className="h-8 text-[10px] text-muted-foreground hover:text-foreground"
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Reload Sessions
+              </Button>
             )}
           </div>
 
@@ -470,7 +487,7 @@ const AshuDashboard = () => {
                     </div>
                     <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm overflow-x-auto no-scrollbar py-1 flex-1 justify-end">
                       {s.gameHistory?.map((g, gi) => {
-                        const label = g.gameId === 'bubble' ? 'MS' : g.gameId === 'crossmath' ? 'CM' : g.gameId === 'numlink' ? 'NL' : `G${gi+1}`;
+                        const label = g.gameId === 'bubble' ? 'MS' : g.gameId === 'crossmath' ? 'CM' : g.gameId === 'numlink' ? 'NL' : `G${gi + 1}`;
                         const colors = gi === 0 ? 'text-accent' : gi === 1 ? 'text-emerald-400' : 'text-primary';
                         return (
                           <div key={gi} className="flex items-center gap-2 px-2 py-1 bg-background/40 rounded-lg border border-border/50 shrink-0">
@@ -563,23 +580,36 @@ const AshuDashboard = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-2 block font-medium">Number of Games</label>
-                  <div className="flex gap-2">
-                    {[1, 2, 3].map(n => (
+                  <label className="text-sm text-muted-foreground mb-3 block font-medium">Select Games (Sequential Order)</label>
+                  <div className="space-y-2">
+                    {availableGamesList.map(game => (
                       <button
-                        key={n}
-                        onClick={() => setNumGames(n)}
-                        className={`flex-1 h-14 rounded-xl font-bold text-lg transition-all ${numGames === n
-                          ? 'bg-accent text-accent-foreground scale-105 shadow-lg shadow-accent/20'
-                          : 'bg-secondary text-foreground hover:bg-secondary/80'
+                        key={game.id}
+                        onClick={() => {
+                          setSelectedGames(prev =>
+                            prev.includes(game.id)
+                              ? prev.filter(id => id !== game.id)
+                              : [...prev, game.id]
+                          );
+                        }}
+                        className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${selectedGames.includes(game.id)
+                          ? 'bg-accent/10 border-accent text-foreground'
+                          : 'bg-secondary/50 border-border text-muted-foreground hover:bg-secondary'
                           }`}
                       >
-                        {n}
+                        <span className="font-semibold">{game.name}</span>
+                        {selectedGames.includes(game.id) ? (
+                          <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
+                            <Check className="w-4 h-4 text-accent-foreground" />
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full border-2 border-muted-foreground" />
+                        )}
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {numGames === 1 ? 'Students pick one game' : `Students play ${numGames} games. Leaderboard averages results.`}
+                  <p className="text-[10px] text-muted-foreground mt-3 uppercase tracking-wider font-bold">
+                    {selectedGames.length === 0 ? 'Select at least one game' : `${selectedGames.length} Game${selectedGames.length > 1 ? 's' : ''} Selected`}
                   </p>
                 </div>
 
@@ -587,13 +617,14 @@ const AshuDashboard = () => {
                   <Button
                     variant="outline"
                     className="flex-1 rounded-xl"
-                    onClick={() => { setShowCreatePinDialog(false); setNumGames(1); }}
+                    onClick={() => { setShowCreatePinDialog(false); setSelectedGames(['bubble']); }}
                   >
                     Cancel
                   </Button>
                   <Button
                     className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl"
                     onClick={handleCreatePin}
+                    disabled={selectedGames.length === 0}
                   >
                     Create PIN
                   </Button>

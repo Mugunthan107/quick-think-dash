@@ -49,10 +49,11 @@ const GameSelector = () => {
     return null;
   }
 
-  // Filter available games: show only uncompleted ones when numGames > 1
-  const availableGames = numGames > 1
-    ? games.filter(g => !playedGameIds.includes(g.id))
-    : games;
+  // Filter available games based on test settings and progress
+  const selectedGamesIds = currentTest?.selectedGames || ['bubble'];
+  const availableGames = games
+    .filter(g => selectedGamesIds.includes(g.id))
+    .filter(g => numGames > 1 ? !playedGameIds.includes(g.id) : true);
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 relative z-10">

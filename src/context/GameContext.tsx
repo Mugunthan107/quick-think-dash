@@ -33,6 +33,7 @@ export interface TestSession {
   isActive: boolean;
   status: 'WAITING' | 'STARTED' | 'FINISHED';
   numGames: number;
+  selectedGames: string[];
 }
 
 interface GameState {
@@ -48,7 +49,7 @@ interface GameState {
 interface GameContextType extends GameState {
   adminLogin: (password: string) => boolean;
   adminLogout: () => void;
-  createTestPin: (numGames?: number) => Promise<string>;
+  createTestPin: (selectedGames: string[]) => Promise<string>;
   verifyTestPin: (pin: string) => Promise<boolean>;
   joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string; pending?: boolean }>;
   startTest: () => Promise<void>;
@@ -93,26 +94,36 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   // Fetch all active sessions
   const fetchSessions = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('test_sessions')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
+    try {
+      console.log('[GameContext] Fetching sessions...');
+      const { data, error } = await supabase
+        .from('test_sessions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-    if (error) {
-      console.error('Error fetching sessions:', error);
-      return;
-    }
+      if (error) {
+        console.error('[GameContext] Error fetching sessions:', error);
+        toast.error('Failed to load sessions: ' + error.message);
+        return;
+      }
 
-    if (data) {
-      const mappedSessions = data.map((row: any) => ({
-        pin: row.pin,
-        createdAt: new Date(row.created_at).getTime(),
-        isActive: row.is_active,
-        status: row.status || 'WAITING',
-        numGames: row.num_games || 1,
-      }));
-      setSessions(mappedSessions);
+      if (data) {
+        console.log(`[GameContext] Loaded ${data.length} sessions`);
+        const mappedSessions = data.map((row: any) => ({
+          pin: row.pin,
+          createdAt: new Date(row.created_at).getTime(),
+          isActive: row.is_active,
+          status: row.status || 'WAITING',
+          numGames: row.num_games || 1,
+          selectedGames: row.selected_games || AVAILABLE_GAMES,
+        }));
+        setSessions(mappedSessions);
+      }
+    } catch (e) {
+      console.error('[GameContext] Unexpected error in fetchSessions:', e);
+      // Don't show toast for every periodic sync failure if we add one, 
+      // but for manual/mount ones it's good.
     }
   }, []);
 
@@ -188,6 +199,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
               isActive: data.is_active,
               status: data.status || 'WAITING',
               numGames: data.num_games || 1,
+              selectedGames: data.selected_games || AVAILABLE_GAMES,
             } : null);
           }
         }
@@ -300,27 +312,44 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setSessions([]);
   }, []);
 
-  const createTestPin = useCallback(async (numGames: number = 1) => {
-    // Cap numGames at available games count
-    const cappedNumGames = Math.min(numGames, AVAILABLE_GAMES.length);
+  const createTestPin = useCallback(async (selectedGames: string[]) => {
     const pin = Math.floor(100000 + Math.random() * 900000).toString();
+    const numGames = selectedGames.length;
 
-    const { error } = await supabase
-      .from('test_sessions')
-      .insert([{ pin, is_active: true, status: 'WAITING', num_games: cappedNumGames }]);
+    try {
+      const { error } = await supabase
+        .from('test_sessions')
+        .insert([{
+          pin,
+          is_active: true,
+          status: 'WAITING',
+          num_games: numGames,
+          selected_games: selectedGames
+        }]);
 
-    if (error) {
-      console.error('Error creating test session:', error);
-      toast.error('Failed to create test session: ' + error.message);
-      throw error;
+      if (error) {
+        console.error('Error creating test session:', error);
+        toast.error('Failed to create test session: ' + error.message);
+        throw error;
+      }
+
+      const newTest: TestSession = {
+        pin,
+        createdAt: Date.now(),
+        isActive: true,
+        status: 'WAITING',
+        numGames,
+        selectedGames
+      };
+      setCurrentTest(newTest);
+      setStudents([]);
+      setPendingStudents([]);
+      await fetchSessions();
+      return pin;
+    } catch (e) {
+      console.error('[createTestPin] Error:', e);
+      throw e;
     }
-
-    const newTest: TestSession = { pin, createdAt: Date.now(), isActive: true, status: 'WAITING', numGames: cappedNumGames };
-    setCurrentTest(newTest);
-    setStudents([]);
-    setPendingStudents([]);
-    await fetchSessions();
-    return pin;
   }, [fetchSessions]);
 
   const startTest = useCallback(async () => {
@@ -367,7 +396,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     // Step 1: Verify test pin and status in one go
     const { data: testData, error: testError } = await supabase
       .from('test_sessions')
-      .select('pin, is_active, status, created_at, num_games')
+      .select('pin, is_active, status, created_at, num_games, selected_games')
       .eq('pin', pin)
       .single();
 
@@ -416,7 +445,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           createdAt: new Date(testData.created_at).getTime(),
           isActive: testData.is_active,
           status: testData.status as any || 'WAITING',
-          numGames: testData.num_games || 1
+          numGames: testData.num_games || 1,
+          selectedGames: testData.selected_games || AVAILABLE_GAMES
         });
         setCurrentStudent(student);
         setCompletedGames(student.gameHistory.map(g => g.gameId));
@@ -471,7 +501,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         createdAt: new Date(testData.created_at).getTime(),
         isActive: testData.is_active,
         status: (testData.status as any) || 'WAITING',
-        numGames: testData.num_games || 1
+        numGames: testData.num_games || 1,
+        selectedGames: testData.selected_games || AVAILABLE_GAMES
       });
       setCurrentStudent(newStudent);
       setCompletedGames([]);
@@ -623,9 +654,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const getNextGame = useCallback((): string | null => {
     if (!currentTest) return null;
-    const numGames = currentTest.numGames;
-    const remaining = AVAILABLE_GAMES.filter(g => !completedGames.includes(g));
-    if (completedGames.length >= numGames || remaining.length === 0) return null;
+    const selectedGames = currentTest.selectedGames || AVAILABLE_GAMES;
+    const remaining = selectedGames.filter(g => !completedGames.includes(g));
+    if (remaining.length === 0) return null;
     return remaining[0];
   }, [currentTest, completedGames]);
 
