@@ -52,7 +52,7 @@ const AshuDashboard = () => {
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
-  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath'>('overall');
+  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
   const [numGames, setNumGames] = useState(1);
 
@@ -113,7 +113,7 @@ const AshuDashboard = () => {
 
       // Create breakdown string
       const breakdown = student.gameHistory?.map(g => {
-        const gameName = g.gameId === 'bubble' ? 'G1' : g.gameId === 'crossmath' ? 'G2' : g.gameId;
+        const gameName = g.gameId === 'bubble' ? 'MS' : g.gameId === 'crossmath' ? 'CM' : g.gameId === 'numlink' ? 'NL' : g.gameId;
         return `${gameName}: ${g.correctAnswers}/${g.totalQuestions} (${g.score}pts, ${g.timeTaken.toFixed(1)}s)`;
       }).join(' | ') || 'N/A';
 
@@ -358,25 +358,16 @@ const AshuDashboard = () => {
               </div>
 
               <div className="p-4 border-b border-border bg-secondary/30 shrink-0 space-y-4">
-                <div className="flex gap-2 p-1 bg-background rounded-lg border border-border">
-                  <button
-                    onClick={() => setLeaderboardTab('overall')}
-                    className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${leaderboardTab === 'overall' ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary'}`}
-                  >
-                    Overall (Avg)
-                  </button>
-                  <button
-                    onClick={() => setLeaderboardTab('bubble')}
-                    className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${leaderboardTab === 'bubble' ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary'}`}
-                  >
-                    Bubble
-                  </button>
-                  <button
-                    onClick={() => setLeaderboardTab('crossmath')}
-                    className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${leaderboardTab === 'crossmath' ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary'}`}
-                  >
-                    CrossMath
-                  </button>
+                <div className="flex gap-1.5 p-1 bg-background rounded-lg border border-border flex-wrap">
+                  {(['overall', 'bubble', 'crossmath', 'numlink'] as const).map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setLeaderboardTab(tab)}
+                      className={`flex-1 py-1.5 px-2 rounded-md text-xs sm:text-sm font-medium transition-all min-w-[60px] ${leaderboardTab === tab ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary'}`}
+                    >
+                      {tab === 'overall' ? 'Overall' : tab === 'bubble' ? 'Mind Sprint' : tab === 'crossmath' ? 'Cross Math' : 'NumLink'}
+                    </button>
+                  ))}
                 </div>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -478,23 +469,18 @@ const AshuDashboard = () => {
                       <span className="font-medium text-foreground text-sm truncate flex-1 min-w-0 pr-4">{s.username}</span>
                     </div>
                     <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm overflow-x-auto no-scrollbar py-1 flex-1 justify-end">
-                      {s.gameHistory?.[0] && (
-                        <div className="flex items-center gap-2 px-2 py-1 bg-background/40 rounded-lg border border-border/50 shrink-0">
-                          <span className="text-[10px] font-bold text-accent uppercase">G1</span>
-                          <span className="text-success font-medium">{s.gameHistory[0].correctAnswers}/{s.gameHistory[0].totalQuestions}</span>
-                          <span className="font-mono font-bold text-foreground">{s.gameHistory[0].score}</span>
-                          <span className="text-muted-foreground">{s.gameHistory[0].timeTaken.toFixed(1)}s</span>
-                        </div>
-                      )}
-
-                      {s.gameHistory?.[1] && (
-                        <div className="flex items-center gap-2 px-2 py-1 bg-background/40 rounded-lg border border-border/50 shrink-0">
-                          <span className="text-[10px] font-bold text-emerald-400 uppercase">G2</span>
-                          <span className="font-mono font-bold text-foreground">{s.gameHistory[1].score}</span>
-                          <span className="text-muted-foreground">{s.gameHistory[1].timeTaken.toFixed(1)}s</span>
-                          <span className="text-success font-medium">{s.gameHistory[1].correctAnswers}/{s.gameHistory[1].totalQuestions}</span>
-                        </div>
-                      )}
+                      {s.gameHistory?.map((g, gi) => {
+                        const label = g.gameId === 'bubble' ? 'MS' : g.gameId === 'crossmath' ? 'CM' : g.gameId === 'numlink' ? 'NL' : `G${gi+1}`;
+                        const colors = gi === 0 ? 'text-accent' : gi === 1 ? 'text-emerald-400' : 'text-primary';
+                        return (
+                          <div key={gi} className="flex items-center gap-2 px-2 py-1 bg-background/40 rounded-lg border border-border/50 shrink-0">
+                            <span className={`text-[10px] font-bold uppercase ${colors}`}>{label}</span>
+                            <span className="text-success font-medium">{g.correctAnswers}/{g.totalQuestions}</span>
+                            <span className="font-mono font-bold text-foreground">{g.score}</span>
+                            <span className="text-muted-foreground">{g.timeTaken.toFixed(1)}s</span>
+                          </div>
+                        );
+                      })}
 
                       <div className="flex flex-col items-end gap-0.5 pl-3 border-l border-border/50 shrink-0">
                         <span className="text-[8px] font-bold text-success uppercase leading-none">Total</span>
@@ -579,7 +565,7 @@ const AshuDashboard = () => {
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block font-medium">Number of Games</label>
                   <div className="flex gap-2">
-                    {[1, 2].map(n => (
+                    {[1, 2, 3].map(n => (
                       <button
                         key={n}
                         onClick={() => setNumGames(n)}
