@@ -9,6 +9,7 @@ import StudentEntry from "./pages/StudentEntry";
 import WaitingApproval from "./pages/WaitingApproval";
 import BubbleGame from "./pages/BubbleGame";
 import CrossMathGame from "./pages/CrossMathGame";
+import NumLinkGame from "./pages/NumLinkGame";
 import GameSelector from "./pages/GameSelector";
 import AshuLogin from "./pages/AshuLogin";
 import AshuDashboard from "./pages/AshuDashboard";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/waiting-approval" element={<WaitingApproval />} />
             <Route path="/game" element={<BubbleGame />} />
             <Route path="/crossmath" element={<CrossMathGame />} />
+            <Route path="/numlink" element={<NumLinkGame />} />
             <Route path="/select-game" element={<GameSelector />} />
             {/* Ashu Routes */}
             <Route path="/ashu" element={<AshuDashboard />} />

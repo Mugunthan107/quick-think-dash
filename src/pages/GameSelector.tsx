@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { ArrowLeft, Brain, Grid3X3, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Brain, Grid3X3, Link, CheckCircle2 } from 'lucide-react';
 
 const GameSelector = () => {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ const GameSelector = () => {
   const games = [
     {
       id: 'bubble',
-      name: 'Bubble',
+      name: 'Mind Sprint',
       description: 'Sort math expressions from lowest to highest value across 30 levels',
       icon: Brain,
       route: '/game',
@@ -23,6 +23,14 @@ const GameSelector = () => {
       icon: Grid3X3,
       route: '/crossmath',
       color: 'bg-success/15 text-success',
+    },
+    {
+      id: 'numlink',
+      name: 'NumLink',
+      description: 'Connect numbers in order on a grid. Fill every cell with one continuous path!',
+      icon: Link,
+      route: '/numlink',
+      color: 'bg-primary/15 text-primary',
     },
   ];
 

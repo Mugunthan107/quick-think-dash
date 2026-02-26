@@ -74,27 +74,20 @@ const Leaderboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 sm:gap-6 text-[10px] sm:text-xs overflow-x-auto no-scrollbar py-1 flex-1 justify-end">
-                    {s.gameHistory?.[0] && (
-                      <div className="flex flex-col items-center gap-0.5 px-2 py-1 bg-secondary/50 rounded-lg border border-border/50 shrink-0">
-                        <span className="text-[8px] font-bold text-accent uppercase leading-none">G1</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-success font-medium">{s.gameHistory[0].correctAnswers}/{s.gameHistory[0].totalQuestions}</span>
-                          <span className="font-mono font-bold text-foreground">{s.gameHistory[0].score}</span>
-                          <span className="text-muted-foreground">{s.gameHistory[0].timeTaken.toFixed(1)}s</span>
+                    {s.gameHistory?.map((g, gi) => {
+                      const label = g.gameId === 'bubble' ? 'MS' : g.gameId === 'crossmath' ? 'CM' : g.gameId === 'numlink' ? 'NL' : `G${gi+1}`;
+                      const colors = gi === 0 ? 'text-accent' : gi === 1 ? 'text-emerald-400' : 'text-primary';
+                      return (
+                        <div key={gi} className="flex flex-col items-center gap-0.5 px-2 py-1 bg-secondary/50 rounded-lg border border-border/50 shrink-0">
+                          <span className={`text-[8px] font-bold uppercase leading-none ${colors}`}>{label}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-success font-medium">{g.correctAnswers}/{g.totalQuestions}</span>
+                            <span className="font-mono font-bold text-foreground">{g.score}</span>
+                            <span className="text-muted-foreground">{g.timeTaken.toFixed(1)}s</span>
+                          </div>
                         </div>
-                      </div>
-                    )}
-
-                    {s.gameHistory?.[1] && (
-                      <div className="flex flex-col items-center gap-0.5 px-2 py-1 bg-secondary/50 rounded-lg border border-border/50 shrink-0">
-                        <span className="text-[8px] font-bold text-emerald-400 uppercase leading-none">G2</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-foreground">{s.gameHistory[1].score}</span>
-                          <span className="text-muted-foreground">{s.gameHistory[1].timeTaken.toFixed(1)}s</span>
-                          <span className="text-success font-medium">{s.gameHistory[1].correctAnswers}/{s.gameHistory[1].totalQuestions}</span>
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })}
 
                     <div className="flex flex-col items-end gap-0.5 pl-3 border-l border-border/50 shrink-0">
                       <span className="text-[8px] font-bold text-success uppercase leading-none">Total</span>

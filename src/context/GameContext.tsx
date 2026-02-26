@@ -72,7 +72,7 @@ interface GameContextType extends GameState {
 
 const ADMIN_PASSWORD = 'admin123';
 
-const AVAILABLE_GAMES = ['bubble', 'crossmath'];
+const AVAILABLE_GAMES = ['bubble', 'crossmath', 'numlink'];
 
 const GameContext = createContext<GameContextType | null>(null);
 
@@ -166,11 +166,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     console.log(`[GameContext] Initializing subscription for PIN: ${pin}`);
 
-    // Fetch initial data ONCE when pin changes
-    // Only Admin needs the full list of students. Students only need their own data.
-    if (adminLoggedIn) {
-      fetchStudents(pin);
-    }
+    // Fetch students for both admin and student views (students need the lobby list)
+    fetchStudents(pin);
 
     // Subscribe to session changes (All users need this to know when test starts)
     const sessionChannel = supabase
@@ -197,86 +194,81 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       )
       .subscribe();
 
-    let resultsChannel: any = null;
+    // All users subscribe to exam_results changes for lobby updates & real-time sync
+    const resultsChannel = supabase
+      .channel(`results-${pin}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'exam_results',
+          filter: `test_pin=eq.${pin}`
+        },
+        (payload) => {
+          const mapRecordToStudent = (row: any): Student => {
+            const gameHistory = row.game_history || [];
+            return {
+              id: row.id,
+              username: row.student_name,
+              testPin: row.test_pin,
+              score: row.score,
+              level: row.level,
+              completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
+              startedAt: new Date(row.started_at).getTime(),
+              isFinished: !!row.completed_at,
+              correctAnswers: row.correct_answers || 0,
+              totalQuestions: gameHistory.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
+              status: row.status || 'APPROVED',
+              gameHistory: gameHistory,
+              gamesPlayed: gameHistory.length,
+            };
+          };
 
-    // ONLY Admin needs to see all student score updates in real-time
-    // Students only update via their own actions or approval listener
-    if (adminLoggedIn) {
-      resultsChannel = supabase
-        .channel(`results-${pin}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'exam_results',
-            filter: `test_pin=eq.${pin}`
-          },
-          (payload) => {
-            const mapRecordToStudent = (row: any): Student => {
-              const gameHistory = row.game_history || [];
-              return {
-                id: row.id,
-                username: row.student_name,
-                testPin: row.test_pin,
-                score: row.score,
-                level: row.level,
-                completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
-                startedAt: new Date(row.started_at).getTime(),
-                isFinished: !!row.completed_at,
-                correctAnswers: row.correct_answers || 0,
-                totalQuestions: gameHistory.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0),
-                status: row.status || 'APPROVED',
-                gameHistory: gameHistory,
-                gamesPlayed: gameHistory.length,
-              };
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const newStudent = mapRecordToStudent(payload.new);
+
+            // Update current student identity check using Ref
+            const activeStudent = currentStudentRef.current;
+            if (activeStudent && newStudent.username === activeStudent.username) {
+              setCurrentStudent(newStudent);
+            }
+
+            const updateList = (prev: Student[]) => {
+              const exists = prev.find(s => s.username === newStudent.username);
+              if (exists) {
+                return prev.map(s => s.username === newStudent.username ? newStudent : s);
+              }
+              return [...prev, newStudent];
             };
 
-            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-              const newStudent = mapRecordToStudent(payload.new);
+            const removeFromList = (prev: Student[]) => prev.filter(s => s.username !== newStudent.username);
 
-              // Update current student identity check using Ref
-              const activeStudent = currentStudentRef.current;
-              if (activeStudent && newStudent.username === activeStudent.username) {
-                setCurrentStudent(newStudent);
-              }
-
-              const updateList = (prev: Student[]) => {
-                const exists = prev.find(s => s.username === newStudent.username);
-                if (exists) {
-                  return prev.map(s => s.username === newStudent.username ? newStudent : s);
-                }
-                return [...prev, newStudent];
-              };
-
-              const removeFromList = (prev: Student[]) => prev.filter(s => s.username !== newStudent.username);
-
-              if (newStudent.status.toUpperCase() === 'APPROVED') {
-                setStudents(prev => updateList(prev));
-                setPendingStudents(prev => removeFromList(prev));
-              } else {
-                setPendingStudents(prev => updateList(prev));
-                setStudents(prev => removeFromList(prev));
-              }
-            } else if (payload.eventType === 'DELETE') {
-              const oldId = payload.old.id;
-              const oldName = (payload.old as any).student_name;
-              setStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
-              setPendingStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
+            if (newStudent.status.toUpperCase() === 'APPROVED') {
+              setStudents(prev => updateList(prev));
+              setPendingStudents(prev => removeFromList(prev));
+            } else {
+              setPendingStudents(prev => updateList(prev));
+              setStudents(prev => removeFromList(prev));
             }
+          } else if (payload.eventType === 'DELETE') {
+            const oldId = payload.old.id;
+            const oldName = (payload.old as any).student_name;
+            setStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
+            setPendingStudents(prev => prev.filter(s => s.id !== oldId && s.username !== oldName));
           }
-        )
-        .subscribe((status) => {
-          console.log(`[GameContext] Results channel status for ${pin}: ${status}`);
-        });
-    }
+        }
+      )
+      .subscribe((status) => {
+        console.log(`[GameContext] Results channel status for ${pin}: ${status}`);
+      });
 
     return () => {
       console.log(`[GameContext] Cleaning up subscription for PIN: ${pin}`);
-      if (sessionChannel) supabase.removeChannel(sessionChannel);
-      if (resultsChannel) supabase.removeChannel(resultsChannel);
+      supabase.removeChannel(sessionChannel);
+      supabase.removeChannel(resultsChannel);
     };
-  }, [currentTest?.pin, adminLoggedIn, fetchStudents]);
+  }, [currentTest?.pin, fetchStudents]);
 
   // Handle session status changes for redirection (Lobby logic)
   useEffect(() => {
@@ -349,16 +341,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }, [currentTest]);
 
   const verifyTestPin = useCallback(async (pin: string) => {
-    const { data, error } = await supabase
-      .from('test_sessions')
-      .select('is_active')
-      .eq('pin', pin)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('test_sessions')
+        .select('is_active')
+        .eq('pin', pin)
+        .maybeSingle();
 
-    if (error || !data || !data.is_active) {
+      if (error || !data || !data.is_active) {
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error('[verifyTestPin] Error:', e);
       return false;
     }
-    return true;
   }, []);
 
   const joinTest = useCallback(async (pin: string, username: string) => {
