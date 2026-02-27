@@ -40,25 +40,25 @@ function getMarksForRound(round: number): number {
 // We generate a valid Hamiltonian path on the grid, then place numbers along it
 function generatePuzzle(gridSize: number, maxNumber: number): Cell[][] {
   const totalCells = gridSize * gridSize;
-  
+
   // Generate a random Hamiltonian path using backtracking with randomization
   const path = generateHamiltonianPath(gridSize);
-  
+
   if (!path || path.length < totalCells) {
     // Fallback: create a snake path
     return generateSnakePuzzle(gridSize, maxNumber);
   }
-  
+
   // Place numbers at evenly spaced positions along the path
   const numberPositions = new Map<string, number>();
   const step = Math.floor((path.length - 1) / (maxNumber - 1));
-  
+
   for (let i = 0; i < maxNumber; i++) {
     const pathIndex = i === maxNumber - 1 ? path.length - 1 : i * step;
     const pos = path[pathIndex];
     numberPositions.set(`${pos.row}-${pos.col}`, i + 1);
   }
-  
+
   // Create grid
   const grid: Cell[][] = [];
   for (let r = 0; r < gridSize; r++) {
@@ -75,7 +75,7 @@ function generatePuzzle(gridSize: number, maxNumber: number): Cell[][] {
     }
     grid.push(row);
   }
-  
+
   return grid;
 }
 
@@ -83,18 +83,18 @@ function generateHamiltonianPath(size: number): { row: number; col: number }[] |
   const visited = Array.from({ length: size }, () => Array(size).fill(false));
   const path: { row: number; col: number }[] = [];
   const totalCells = size * size;
-  
+
   // Start from a random corner or edge
   const startRow = Math.random() < 0.5 ? 0 : size - 1;
   const startCol = Math.random() < 0.5 ? 0 : size - 1;
-  
+
   visited[startRow][startCol] = true;
   path.push({ row: startRow, col: startCol });
-  
+
   if (backtrack(path, visited, size, totalCells)) {
     return path;
   }
-  
+
   return null;
 }
 
@@ -105,7 +105,7 @@ function backtrack(
   total: number
 ): boolean {
   if (path.length === total) return true;
-  
+
   const current = path[path.length - 1];
   const dirs = [
     { dr: -1, dc: 0 },
@@ -113,28 +113,28 @@ function backtrack(
     { dr: 0, dc: -1 },
     { dr: 0, dc: 1 },
   ];
-  
+
   // Shuffle directions for randomness
   for (let i = dirs.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
   }
-  
+
   for (const { dr, dc } of dirs) {
     const nr = current.row + dr;
     const nc = current.col + dc;
-    
+
     if (nr >= 0 && nr < size && nc >= 0 && nc < size && !visited[nr][nc]) {
       visited[nr][nc] = true;
       path.push({ row: nr, col: nc });
-      
+
       if (backtrack(path, visited, size, total)) return true;
-      
+
       path.pop();
       visited[nr][nc] = false;
     }
   }
-  
+
   return false;
 }
 
@@ -147,7 +147,7 @@ function generateSnakePuzzle(gridSize: number, maxNumber: number): Cell[][] {
       path.push({ row: r, col });
     }
   }
-  
+
   const numberPositions = new Map<string, number>();
   const step = Math.floor((path.length - 1) / (maxNumber - 1));
   for (let i = 0; i < maxNumber; i++) {
@@ -155,7 +155,7 @@ function generateSnakePuzzle(gridSize: number, maxNumber: number): Cell[][] {
     const pos = path[pathIndex];
     numberPositions.set(`${pos.row}-${pos.col}`, i + 1);
   }
-  
+
   const grid: Cell[][] = [];
   for (let r = 0; r < gridSize; r++) {
     const row: Cell[] = [];
@@ -274,12 +274,12 @@ const NumLinkGame = () => {
         const newStack = [{ row, col }];
         pathStackRef.current = newStack;
         setPathStack(newStack);
-        
+
         const newGrid = currentGrid.map(r => r.map(c => ({ ...c, inPath: false, filled: false })));
         newGrid[row][col].filled = true;
         gridStateRef.current = newGrid;
         setGrid(newGrid);
-        
+
         expectedNumberRef.current = 2;
         setExpectedNumber(2);
       }
@@ -290,25 +290,25 @@ const NumLinkGame = () => {
     const lastPos = stack[stack.length - 1];
     if (!lastPos) return;
 
-    // Check for backtracking (undo)
+    // Check for backtracking (undo) — going back to the previous cell in the stack
     if (stack.length >= 2) {
       const prevPos = stack[stack.length - 2];
       if (prevPos.row === row && prevPos.col === col) {
         // Undo last cell
         const removedPos = stack[stack.length - 1];
         const removedCell = currentGrid[removedPos.row][removedPos.col];
-        
+
         const newStack = stack.slice(0, -1);
         pathStackRef.current = newStack;
         setPathStack(newStack);
-        
+
         const newGrid = currentGrid.map(r => r.map(c => ({ ...c })));
         if (removedCell.number === null) {
           newGrid[removedPos.row][removedPos.col].inPath = false;
           newGrid[removedPos.row][removedPos.col].filled = false;
         } else {
           newGrid[removedPos.row][removedPos.col].filled = false;
-          // If we're undoing a number, decrease expected
+          // Revert expected number back to this number
           const newExpected = removedCell.number;
           expectedNumberRef.current = newExpected;
           setExpectedNumber(newExpected);
@@ -319,39 +319,41 @@ const NumLinkGame = () => {
       }
     }
 
-    // Can't revisit already-filled cells (except undo above)
+    // Can't revisit already-filled cells (except backtracking above)
     if (cell.filled || cell.inPath) return;
 
-    // Must be adjacent
+    // Must be adjacent to current last position
     if (!isAdjacent(lastPos, { row, col })) return;
 
-    // If cell has a number
+    // If cell has a number — it BLOCKS the path unless it is the next expected number
     if (cell.number !== null) {
-      if (cell.number !== expected) return; // Can't skip numbers
-      
-      // Valid number cell
+      if (cell.number !== expected) {
+        // Wrong number encountered — block movement, cannot pass through
+        return;
+      }
+
+      // Correct next number — collect it automatically
       const newStack = [...stack, { row, col }];
       pathStackRef.current = newStack;
       setPathStack(newStack);
-      
+
       const newGrid = currentGrid.map(r => r.map(c => ({ ...c })));
       newGrid[row][col].filled = true;
       gridStateRef.current = newGrid;
       setGrid(newGrid);
-      
+
       const newExpected = expected + 1;
       expectedNumberRef.current = newExpected;
       setExpectedNumber(newExpected);
-      
-      // Check if puzzle solved
+
+      // Check if puzzle solved (visited all numbers and all cells filled)
       const level = LEVELS[currentLevel];
       const allFilled = newGrid.every(r => r.every(c => c.filled || c.inPath));
       if (newExpected > level.maxNumber && allFilled) {
-        // Puzzle solved!
         isDrawingRef.current = false;
         setIsDrawing(false);
         setRoundComplete(true);
-        
+
         const marks = getMarksForRound(globalRound + 1);
         const newScore = score + marks;
         const newCorrect = correctCount + 1;
@@ -359,17 +361,17 @@ const NumLinkGame = () => {
         setCorrectCount(newCorrect);
         setShowFlash('correct');
         setTimeout(() => setShowFlash(null), 600);
-        
+
         if (currentStudent) {
           updateStudentScore(currentStudent.username, newScore, globalRound + 1, newCorrect);
         }
       }
     } else {
-      // Empty cell - turn green
+      // Empty cell — freely traversable, mark it as part of the path
       const newStack = [...stack, { row, col }];
       pathStackRef.current = newStack;
       setPathStack(newStack);
-      
+
       const newGrid = currentGrid.map(r => r.map(c => ({ ...c })));
       newGrid[row][col].inPath = true;
       newGrid[row][col].filled = true;
@@ -415,7 +417,7 @@ const NumLinkGame = () => {
       // Game finished
       setFinished(true);
       if (timerRef.current) clearInterval(timerRef.current);
-      
+
       if (currentStudent) {
         submitGameResult(currentStudent.username, {
           gameId: 'numlink',
@@ -552,7 +554,7 @@ const NumLinkGame = () => {
         {/* Main Card */}
         <div className={`bg-card/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-border overflow-hidden transition-all duration-300
           ${showFlash === 'correct' ? 'border-success/50' : showFlash === 'wrong' ? 'border-destructive/50' : ''}`}>
-          
+
           {/* Header */}
           <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3">
             <div className="flex items-center justify-between mb-2">
@@ -582,7 +584,7 @@ const NumLinkGame = () => {
           <div className="px-4 sm:px-6 pb-2">
             <div className="flex items-center gap-2">
               <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                <div 
+                <div
                   className={`h-full rounded-full transition-all duration-1000 ease-linear ${timeLeft <= 10 ? 'bg-destructive' : 'bg-accent'}`}
                   style={{ width: `${timerProgress}%` }}
                 />
@@ -607,9 +609,9 @@ const NumLinkGame = () => {
                   const isNumberCell = cell.number !== null;
                   const isPath = cell.inPath;
                   const isFilled = cell.filled;
-                  
+
                   const cellSize = level.gridSize <= 5 ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-10 h-10 sm:w-12 sm:h-12';
-                  
+
                   return (
                     <div
                       key={`${r}-${c}`}
@@ -691,7 +693,7 @@ const NumLinkGame = () => {
         <div className="mt-3 px-1">
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
             <span>Round marks: {getMarksForRound(globalRound + 1)} pts</span>
-            <span>Max possible: {[5,5,10,10,15,15,20,20].reduce((a,b) => a+b, 0)} pts</span>
+            <span>Max possible: {[5, 5, 10, 10, 15, 15, 20, 20].reduce((a, b) => a + b, 0)} pts</span>
           </div>
         </div>
       </div>
