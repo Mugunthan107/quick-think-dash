@@ -10,7 +10,7 @@ const GameSelector = () => {
   const games = [
     {
       id: 'bubble',
-      name: 'Mind Sprint',
+      name: 'Bubble',
       description: 'Sort math expressions from lowest to highest value across 30 levels',
       icon: Brain,
       route: '/game',
