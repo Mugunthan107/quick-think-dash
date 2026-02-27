@@ -96,6 +96,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const fetchSessions = useCallback(async () => {
     try {
       console.log('[GameContext] Fetching sessions...');
+
       const { data, error } = await supabase
         .from('test_sessions')
         .select('*')
@@ -104,7 +105,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('[GameContext] Error fetching sessions:', error);
-        toast.error('Failed to load sessions: ' + error.message);
+        // If it's a network error or missing column, be specific
+        if (error.message.includes('Failed to fetch')) {
+          toast.error('Connection timeout: Please check your internet or Supabase status.');
+        } else if (error.message.includes('selected_games')) {
+          toast.error('Database schema out of date. Please run the provided SQL query.');
+        } else {
+          toast.error('Failed to load sessions: ' + error.message);
+        }
         return;
       }
 
@@ -116,14 +124,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           isActive: row.is_active,
           status: row.status || 'WAITING',
           numGames: row.num_games || 1,
-          selectedGames: row.selected_games || AVAILABLE_GAMES,
+          selectedGames: row.selected_games || ['bubble'],
         }));
         setSessions(mappedSessions);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('[GameContext] Unexpected error in fetchSessions:', e);
-      // Don't show toast for every periodic sync failure if we add one, 
-      // but for manual/mount ones it's good.
+      if (e.message?.includes('Failed to fetch')) {
+        toast.error('Network timeout while fetching sessions.');
+      }
     }
   }, []);
 
@@ -317,6 +326,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const numGames = selectedGames.length;
 
     try {
+      console.log(`[GameContext] Creating session ${pin} with games:`, selectedGames);
       const { error } = await supabase
         .from('test_sessions')
         .insert([{
@@ -329,7 +339,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error creating test session:', error);
-        toast.error('Failed to create test session: ' + error.message);
+        if (error.message.includes('selected_games')) {
+          toast.error('Missing database column "selected_games". Please run the SQL query I provided.');
+        } else if (error.message.includes('Failed to fetch')) {
+          toast.error('Connection timed out. Retrying...');
+          // Optional: implement a single retry here if needed
+        } else {
+          toast.error('Failed to create test session: ' + error.message);
+        }
         throw error;
       }
 
@@ -341,12 +358,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         numGames,
         selectedGames
       };
+
       setCurrentTest(newTest);
       setStudents([]);
       setPendingStudents([]);
-      await fetchSessions();
+
+      // Attempt to refresh sessions list, but don't fail the whole operation if this part times out
+      fetchSessions().catch(err => console.warn('Refresh sessions failed after creation:', err));
+
       return pin;
-    } catch (e) {
+    } catch (e: any) {
       console.error('[createTestPin] Error:', e);
       throw e;
     }

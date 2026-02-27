@@ -56,9 +56,10 @@ const AshuDashboard = () => {
   const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
   const [selectedGames, setSelectedGames] = useState<string[]>(['bubble']);
+  const [isCreatingPin, setIsCreatingPin] = useState(false);
 
   const availableGamesList = [
-    { id: 'bubble', name: 'Mind Sprint' },
+    { id: 'bubble', name: 'Bubble' },
     { id: 'crossmath', name: 'Cross Math' },
     { id: 'numlink', name: 'NumLink' },
   ];
@@ -75,20 +76,24 @@ const AshuDashboard = () => {
     }
   }, [pendingStudents.length]);
 
-  if (!adminLoggedIn) {
-    return <AshuLogin />;
-  }
-
   const handleCreatePin = async () => {
+    if (isCreatingPin) return; // Prevent double-click / multiple calls
+    setIsCreatingPin(true);
     try {
       const pin = await createTestPin(selectedGames);
       toast.success(`Test PIN created: ${pin} (${selectedGames.length} game${selectedGames.length > 1 ? 's' : ''})`);
       setShowCreatePinDialog(false);
       setSelectedGames(['bubble']);
     } catch (e) {
-      toast.error('Failed to create PIN');
+      toast.error('Failed to create PIN. Check your internet connection and Supabase status.');
+    } finally {
+      setIsCreatingPin(false);
     }
   };
+
+  if (!adminLoggedIn) {
+    return <AshuLogin />;
+  }
 
   const handleCopyPin = () => {
     if (currentTest) {
@@ -624,9 +629,9 @@ const AshuDashboard = () => {
                   <Button
                     className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl"
                     onClick={handleCreatePin}
-                    disabled={selectedGames.length === 0}
+                    disabled={selectedGames.length === 0 || isCreatingPin}
                   >
-                    Create PIN
+                    {isCreatingPin ? 'Creating...' : 'Create PIN'}
                   </Button>
                 </div>
               </div>
