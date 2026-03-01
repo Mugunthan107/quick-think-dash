@@ -26,7 +26,7 @@ const Lobby = () => {
         <>
             {showCountdown && <CountdownOverlay onComplete={() => navigate('/select-game')} />}
 
-            <div className="min-h-screen p-4 sm:p-6 bg-background">
+            <div className="min-h-screen p-4 sm:p-6">
                 <div className="max-w-4xl mx-auto space-y-8 animate-fade-in text-center mt-8">
 
                     <div className="space-y-4">
@@ -37,15 +37,15 @@ const Lobby = () => {
                         <h1 className="text-2xl sm:text-4xl font-bold text-foreground">
                             Waiting for Host
                         </h1>
-                        <p className="text-muted-foreground text-lg">
+                        <p className="text-muted-foreground text-lg font-medium">
                             {students.length} student{students.length !== 1 ? 's' : ''} joined. The test will start shortly.
                         </p>
                     </div>
 
-                    <div className="bg-secondary/30 backdrop-blur-sm rounded-2xl p-6 border border-border">
+                    <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-border shadow-[0_8px_24px_hsl(260_40%_90%/0.6)]">
                         <div className="flex items-center justify-center gap-2 mb-6">
                             <Users className="w-5 h-5 text-accent" />
-                            <span className="font-medium text-foreground uppercase tracking-wider text-sm">
+                            <span className="font-semibold text-foreground uppercase tracking-wider text-sm">
                                 Connected Students
                             </span>
                         </div>
@@ -55,17 +55,17 @@ const Lobby = () => {
                                 <div
                                     key={student.username}
                                     className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${student.username === currentStudent.username
-                                            ? 'bg-accent/10 border-accent/50 shadow-sm'
-                                            : 'bg-background border-border/50'
+                                        ? 'bg-accent/8 border-accent/40 shadow-sm'
+                                        : 'bg-white border-border'
                                         }`}
                                 >
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${student.username === currentStudent.username
-                                            ? 'bg-accent text-accent-foreground'
-                                            : 'bg-secondary text-muted-foreground'
+                                        ? 'bg-accent text-accent-foreground'
+                                        : 'bg-secondary text-muted-foreground'
                                         }`}>
                                         <User className="w-4 h-4" />
                                     </div>
-                                    <span className={`font-medium truncate ${student.username === currentStudent.username ? 'text-accent' : 'text-foreground'
+                                    <span className={`font-medium truncate text-sm ${student.username === currentStudent.username ? 'text-accent' : 'text-foreground'
                                         }`}>
                                         {student.username} {student.username === currentStudent.username && '(You)'}
                                     </span>
@@ -73,8 +73,8 @@ const Lobby = () => {
                             ))}
                         </div>
 
-                        <div className="mt-8 pt-6 border-t border-border/50 flex flex-col items-center gap-2">
-                            <p className="text-sm text-muted-foreground">Using Test PIN</p>
+                        <div className="mt-8 pt-6 border-t border-border flex flex-col items-center gap-2">
+                            <p className="text-sm text-muted-foreground font-medium">Using Test PIN</p>
                             <span className="font-mono text-2xl font-bold text-foreground tracking-[0.2em] bg-secondary px-4 py-2 rounded-lg border border-border">
                                 {currentTest.pin}
                             </span>

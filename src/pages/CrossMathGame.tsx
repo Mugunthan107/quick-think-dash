@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Clock, Trophy, Target, GripHorizontal } from 'lucide-react';
+import { Clock, Trophy, GripHorizontal } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────
 interface CrossMathPuzzle {
@@ -92,12 +92,10 @@ function generatePuzzle(index: number): CrossMathPuzzle {
       d = randInt(2, 12);
     }
 
-    // Ensure subtraction doesn't go negative
     if (op1 === '-' && a < b) [a, b] = [b, a];
     if (op2 === '-' && a < c) { c = a > 1 ? randInt(1, a - 1) : 1; }
     if (op3 === '-' && b < d) { d = b > 1 ? randInt(1, b - 1) : 1; }
 
-    // Ensure division is clean
     if (op1 === '/') { b = b || 1; a = b * randInt(2, 6); }
     if (op2 === '/') { c = c || 1; a = c * Math.ceil(a / c); }
 
@@ -109,7 +107,6 @@ function generatePuzzle(index: number): CrossMathPuzzle {
     attempts < 100
   );
 
-  // Fallback to simple addition
   if (r1 < 0 || r2 < 0 || r3 < 0 || !Number.isInteger(r1) || !Number.isInteger(r2) || !Number.isInteger(r3)) {
     a = randInt(2, 10); b = randInt(1, 8); c = randInt(1, 8); d = randInt(1, 8);
     op1 = '+'; op2 = '+'; op3 = '+';
@@ -251,7 +248,6 @@ const CrossMathGame = () => {
 
   const checkAnswer = useCallback(() => {
     const current = getCurrentAnswers();
-    // Reconstruct all 7 values
     const v = [...puzzle.values];
     puzzle.blanks.forEach((pos, i) => {
       v[pos] = current[i]!;
@@ -259,11 +255,8 @@ const CrossMathGame = () => {
 
     const [a, b, r1, c, r2, d, r3] = v;
 
-    // Check Row 1: a op1 b = r1
     if (compute(a, puzzle.op1, b) !== r1) return false;
-    // Check Col 1: a op2 c = r2
     if (compute(a, puzzle.op2, c) !== r2) return false;
-    // Check Col 2: b op3 d = r3
     if (compute(b, puzzle.op3, d) !== r3) return false;
 
     return true;
@@ -303,7 +296,6 @@ const CrossMathGame = () => {
           completedAt: Date.now()
         }).then(() => {
           addCompletedGame('crossmath');
-          // No automatic navigation - let the user click the button
         });
       } else {
         setCurrentQ(prev => prev + 1);
@@ -347,10 +339,10 @@ const CrossMathGame = () => {
           onDrop={(e) => handleDrop(e, blankIndex)}
           className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 border-dashed flex items-center justify-center font-bold text-base sm:text-lg transition-all shrink-0
             ${filledValue !== null
-              ? isRight ? 'bg-success/20 border-success text-success' :
-                isWrong ? 'bg-destructive/20 border-destructive text-destructive animate-shake' :
-                  'bg-accent/15 border-accent text-accent'
-              : 'border-muted-foreground/40 text-muted-foreground hover:border-accent hover:bg-accent/5'
+              ? isRight ? 'bg-success/10 border-success text-success' :
+                isWrong ? 'bg-destructive/10 border-destructive text-destructive animate-shake' :
+                  'bg-accent/10 border-accent text-accent'
+              : 'border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/5'
             }`}
         >
           {filledValue !== null ? filledValue : '?'}
@@ -374,33 +366,37 @@ const CrossMathGame = () => {
     return (
       <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
         <div className="text-center animate-fade-in max-w-md w-full px-2">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-6 sm:mb-8 animate-pulse-ring">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-6 sm:mb-8 animate-pulse-ring">
             <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-success" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">Cross Math Complete!</h1>
-          <p className="text-muted-foreground mb-2">Great work, {currentStudent?.username}!</p>
-          <div className="flex items-center justify-center gap-6 my-6 sm:my-8">
-            <div className="text-center">
-              <span className="text-xs text-muted-foreground block mb-1">SCORE</span>
-              <span className="font-mono font-bold text-2xl sm:text-3xl text-accent">{score}</span>
-            </div>
-            <div className="w-px h-12 bg-border" />
-            <div className="text-center">
-              <span className="text-xs text-muted-foreground block mb-1">CORRECT</span>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="font-mono font-bold text-2xl sm:text-3xl text-success">{correctCount}</span>
-                <span className="text-sm text-muted-foreground">/ {TOTAL_QUESTIONS}</span>
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">Cross Math Complete!</h1>
+          <p className="text-muted-foreground mb-8 font-medium">Great work, {currentStudent?.username}!</p>
+
+          <div className="bg-white rounded-2xl border border-border p-6 mb-8 shadow-sm">
+            <div className="flex items-center justify-center gap-6">
+              <div className="text-center">
+                <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider block mb-1">Score</span>
+                <span className="font-mono font-bold text-2xl sm:text-3xl text-accent">{score}</span>
+              </div>
+              <div className="w-px h-12 bg-border" />
+              <div className="text-center">
+                <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider block mb-1">Correct</span>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="font-mono font-bold text-2xl sm:text-3xl text-success">{correctCount}</span>
+                  <span className="text-sm text-muted-foreground">/ {TOTAL_QUESTIONS}</span>
+                </div>
+              </div>
+              <div className="w-px h-12 bg-border" />
+              <div className="text-center">
+                <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider block mb-1">Time</span>
+                <span className="font-mono font-bold text-2xl sm:text-3xl text-foreground">{formatTime(elapsed)}</span>
               </div>
             </div>
-            <div className="w-px h-12 bg-border" />
-            <div className="text-center">
-              <span className="text-xs text-muted-foreground block mb-1">TIME</span>
-              <span className="font-mono font-bold text-2xl sm:text-3xl text-foreground">{formatTime(elapsed)}</span>
-            </div>
           </div>
+
           <button
             onClick={handlePostFinish}
-            className="bg-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:bg-accent/90 transition-all hover:scale-105 text-base sm:text-lg"
+            className="bg-accent text-accent-foreground px-10 py-4 rounded-xl font-semibold hover:bg-accent/90 transition-all hover:scale-105 text-base sm:text-lg shadow-lg shadow-accent/25"
           >
             {getNextGame() ? 'Next Game →' : 'Finish'}
           </button>
@@ -416,7 +412,7 @@ const CrossMathGame = () => {
       <div className="w-full max-w-lg animate-fade-in">
         {/* Top Stats */}
         <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
-          <span className="text-xs sm:text-sm text-muted-foreground">{currentStudent?.username}</span>
+          <span className="text-xs sm:text-sm text-muted-foreground font-medium">{currentStudent?.username}</span>
           <div className="flex items-center gap-2 text-sm font-mono">
             <Clock className="w-3.5 h-3.5 text-accent" />
             <span className="text-foreground font-bold">{formatTime(elapsed)}</span>
@@ -440,30 +436,30 @@ const CrossMathGame = () => {
                 navigate('/');
               }
             }}
-            className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary border border-border/50"
+            className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary border border-border font-medium"
           >
             End Test
           </button>
         </div>
 
         {/* Main Card */}
-        <div className={`bg-card/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-border overflow-hidden transition-all duration-300
-          ${showResult === 'correct' ? 'border-success/50' : showResult === 'wrong' ? 'border-destructive/50' : ''}`}>
+        <div className={`bg-white rounded-2xl shadow-[0_8px_32px_hsl(260_40%_88%/0.6)] border overflow-hidden transition-all duration-300
+          ${showResult === 'correct' ? 'border-success/40' : showResult === 'wrong' ? 'border-destructive/40' : 'border-border'}`}>
 
           {/* Header */}
           <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider
-                  ${puzzle.difficulty === 'easy' ? 'bg-success/15 text-success' :
-                    puzzle.difficulty === 'medium' ? 'bg-accent/15 text-accent' :
-                      'bg-destructive/15 text-destructive'}`}>
+                  ${puzzle.difficulty === 'easy' ? 'bg-success/10 text-success' :
+                    puzzle.difficulty === 'medium' ? 'bg-accent/10 text-accent' :
+                      'bg-destructive/10 text-destructive'}`}>
                   {puzzle.difficulty}
                 </span>
                 <span className="text-xs sm:text-sm font-semibold text-foreground">Q{currentQ + 1} / {TOTAL_QUESTIONS}</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-muted-foreground block">SCORE</span>
+                <span className="text-[10px] text-muted-foreground font-medium block">SCORE</span>
                 <span className="font-mono font-bold text-lg text-foreground">{score}</span>
               </div>
             </div>
@@ -472,7 +468,7 @@ const CrossMathGame = () => {
             </div>
           </div>
 
-          {/* Cross Math Grid - Fixed layout */}
+          {/* Cross Math Grid */}
           <div className="px-4 sm:px-6 py-4 sm:py-6">
             <div className="flex flex-col items-center gap-1.5">
               {/* Row 1: a op1 b = r1 */}
@@ -497,7 +493,7 @@ const CrossMathGame = () => {
                 <div className="w-10 sm:w-12 shrink-0" />
               </div>
 
-              {/* Row 3: c (under a) and d (under b) */}
+              {/* Row 3 */}
               <div className="flex items-center gap-1.5 justify-center">
                 {renderCell(puzzle.c, isBlank(3), getBlankIndex(3) >= 0 ? getBlankIndex(3) : undefined)}
                 <div className="w-10 sm:w-12 shrink-0" />
@@ -506,7 +502,7 @@ const CrossMathGame = () => {
                 <div className="w-10 sm:w-12 shrink-0" />
               </div>
 
-              {/* Row 4: = (under a col) and = (under b col) */}
+              {/* Row 4: = signs */}
               <div className="flex items-center gap-1.5 justify-center">
                 <div className="w-10 h-6 sm:w-12 sm:h-7 flex items-center justify-center text-muted-foreground font-bold text-sm shrink-0">=</div>
                 <div className="w-10 sm:w-12 shrink-0" />
@@ -515,7 +511,7 @@ const CrossMathGame = () => {
                 <div className="w-10 sm:w-12 shrink-0" />
               </div>
 
-              {/* Row 5: r2 (under a col) and r3 (under b col) */}
+              {/* Row 5: results */}
               <div className="flex items-center gap-1.5 justify-center">
                 {renderCell(puzzle.r2, isBlank(4), getBlankIndex(4) >= 0 ? getBlankIndex(4) : undefined)}
                 <div className="w-10 sm:w-12 shrink-0" />
@@ -529,14 +525,14 @@ const CrossMathGame = () => {
             <div className="text-center mt-4 sm:mt-5">
               <div className="flex items-center gap-1.5 justify-center text-xs text-muted-foreground">
                 <GripHorizontal className="w-3.5 h-3.5" />
-                <span>Tap a number below, then tap a <span className="text-accent font-semibold">?</span> cell to place it</span>
+                <span>Tap a number below, then tap a <span className="text-accent font-bold">?</span> cell to place it</span>
               </div>
             </div>
           </div>
 
           {/* Answer Bank */}
-          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <div className="bg-secondary/50 rounded-xl p-3 sm:p-4 border border-border/50">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-5">
+            <div className="bg-secondary rounded-xl p-3 sm:p-4 border border-border">
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                 {currentOptions.map((val, i) => {
                   const usedCount = usedValues.filter(v => v === val).length;
@@ -552,10 +548,10 @@ const CrossMathGame = () => {
                       disabled={isThisUsed}
                       className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl font-bold text-base sm:text-lg transition-all select-none touch-manipulation
                         ${isThisUsed
-                          ? 'bg-muted/30 text-muted-foreground/30 cursor-not-allowed scale-90'
+                          ? 'bg-secondary text-muted-foreground/30 cursor-not-allowed scale-90'
                           : selectedOption === val
-                            ? 'bg-accent text-accent-foreground scale-110 shadow-lg shadow-accent/30 ring-2 ring-accent/50 cursor-grab active:cursor-grabbing'
-                            : 'bg-card border border-border text-foreground hover:border-accent hover:scale-105 cursor-grab active:cursor-grabbing shadow-sm'
+                            ? 'bg-accent text-accent-foreground scale-110 shadow-md shadow-accent/30 ring-2 ring-accent/40 cursor-grab active:cursor-grabbing'
+                            : 'bg-white border border-border text-foreground hover:border-accent hover:scale-105 cursor-grab active:cursor-grabbing shadow-sm'
                         }`}
                     >
                       {val}
@@ -573,8 +569,8 @@ const CrossMathGame = () => {
               disabled={!allFilled || showResult !== null}
               className={`w-full py-3 sm:py-3.5 rounded-xl font-semibold text-sm sm:text-base transition-all
                 ${allFilled && !showResult
-                  ? 'bg-accent text-accent-foreground hover:bg-accent/90 hover:scale-[1.02] active:scale-[0.98]'
-                  : 'bg-muted text-muted-foreground cursor-not-allowed'
+                  ? 'bg-accent text-accent-foreground hover:bg-accent/90 hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-accent/20'
+                  : 'bg-secondary text-muted-foreground cursor-not-allowed'
                 }`}
             >
               {showResult === 'correct' ? '✓ Correct!' : showResult === 'wrong' ? '✗ Wrong' : 'Submit Answer'}
@@ -584,7 +580,7 @@ const CrossMathGame = () => {
           {/* Flash overlay */}
           {showResult && (
             <div className={`absolute inset-0 pointer-events-none animate-fade-in rounded-2xl
-              ${showResult === 'wrong' ? 'bg-destructive/10' : 'bg-success/10'}`} />
+              ${showResult === 'wrong' ? 'bg-destructive/5' : 'bg-success/5'}`} />
           )}
         </div>
       </div>

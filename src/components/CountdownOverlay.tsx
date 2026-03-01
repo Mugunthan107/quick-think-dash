@@ -13,7 +13,7 @@ const CountdownOverlay = ({ onComplete }: CountdownOverlayProps) => {
             setCount((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
-                    setTimeout(onComplete, 500); // Wait a bit on "GO!" or 0
+                    setTimeout(onComplete, 500);
                     return 0;
                 }
                 return prev - 1;
@@ -24,11 +24,11 @@ const CountdownOverlay = ({ onComplete }: CountdownOverlayProps) => {
     }, [onComplete]);
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/85 backdrop-blur-md animate-in fade-in duration-300">
             <div className="text-center">
                 <div
                     key={count}
-                    className="text-9xl font-black text-accent animate-in zoom-in-50 fade-in duration-300 transform"
+                    className="text-9xl font-black text-accent animate-in zoom-in-50 fade-in duration-300 transform drop-shadow-sm"
                 >
                     {count > 0 ? count : 'GO!!'}
                 </div>

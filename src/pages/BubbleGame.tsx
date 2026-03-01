@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Zap, Target, Clock, Trophy, Pause, Play } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Zap, Trophy } from 'lucide-react';
 
 interface BubbleData {
     text: string;
@@ -67,7 +66,7 @@ const BubbleGame = () => {
     const [level, setLevel] = useState(1);
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(TIME_PER_ROUND);
-    const [elapsed, setElapsed] = useState(0); // Track total time
+    const [elapsed, setElapsed] = useState(0);
     const [bubbles, setBubbles] = useState<BubbleData[]>([]);
     const [correctCount, setCorrectCount] = useState(0);
     const [clickOrder, setClickOrder] = useState(0);
@@ -105,7 +104,6 @@ const BubbleGame = () => {
         setGameActive(false);
         if (timerRef.current) clearInterval(timerRef.current);
 
-        // Submit result
         if (currentStudent && currentTest) {
             submitGameResult(currentStudent.username, {
                 gameId: 'bubble',
@@ -116,7 +114,6 @@ const BubbleGame = () => {
                 completedAt: Date.now()
             }).then(() => {
                 addCompletedGame('bubble');
-                // No automatic navigation here - wait for user to click button in finished screen
             });
         }
     }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
@@ -226,28 +223,32 @@ const BubbleGame = () => {
         return (
             <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
                 <div className="text-center animate-fade-in max-w-md w-full px-2">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-6 animate-pulse-ring">
-                        <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-success" />
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-6 animate-pulse-ring">
+                        <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-success" />
                     </div>
                     <h1 className="text-[26px] sm:text-[32px] font-bold text-foreground mb-2 tracking-tight">Bubble Complete!</h1>
-                    <p className="text-base text-muted-foreground/60 mb-6">Great work, {currentStudent?.username}!</p>
-                    <div className="flex items-center justify-center gap-6 mb-8">
-                        <div className="text-center">
-                            <span className="text-[12px] text-muted-foreground/40 font-bold uppercase tracking-wider block mb-1">SCORE</span>
-                            <span className="font-semibold text-xl sm:text-2xl text-accent">{score}</span>
-                        </div>
-                        <div className="w-px h-8 bg-border/20" />
-                        <div className="text-center">
-                            <span className="text-[12px] text-muted-foreground/40 font-bold uppercase tracking-wider block mb-1">CORRECT</span>
-                            <div className="flex items-baseline justify-center gap-1">
-                                <span className="font-semibold text-xl sm:text-2xl text-success">{correctCount}</span>
-                                <span className="text-xs text-muted-foreground/30">/ {MAX_LEVEL}</span>
+                    <p className="text-base text-muted-foreground mb-8 font-medium">Great work, {currentStudent?.username}!</p>
+
+                    <div className="bg-white rounded-2xl border border-border p-6 mb-8 shadow-sm">
+                        <div className="flex items-center justify-center gap-8">
+                            <div className="text-center">
+                                <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider block mb-1">Score</span>
+                                <span className="font-bold text-2xl sm:text-3xl text-accent font-mono">{score}</span>
+                            </div>
+                            <div className="w-px h-10 bg-border" />
+                            <div className="text-center">
+                                <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider block mb-1">Correct</span>
+                                <div className="flex items-baseline justify-center gap-1">
+                                    <span className="font-bold text-2xl sm:text-3xl text-success font-mono">{correctCount}</span>
+                                    <span className="text-sm text-muted-foreground">/ {MAX_LEVEL}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <button
                         onClick={handlePostFinish}
-                        className="bg-accent text-accent-foreground px-8 py-3.5 rounded-xl font-semibold hover:bg-accent/90 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg border border-accent/20 shadow-lg shadow-accent/20"
+                        className="bg-accent text-accent-foreground px-10 py-3.5 rounded-xl font-semibold hover:bg-accent/90 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg shadow-lg shadow-accent/25"
                     >
                         {getNextGame() ? 'Next Game →' : 'Finish'}
                     </button>
@@ -263,13 +264,13 @@ const BubbleGame = () => {
     return (
         <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 relative z-10">
             <div className="w-full max-w-[700px] animate-fade-in">
-                {/* Header Section (Instructions) Moved Above Card */}
+                {/* Header Section */}
                 <div className="w-full mb-6 flex flex-col items-center text-center font-['Inter']">
                     <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground uppercase">
                         SORT BY VALUE
-                        <span className="text-sm font-normal ml-3 opacity-50 text-muted-foreground normal-case">LOW → HIGH</span>
+                        <span className="text-sm font-normal ml-3 opacity-40 text-muted-foreground normal-case">LOW → HIGH</span>
                     </h1>
-                    <p className="text-[13px] sm:text-sm font-normal tracking-wide opacity-40 text-muted-foreground mt-1 px-4 max-w-[340px]">
+                    <p className="text-[13px] sm:text-sm font-normal tracking-wide opacity-50 text-muted-foreground mt-1 px-4 max-w-[340px]">
                         Click bubbles in ascending order of their mathematical result
                     </p>
                 </div>
@@ -277,18 +278,18 @@ const BubbleGame = () => {
                 {/* Top Stats Bar */}
                 <div className="flex items-center justify-between mb-4 px-2">
                     <div className="flex items-center gap-3">
-                        <span className="text-[12px] sm:text-sm font-medium text-muted-foreground/50">{currentStudent?.username}</span>
+                        <span className="text-[12px] sm:text-sm font-medium text-muted-foreground">{currentStudent?.username}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         {streak > 1 && (
-                            <div className="flex items-center gap-1 text-accent text-[11px] font-semibold animate-fade-in bg-accent/5 px-2 py-0.5 rounded-full border border-accent/10">
+                            <div className="flex items-center gap-1 text-accent text-[11px] font-semibold animate-fade-in bg-accent/8 px-2 py-0.5 rounded-full border border-accent/20">
                                 <Zap className="w-2.5 h-2.5" />
                                 {streak}
                             </div>
                         )}
                         <button
                             onClick={handleFinish}
-                            className="text-[12px] font-medium text-muted-foreground/50 hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary border border-border/10 uppercase tracking-wider"
+                            className="text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary border border-border uppercase tracking-wider"
                         >
                             End Test
                         </button>
@@ -296,54 +297,54 @@ const BubbleGame = () => {
                 </div>
 
                 {/* Main Game Card */}
-                <div className={`bg-card/40 backdrop-blur-md rounded-[24px] relative flex flex-col items-center shadow-xl border border-border/20 overflow-hidden transition-all duration-300 ${flash === 'wrong' ? 'border-destructive/20' : flash === 'correct' ? 'border-success/20' : ''
+                <div className={`bg-white rounded-[24px] relative flex flex-col items-center shadow-[0_8px_32px_hsl(260_40%_88%/0.7)] border overflow-hidden transition-all duration-300 ${flash === 'wrong' ? 'border-destructive/30' : flash === 'correct' ? 'border-success/30' : 'border-border'
                     }`}>
 
                     <div className="w-full px-4 sm:px-8 pt-6 sm:pt-10 pb-3 flex items-start justify-between">
                         <div className="flex-1">
                             <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                                <div className={`px-2 py-0.5 rounded text-[11px] font-medium uppercase tracking-wider ${config.label === 'EASY' ? 'bg-success/10 text-success' :
+                                <div className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${config.label === 'EASY' ? 'bg-success/10 text-success' :
                                     config.label === 'MEDIUM' ? 'bg-accent/10 text-accent' :
                                         'bg-destructive/10 text-destructive'
                                     }`}>
                                     {config.label}
                                 </div>
-                                <span className="text-[13px] font-semibold text-foreground/70 tracking-tight">Lv.{level} <span className="text-muted-foreground/30 font-normal">/ {MAX_LEVEL}</span></span>
+                                <span className="text-[13px] font-semibold text-foreground/70 tracking-tight">Lv.{level} <span className="text-muted-foreground/40 font-normal">/ {MAX_LEVEL}</span></span>
                             </div>
-                            <div className="w-full max-w-[140px] h-1 bg-secondary/30 rounded-full overflow-hidden">
+                            <div className="w-full max-w-[140px] h-1.5 bg-secondary rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-accent/80 rounded-full transition-all duration-500 ease-out shadow-sm"
+                                    className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
                                     style={{ width: `${progress}%` }}
                                 />
                             </div>
                         </div>
 
                         <div className="text-right">
-                            <span className="text-[11px] text-muted-foreground/40 font-medium uppercase tracking-wider block mb-0.5">Score</span>
-                            <span className="font-semibold text-lg sm:text-xl text-foreground tabular-nums leading-none">{score}</span>
+                            <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider block mb-0.5">Score</span>
+                            <span className="font-bold text-lg sm:text-xl text-foreground tabular-nums leading-none font-mono">{score}</span>
                         </div>
                     </div>
 
                     {/* Game Area */}
-                    <div className="w-full px-4 sm:px-8 py-6 sm:py-10">
-                        <div className="flex flex-wrap justify-center gap-3 sm:gap-6">
+                    <div className="w-full px-4 sm:px-8 py-8 sm:py-12">
+                        <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
                             {bubbles.map((bubble) => (
                                 <button
                                     key={bubble.id}
                                     onClick={() => handleBubbleClick(bubble)}
                                     disabled={bubble.selected || transitioning}
                                     style={{ WebkitTapHighlightColor: 'transparent' }}
-                                    className={`w-[80px] h-[80px] sm:w-[110px] sm:h-[110px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none touch-manipulation border
+                                    className={`w-[88px] h-[88px] sm:w-[116px] sm:h-[116px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none touch-manipulation border-2
                                         ${bubble.selected
-                                            ? 'bg-accent/5 text-accent/30 scale-90 border-accent/10 shadow-inner'
+                                            ? 'bg-secondary text-muted-foreground/40 scale-90 border-secondary shadow-none'
                                             : bubble.wrong
-                                                ? 'bg-destructive/5 text-destructive animate-shake border-destructive/20'
-                                                : 'bg-white text-slate-900 border-white/5 hover:scale-105 shadow-lg shadow-black/10 hover:shadow-accent/5 cursor-pointer active:scale-95'
+                                                ? 'bg-destructive/8 text-destructive animate-shake border-destructive/30'
+                                                : 'bg-white text-foreground border-border/50 hover:scale-105 shadow-md shadow-[hsl(260_40%_88%/0.8)] hover:border-accent/30 hover:shadow-[0_6px_20px_hsl(265_80%_60%/0.15)] cursor-pointer active:scale-95'
                                         }`}
                                 >
                                     <span className="text-sm sm:text-base font-semibold tracking-tight leading-none px-2 text-center">{bubble.text}</span>
                                     {bubble.selected && bubble.order && (
-                                        <span className="text-[10px] mt-1 opacity-20 font-medium uppercase tracking-tighter">Done</span>
+                                        <span className="text-[10px] mt-1 opacity-30 font-medium uppercase tracking-tighter">Done</span>
                                     )}
                                 </button>
                             ))}
@@ -353,30 +354,28 @@ const BubbleGame = () => {
                     {/* Bottom Bar */}
                     <div className="w-full px-4 sm:px-8 pb-6 sm:pb-10 flex items-center justify-between mt-auto">
                         <div className="flex items-center gap-3">
-                            <div className="relative w-8 h-8">
+                            <div className="relative w-9 h-9">
                                 <svg className="w-full h-full -rotate-90" viewBox="0 0 48 48">
-                                    <circle cx="24" cy="24" r="21" fill="none" stroke="hsl(var(--secondary)/0.15)" strokeWidth="2" />
+                                    <circle cx="24" cy="24" r="21" fill="none" stroke="hsl(var(--secondary))" strokeWidth="3" />
                                     <circle
                                         cx="24" cy="24" r="21" fill="none"
                                         stroke={timeLeft <= 3 ? 'hsl(var(--destructive))' : 'hsl(var(--accent))'}
-                                        strokeWidth="2.5"
+                                        strokeWidth="3"
                                         strokeDasharray={`${2 * Math.PI * 21}`}
                                         strokeDashoffset={`${2 * Math.PI * 21 * (1 - timerProgress / 100)}`}
                                         strokeLinecap="round"
                                         className="transition-all duration-1000 ease-linear"
                                     />
                                 </svg>
-                                <span className={`absolute inset-0 flex items-center justify-center font-semibold text-[10px] tabular-nums text-foreground ${timeLeft <= 3 ? 'text-destructive' : ''}`}>
+                                <span className={`absolute inset-0 flex items-center justify-center font-bold text-[11px] tabular-nums ${timeLeft <= 3 ? 'text-destructive' : 'text-foreground'}`}>
                                     {timeLeft}
                                 </span>
                             </div>
-                            <div className="flex flex-col gap-0.5">
-                                <span className="text-[11px] text-muted-foreground/30 font-medium uppercase tracking-wide leading-none">Time</span>
-                            </div>
+                            <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Time</span>
                         </div>
 
                         <div className="text-right">
-                            <span className="text-[12px] sm:text-[13px] font-normal text-muted-foreground/40 tracking-tight">Keep going!</span>
+                            <span className="text-[12px] sm:text-[13px] font-medium text-muted-foreground/50 tracking-tight">Keep going!</span>
                         </div>
                     </div>
 
