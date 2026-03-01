@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { ShieldCheck, Users, Activity, Trophy, Zap } from 'lucide-react';
+import DecorativeCurve from './DecorativeCurve';
 
 const IN_TEST_ROUTES = ['/game', '/crossmath', '/numlink', '/select-game', '/lobby', '/waiting-approval'];
 const HIDE_CTA_ROUTES = ['/student', '/leaderboard'];
@@ -15,86 +16,74 @@ const NavBar = () => {
     const hideCta = HIDE_CTA_ROUTES.includes(path);
     const isAdmin = path === '/ashu';
 
+
     const finished = students.filter(s => s.isFinished).length;
     const active = students.filter(s => !s.isFinished).length;
+    const isHome = path === '/';
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-40 h-14 sm:h-[60px] flex items-center border-b border-border/50 glass-surface">
-            <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                style={{ background: 'linear-gradient(135deg, hsl(255 72% 56%) 0%, hsl(280 70% 60%) 100%)' }}
-            />
-            <div className="relative w-full max-w-6xl mx-auto px-5 sm:px-8 flex items-center justify-between gap-4">
+        <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col ${isHome ? 'h-auto' : 'h-14'}`}>
+            <div className={`h-14 flex items-center ${isHome ? 'bg-gradient-to-r from-[#EDE9FE]/95 to-[#F5F3FF]/95' : 'bg-white/95'} backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm relative z-10`}>
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />
+                <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-10 flex items-center justify-between gap-4">
 
-                {/* Left */}
-                <button onClick={() => navigate('/')} className="flex items-center gap-2.5 group">
-                    <div className="relative">
-                        <img
-                            src="/favicon-round.png"
-                            alt="MindSprint"
-                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-contain transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <div className="absolute -inset-0.5 rounded-full bg-accent/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
-                    </div>
-                    <span className="font-semibold text-foreground text-sm sm:text-[15px] tracking-tight">
-                        MindSprint
-                    </span>
-                </button>
-
-                {/* Center */}
-                <div className="flex-1 flex items-center justify-center">
-                    {isAdmin && adminLoggedIn ? (
-                        <div className="hidden sm:flex items-center gap-1.5">
-                            {[
-                                { icon: <Users className="w-3 h-3" />, value: students.length, label: 'joined', color: 'text-accent' },
-                                { icon: <Activity className="w-3 h-3" />, value: active, label: 'active', color: 'text-success' },
-                                { icon: <Trophy className="w-3 h-3" />, value: finished, label: 'done', color: 'text-amber-500' },
-                            ].map(({ icon, value, label, color }) => (
-                                <div key={label} className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] text-muted-foreground bg-secondary/80 border border-border/50">
-                                    <span className={color}>{icon}</span>
-                                    <span className="font-bold text-foreground tabular-nums">{value}</span>
-                                    <span>{label}</span>
-                                </div>
-                            ))}
+                    {/* Left — Logo */}
+                    <button onClick={() => navigate('/')} className="flex items-center gap-2 group shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm border border-[#E6E1FF]">
+                            <img
+                                src="/favicon-round.png"
+                                alt="MindSprint"
+                                className="w-5 h-5 rounded-full object-contain"
+                            />
                         </div>
-                    ) : inTest && currentStudent ? (
-                        <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Zap className="w-3 h-3 text-accent" />
-                            <span>Playing as</span>
-                            <span className="font-semibold text-foreground bg-accent/8 px-2 py-0.5 rounded-full">{currentStudent.username}</span>
-                        </div>
-                    ) : (
-                        <span className="hidden sm:block text-[11px] font-medium tracking-[0.2em] text-muted-foreground/35 uppercase select-none pointer-events-none">
-                            Think · Solve · Win
+                        <span className="font-bold text-[#111827] text-[15px] tracking-tight">
+                            MindSprint
                         </span>
-                    )}
-                </div>
+                    </button>
 
-                {/* Right */}
-                <div className="flex items-center gap-2">
-                    {isAdmin ? (
-                        <div className="flex items-center gap-1.5 bg-accent/8 border border-accent/20 rounded-full px-3 py-1">
-                            <ShieldCheck className="w-3.5 h-3.5 text-accent" />
-                            <span className="text-[11px] font-semibold text-accent">Admin</span>
-                        </div>
-                    ) : inTest && currentStudent ? (
-                        <button
-                            onClick={() => navigate('/')}
-                            className="text-xs font-medium text-muted-foreground hover:text-foreground bg-secondary hover:bg-secondary/80 rounded-lg px-3.5 py-1.5 transition-all duration-200 border border-border/50"
-                        >
-                            Exit
-                        </button>
-                    ) : hideCta ? null : (
-                        <button
-                            onClick={() => navigate('/student')}
-                            className="text-xs sm:text-sm font-semibold text-accent-foreground bg-accent hover:bg-accent/90 rounded-lg px-4 py-2 transition-all duration-200 btn-glow active:scale-[0.97]"
-                        >
-                            Enter Test PIN
-                        </button>
-                    )}
-                </div>
+                    {/* Right */}
+                    <div className="flex items-center gap-6">
+                        {!hideCta && !inTest && !isAdmin && (
+                            <button
+                                onClick={() => navigate(path === '/about' ? '/' : '/about')}
+                                className="hidden sm:block text-[13px] font-medium text-[#4B5563] hover:text-[#111827] transition-colors"
+                            >
+                                {path === '/about' ? 'Home' : 'About'}
+                            </button>
+                        )}
 
+                        {isAdmin ? (
+                            <div className="flex items-center gap-1.5 bg-[#6D4AFE]/10 border border-[#6D4AFE]/20 rounded-full px-3 py-1">
+                                <span className="text-[11px] font-bold text-[#6D4AFE]">Admin Mode</span>
+                            </div>
+                        ) : inTest && currentStudent ? (
+                            <button
+                                onClick={() => navigate('/')}
+                                className="text-[12px] font-semibold text-[#4B5563] hover:text-[#111827] bg-white border border-[#E6E1FF] rounded-lg px-4 py-1.5 transition-all shadow-sm"
+                            >
+                                Exit Test
+                            </button>
+                        ) : !hideCta ? (
+                            <button
+                                onClick={() => navigate('/student')}
+                                className="bg-[#6D4AFE] hover:bg-[#6D4AFE]/90 text-white text-[13px] font-semibold rounded-xl px-5 py-2 transition-all shadow-md shadow-[#6D4AFE]/10"
+                            >
+                                Enter Test PIN
+                            </button>
+                        ) : null}
+                    </div>
+                </div>
             </div>
+
+            {/* Decorative Curvy Bottom (Home Page Only) */}
+            {isHome && (
+                <DecorativeCurve
+                    height="h-[25px] sm:h-[35px]"
+                    opacity={0.05}
+                    className="relative z-0 -mt-[1px]"
+                    animate={true}
+                />
+            )}
         </header>
     );
 };

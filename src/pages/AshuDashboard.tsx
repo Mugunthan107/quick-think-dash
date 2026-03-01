@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square } from 'lucide-react';
+import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square, Trophy, Medal, Filter, Eye, Crown, User } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -22,31 +22,25 @@ import AshuLogin from './AshuLogin';
 // ─── Medal colors ────────────────────────────────────────
 const MEDAL = {
   1: {
-    bg: 'bg-amber-50',
-    border: 'border-amber-300/60',
-    shadow: 'shadow-[0_0_20px_hsl(45_90%_65%/0.25)]',
-    iconBg: 'bg-amber-400',
-    text: 'text-amber-600',
-    label: '🥇',
-    glow: 'hover:shadow-[0_0_28px_hsl(45_90%_65%/0.4)]',
+    bg: 'bg-gradient-to-br from-amber-100 to-amber-50',
+    border: 'border-amber-400',
+    shadow: 'shadow-[0_12px_40px_-12px_rgba(251,191,36,0.6)]',
+    text: 'text-amber-500',
+    glow: 'hover:shadow-[0_12px_50px_-12px_rgba(251,191,36,0.8)]',
   },
   2: {
-    bg: 'bg-slate-50',
-    border: 'border-slate-300/60',
-    shadow: 'shadow-[0_0_14px_hsl(220_15%_70%/0.25)]',
-    iconBg: 'bg-slate-400',
+    bg: 'bg-gradient-to-br from-slate-100 to-slate-50',
+    border: 'border-slate-300',
+    shadow: 'shadow-[0_12px_35px_-12px_rgba(148,163,184,0.5)]',
     text: 'text-slate-500',
-    label: '🥈',
-    glow: 'hover:shadow-[0_0_20px_hsl(220_15%_60%/0.35)]',
+    glow: 'hover:shadow-[0_12px_40px_-12px_rgba(148,163,184,0.7)]',
   },
   3: {
-    bg: 'bg-orange-50',
-    border: 'border-orange-300/50',
-    shadow: 'shadow-[0_0_12px_hsl(25_80%_65%/0.2)]',
-    iconBg: 'bg-orange-400',
+    bg: 'bg-gradient-to-br from-orange-100 to-orange-50',
+    border: 'border-orange-300',
+    shadow: 'shadow-[0_12px_35px_-12px_rgba(249,115,22,0.5)]',
     text: 'text-orange-500',
-    label: '🥉',
-    glow: 'hover:shadow-[0_0_18px_hsl(25_80%_65%/0.3)]',
+    glow: 'hover:shadow-[0_12px_40px_-12px_rgba(249,115,22,0.7)]',
   },
 } as const;
 
@@ -64,16 +58,45 @@ interface PodiumCardProps {
 const PodiumCard = ({ rank, name, score, correctAnswers, totalQuestions, timeTaken, large }: PodiumCardProps) => {
   const m = MEDAL[rank];
   return (
-    <div
-      className={`flex flex-col items-center rounded-2xl border p-4 sm:p-5 transition-all duration-200 hover:scale-[1.03] cursor-default
-        ${m.bg} ${m.border} ${m.shadow} ${m.glow}
-        ${large ? 'w-36 sm:w-44' : 'w-28 sm:w-36'}`}
-    >
-      <span className={`text-3xl sm:text-4xl mb-2 ${large ? 'text-4xl sm:text-5xl' : ''}`}>{m.label}</span>
-      <span className={`font-bold text-foreground text-center text-sm leading-tight truncate w-full text-center mb-1 ${large ? 'text-base' : 'text-sm'}`}>{name}</span>
-      <span className={`font-mono font-bold ${m.text} ${large ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'} mt-1`}>{score}</span>
-      <span className="text-[10px] text-muted-foreground font-medium mt-0.5">{correctAnswers}/{totalQuestions} correct</span>
-      <span className="text-[10px] text-muted-foreground font-medium">{timeTaken.toFixed(1)}s</span>
+    <div className={`flex flex-col items-center ${large ? '-mt-4 sm:-mt-6' : ''}`}>
+      {/* Rank Indicator */}
+      <div className="mb-2 sm:mb-3 flex flex-col items-center justify-end h-10 sm:h-12">
+        {rank === 1 && <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500 drop-shadow-md pb-1" fill="currentColor" />}
+        {rank === 2 && (
+          <div className="flex flex-col items-center">
+            <span className="font-black text-slate-500 text-lg sm:text-xl leading-none">2</span>
+            <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[6px] border-transparent border-b-emerald-500 mt-1" />
+          </div>
+        )}
+        {rank === 3 && (
+          <div className="flex flex-col items-center">
+            <span className="font-black text-orange-500 text-lg sm:text-xl leading-none">3</span>
+            <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[6px] border-transparent border-t-red-500 mt-1" />
+          </div>
+        )}
+      </div>
+
+      {/* Circular Glassmorphism Avatar */}
+      <div
+        className={`relative flex items-center justify-center rounded-full border-[3px] sm:border-[4px] p-1.5 transition-all duration-300 hover:scale-[1.05] cursor-default
+          bg-white/60 backdrop-blur-xl ${m.border} ${m.shadow} ${m.glow}
+          ${large ? 'w-28 h-28 sm:w-36 sm:h-36 z-20' : 'w-20 h-20 sm:w-28 sm:h-28 z-10'}`}
+      >
+        <div className={`w-full h-full rounded-full flex items-center justify-center ${m.bg} shadow-inner`}>
+          <User className={`w-1/2 h-1/2 ${m.text}`} strokeWidth={2.5} />
+        </div>
+      </div>
+
+      {/* Details underneath */}
+      <div className="mt-3 sm:mt-4 text-center flex flex-col items-center bg-white/40 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-black/[0.03]">
+        <span className={`font-bold text-foreground truncate w-24 sm:w-28 ${large ? 'text-[15px] sm:text-[16px]' : 'text-xs sm:text-sm'}`}>{name}</span>
+        <span className={`font-black tracking-tighter ${m.text} ${large ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'} leading-none mt-1`}>{score}</span>
+        <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground font-semibold mt-1">
+          <span>{correctAnswers}/{totalQuestions}</span>
+          <span className="w-1 h-1 bg-muted-foreground/30 rounded-full" />
+          <span>{timeTaken.toFixed(1)}s</span>
+        </div>
+      </div>
     </div>
   );
 };
@@ -92,10 +115,10 @@ interface PodiumRowProps {
 const PodiumRow = ({ top3 }: PodiumRowProps) => {
   const [first, second, third] = top3;
   return (
-    <div className="flex items-end justify-center gap-3 sm:gap-4 py-4">
-      {/* 2nd place — left, shorter */}
+    <div className="flex items-end justify-center gap-2 sm:gap-6 pt-8 pb-4">
+      {/* 2nd place — left */}
       {second ? (
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center">
           <PodiumCard
             rank={2}
             name={second.username}
@@ -104,13 +127,12 @@ const PodiumRow = ({ top3 }: PodiumRowProps) => {
             totalQuestions={second.totalQuestions}
             timeTaken={second.timeTaken}
           />
-          <div className="w-full h-8 bg-slate-200/70 rounded-b-lg" />
         </div>
-      ) : <div className="w-28 sm:w-36" />}
+      ) : <div className="w-24 sm:w-28" />}
 
-      {/* 1st place — center, tallest */}
+      {/* 1st place — center */}
       {first ? (
-        <div className="flex flex-col items-center gap-1 -mb-0">
+        <div className="flex flex-col items-center z-20">
           <PodiumCard
             rank={1}
             name={first.username}
@@ -120,13 +142,12 @@ const PodiumRow = ({ top3 }: PodiumRowProps) => {
             timeTaken={first.timeTaken}
             large
           />
-          <div className="w-full h-14 bg-amber-200/60 rounded-b-lg" />
         </div>
       ) : null}
 
-      {/* 3rd place — right, shortest */}
+      {/* 3rd place — right */}
       {third ? (
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center">
           <PodiumCard
             rank={3}
             name={third.username}
@@ -135,9 +156,8 @@ const PodiumRow = ({ top3 }: PodiumRowProps) => {
             totalQuestions={third.totalQuestions}
             timeTaken={third.timeTaken}
           />
-          <div className="w-full h-5 bg-orange-200/50 rounded-b-lg" />
         </div>
-      ) : <div className="w-28 sm:w-36" />}
+      ) : <div className="w-24 sm:w-28" />}
     </div>
   );
 };
@@ -316,12 +336,12 @@ const AshuDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 relative z-10">
+    <div className="flex flex-col flex-1 w-full bg-[#F8F9FB] min-h-screen p-4 sm:p-6 lg:p-8">
       {showCountdown && <CountdownOverlay onComplete={() => setShowCountdown(false)} />}
-      <div className="max-w-2xl mx-auto animate-fade-in">
+      <div className="relative w-full max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-fade-in pb-16">
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 sm:mb-10">
+        {/* Header Section */}
+        <div className="flex items-center justify-between gap-4 mb-2 sm:mb-4 px-2">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium">Manage tests and monitor progress</p>
@@ -349,7 +369,7 @@ const AshuDashboard = () => {
         </div>
 
         {/* Test PIN Section */}
-        <div className="bg-white rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border border-border shadow-[0_4px_16px_hsl(260_40%_90%/0.5)]">
+        <div className="card-glass rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">Test Session</h2>
             {sessions.length > 0 ? (
@@ -379,12 +399,13 @@ const AshuDashboard = () => {
             <div className="space-y-4 sm:space-y-5">
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* PIN Display */}
-                <div className="bg-accent/5 rounded-xl px-4 sm:px-6 py-4 flex-1 min-w-0 border border-accent/15 relative overflow-hidden">
+                <div className="bg-accent/5 rounded-xl px-4 sm:px-6 py-4 flex-1 min-w-0 border border-accent/20 relative overflow-hidden"
+                  style={{ boxShadow: '0 0 20px hsl(258 80% 58% / 0.10)' }}>
                   <div className="absolute top-0 right-0 p-4 opacity-5">
                     <Activity className="w-24 h-24 text-accent" />
                   </div>
                   <span className="text-[10px] text-accent font-bold block mb-2 uppercase tracking-wider">Session Active</span>
-                  <div className="font-mono text-3xl sm:text-5xl font-bold text-accent tracking-[0.1em] mb-2">{currentTest.pin}</div>
+                  <div className="font-mono text-3xl sm:text-5xl font-bold text-accent tracking-[0.1em] mb-2" style={{ textShadow: '0 0 20px hsl(258 80% 58% / 0.25)' }}>{currentTest.pin}</div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>Created: {new Date(currentTest.createdAt).toLocaleTimeString()}</span>
                     <span>•</span>
@@ -399,21 +420,27 @@ const AshuDashboard = () => {
                     <Button variant="outline" size="icon" onClick={() => deleteSession(currentTest.pin)} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground h-12 w-12 rounded-xl"><Trash2 className="w-5 h-5" /></Button>
                   </div>
                   {currentTest.status !== 'STARTED' ? (
-                    <Button onClick={() => { startTest(); setShowCountdown(true); }} className="h-16 w-full sm:w-48 text-xl font-bold bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20 animate-pulse">
+                    <Button
+                      onClick={() => { startTest(); setShowCountdown(true); }}
+                      className="h-16 w-full sm:w-48 text-xl font-bold btn-primary text-white rounded-xl"
+                      style={{ boxShadow: '0 0 22px hsl(158 70% 45% / 0.32), 0 4px 16px hsl(158 70% 45% / 0.20)', background: 'linear-gradient(135deg, hsl(158 68% 40%) 0%, hsl(145 65% 35%) 100%)' }}
+                    >
                       <Play className="w-6 h-6 mr-2 fill-current" />START TEST
                     </Button>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      <div className="h-16 w-full sm:w-48 flex items-center justify-center bg-green-50 border border-green-200 rounded-xl">
-                        <span className="text-green-600 font-bold flex items-center gap-2"><Activity className="w-4 h-4 animate-pulse" />RUNNING</span>
+                      <div className="h-16 w-full sm:w-48 flex items-center justify-center bg-emerald-50 border border-emerald-300/60 rounded-xl"
+                        style={{ boxShadow: '0 0 14px hsl(158 70% 45% / 0.15)' }}>
+                        <span className="text-emerald-600 font-bold flex items-center gap-2 text-sm">
+                          <Activity className="w-4 h-4 animate-pulse" />RUNNING
+                        </span>
                       </div>
                       <button
                         onClick={() => {
-                          if (confirm('Stop the test? All students still playing will be marked as finished.')) {
-                            stopTest();
-                          }
+                          if (confirm('Stop the test? All students still playing will be marked as finished.')) stopTest();
                         }}
-                        className="h-10 w-full sm:w-48 flex items-center justify-center gap-2 rounded-xl bg-destructive/10 hover:bg-destructive hover:text-white text-destructive border border-destructive/30 font-bold text-sm transition-all duration-200"
+                        className="h-10 w-full sm:w-48 flex items-center justify-center gap-2 rounded-xl bg-red-50 hover:bg-destructive hover:text-white text-destructive border border-destructive/30 font-bold text-sm transition-all duration-200"
+                        style={{ boxShadow: '0 0 8px hsl(348 85% 55% / 0.10)' }}
                       >
                         <Square className="w-4 h-4 fill-current" />Stop Test
                       </button>
@@ -425,11 +452,12 @@ const AshuDashboard = () => {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {[
-                  { icon: <Users className="w-3.5 h-3.5 text-muted-foreground" />, value: students.length, label: 'Joined' },
-                  { icon: <Activity className="w-3.5 h-3.5 text-accent" />, value: active.length, label: 'Active' },
-                  { icon: <span className="text-xs text-success">✓</span>, value: finished.length, label: 'Done' },
-                ].map(({ icon, value, label }) => (
-                  <div key={label} className="bg-secondary rounded-xl p-2.5 sm:p-3 text-center border border-border">
+                  { icon: <Users className="w-3.5 h-3.5 text-accent" />, value: students.length, label: 'Joined', bg: 'icon-bg-purple', glow: '0 0 14px hsl(258 76% 55% / 0.12)' },
+                  { icon: <Activity className="w-3.5 h-3.5 text-blue-500" />, value: active.length, label: 'Active', bg: 'icon-bg-blue', glow: '0 0 14px hsl(210 90% 60% / 0.12)' },
+                  { icon: <span className="text-xs text-emerald-600 font-bold">✓</span>, value: finished.length, label: 'Done', bg: 'icon-bg-green', glow: '0 0 14px hsl(158 68% 36% / 0.12)' },
+                ].map(({ icon, value, label, bg, glow }) => (
+                  <div key={label} className={`${bg} rounded-xl p-2.5 sm:p-3 text-center border`}
+                    style={{ boxShadow: glow }}>
                     <div className="flex justify-center mb-1">{icon}</div>
                     <span className="font-mono font-bold text-base sm:text-lg text-foreground block">{value}</span>
                     <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium">{label}</span>
@@ -438,7 +466,7 @@ const AshuDashboard = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button onClick={() => setShowCreatePinDialog(true)} variant="outline" size="sm" className="flex-1 border-border rounded-lg text-xs sm:text-sm">
+                <Button onClick={() => setShowCreatePinDialog(true)} size="sm" className="flex-1 btn-primary text-white rounded-lg text-xs sm:text-sm">
                   <Plus className="w-3.5 h-3.5 mr-1" />New Session
                 </Button>
               </div>

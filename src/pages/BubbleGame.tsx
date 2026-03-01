@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Zap, Trophy } from 'lucide-react';
+import GradientBg from '@/components/GradientBg';
 
 interface BubbleData {
     text: string;
@@ -227,25 +228,31 @@ const BubbleGame = () => {
 
     if (finished) {
         return (
-            <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
+            <div className="page-bg flex min-h-screen items-center justify-center p-4">
+                <GradientBg />
                 <div className="text-center animate-fade-in max-w-md w-full px-2">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-6 animate-pulse-ring">
-                        <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-success" />
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6">
+                        <div className="w-full h-full rounded-full bg-emerald-50 border border-emerald-200/60 flex items-center justify-center animate-pulse-ring"
+                            style={{ boxShadow: '0 0 28px hsl(158 70% 38% / 0.25)' }}>
+                            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" />
+                        </div>
+                        <div className="absolute -inset-1 rounded-full bg-emerald-400/10 blur-xl -z-10 animate-pulse" />
                     </div>
-                    <h1 className="text-[26px] sm:text-[32px] font-bold text-foreground mb-2 tracking-tight">Bubble Complete!</h1>
+                    <h1 className="text-[26px] sm:text-[32px] font-extrabold text-foreground mb-2 tracking-tight">Bubble Complete!</h1>
                     <p className="text-base text-muted-foreground mb-8 font-medium">Great work, {currentStudent?.username}!</p>
 
-                    <div className="bg-white rounded-2xl border border-border p-6 mb-8 shadow-sm">
+                    <div className="bg-white rounded-2xl border border-border p-6 mb-8"
+                        style={{ boxShadow: '0 0 24px hsl(258 80% 58% / 0.08), 0 8px 20px hsl(224 30% 12% / 0.05)' }}>
                         <div className="flex items-center justify-center gap-8">
                             <div className="text-center">
                                 <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider block mb-1">Score</span>
-                                <span className="font-bold text-2xl sm:text-3xl text-accent font-mono">{score}</span>
+                                <span className="font-bold text-2xl sm:text-3xl text-accent font-mono" style={{ textShadow: '0 0 16px hsl(258 80% 58% / 0.22)' }}>{score}</span>
                             </div>
                             <div className="w-px h-10 bg-border" />
                             <div className="text-center">
                                 <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider block mb-1">Correct</span>
                                 <div className="flex items-baseline justify-center gap-1">
-                                    <span className="font-bold text-2xl sm:text-3xl text-success font-mono">{correctCount}</span>
+                                    <span className="font-bold text-2xl sm:text-3xl text-emerald-500 font-mono">{correctCount}</span>
                                     <span className="text-sm text-muted-foreground">/ {MAX_LEVEL}</span>
                                 </div>
                             </div>
@@ -254,7 +261,8 @@ const BubbleGame = () => {
 
                     <button
                         onClick={handlePostFinish}
-                        className="bg-accent text-accent-foreground px-10 py-3.5 rounded-xl font-semibold hover:bg-accent/90 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg shadow-lg shadow-accent/25"
+                        className="bg-accent text-accent-foreground px-10 py-3.5 rounded-xl font-semibold hover:bg-accent/90 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg btn-glow"
+                        style={{ boxShadow: '0 0 20px hsl(258 80% 58% / 0.28), 0 4px 14px hsl(258 80% 58% / 0.18)' }}
                     >
                         {getNextGame() ? 'Next Game →' : 'Finish'}
                     </button>
@@ -303,8 +311,8 @@ const BubbleGame = () => {
                 </div>
 
                 {/* Main Game Card */}
-                <div className={`bg-white rounded-[24px] relative flex flex-col items-center shadow-[0_8px_32px_hsl(260_40%_88%/0.7)] border overflow-hidden transition-all duration-300 ${flash === 'wrong' ? 'border-destructive/30' : flash === 'correct' ? 'border-success/30' : 'border-border'
-                    }`}>
+                <div className={`bg-white rounded-[24px] relative flex flex-col items-center border overflow-hidden transition-all duration-300 ${flash === 'wrong' ? 'border-destructive/40' : flash === 'correct' ? 'border-emerald-400/40' : 'border-border'}`}
+                    style={{ boxShadow: flash === 'wrong' ? '0 0 28px hsl(348 85% 55% / 0.4), 0 8px 20px hsl(224 30% 12% / 0.05)' : flash === 'correct' ? '0 0 28px hsl(158 70% 38% / 0.4), 0 8px 20px hsl(224 30% 12% / 0.05)' : '0 0 24px hsl(258 80% 58% / 0.07), 0 8px 24px hsl(224 30% 12% / 0.05)' }}>
 
                     <div className="w-full px-4 sm:px-8 pt-6 sm:pt-10 pb-3 flex items-start justify-between">
                         <div className="flex-1">
@@ -339,14 +347,17 @@ const BubbleGame = () => {
                                     key={bubble.id}
                                     onClick={() => handleBubbleClick(bubble)}
                                     disabled={bubble.selected || transitioning}
-                                    style={{ WebkitTapHighlightColor: 'transparent' }}
                                     className={`w-[88px] h-[88px] sm:w-[116px] sm:h-[116px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none touch-manipulation border-2
                                         ${bubble.selected
                                             ? 'bg-secondary text-muted-foreground/40 scale-90 border-secondary shadow-none'
                                             : bubble.wrong
-                                                ? 'bg-destructive/8 text-destructive animate-shake border-destructive/30'
-                                                : 'bg-white text-foreground border-border/50 hover:scale-105 shadow-md shadow-[hsl(260_40%_88%/0.8)] hover:border-accent/30 hover:shadow-[0_6px_20px_hsl(265_80%_60%/0.15)] cursor-pointer active:scale-95'
+                                                ? 'bg-red-50 text-destructive animate-shake border-destructive/40'
+                                                : 'bg-white text-foreground border-border hover:scale-105 hover:border-accent/40 cursor-pointer active:scale-95'
                                         }`}
+                                    style={{
+                                        WebkitTapHighlightColor: 'transparent',
+                                        boxShadow: bubble.wrong ? '0 0 18px hsl(348 85% 55% / 0.18)' : undefined,
+                                    }}
                                 >
                                     <span className="text-sm sm:text-base font-semibold tracking-tight leading-none px-2 text-center">{bubble.text}</span>
                                     {bubble.selected && bubble.order && (

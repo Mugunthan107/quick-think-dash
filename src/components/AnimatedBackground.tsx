@@ -31,17 +31,17 @@ const AnimatedBackground = () => {
     }
 
     const createParticles = () => {
-      const count = Math.min(Math.floor(window.innerWidth / 110), 14);
-      particles = Array.from({ length: Math.max(count, 8) }, () => ({
+      const count = Math.min(Math.floor(window.innerWidth / 130), 10);
+      particles = Array.from({ length: Math.max(count, 6) }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 100 + 50,
-        vx: (Math.random() - 0.5) * 0.2,
-        vy: (Math.random() - 0.5) * 0.2,
-        opacity: Math.random() * 0.10 + 0.05,
-        hue: 255 + Math.random() * 20,
+        radius: Math.random() * 80 + 40,
+        vx: (Math.random() - 0.5) * 0.1,
+        vy: (Math.random() - 0.5) * 0.1,
+        opacity: Math.random() * 0.03 + 0.02,
+        hue: 255 + Math.random() * 10,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: Math.random() * 0.006 + 0.003,
+        pulseSpeed: Math.random() * 0.003 + 0.001,
       }));
     };
 
