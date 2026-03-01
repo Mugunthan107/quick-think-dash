@@ -398,7 +398,7 @@ const AshuDashboard = () => {
                     <Button variant="outline" size="icon" onClick={handleCopyPin} className="border-border h-12 w-12 rounded-xl"><Copy className="w-5 h-5" /></Button>
                     <Button variant="outline" size="icon" onClick={() => deleteSession(currentTest.pin)} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground h-12 w-12 rounded-xl"><Trash2 className="w-5 h-5" /></Button>
                   </div>
-                  {currentTest.status === 'WAITING' ? (
+                  {currentTest.status !== 'STARTED' ? (
                     <Button onClick={() => { startTest(); setShowCountdown(true); }} className="h-16 w-full sm:w-48 text-xl font-bold bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20 animate-pulse">
                       <Play className="w-6 h-6 mr-2 fill-current" />START TEST
                     </Button>
