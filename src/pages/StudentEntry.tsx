@@ -69,7 +69,7 @@ const StudentEntry = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
+    <div className="flex min-h-screen items-center justify-center p-4 relative z-10 bg-background">
       <div className="w-full max-w-sm animate-fade-in px-2">
         <button
           onClick={() => step === 'name' ? (setStep('pin'), setError('')) : navigate('/')}
@@ -79,9 +79,9 @@ const StudentEntry = () => {
           {step === 'name' ? 'Change PIN' : 'Back'}
         </button>
 
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-border p-6 sm:p-8 shadow-[0_8px_24px_hsl(260_40%_90%/0.6)]">
+        <div className="bg-card rounded-xl border border-border p-6 sm:p-8 card-elevated">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent flex items-center justify-center shadow-md shadow-accent/20">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-accent flex items-center justify-center">
               <Play className="w-4 h-4 sm:w-5 sm:h-5 text-accent-foreground" />
             </div>
             <div>
