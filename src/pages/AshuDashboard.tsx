@@ -222,7 +222,7 @@ const AshuDashboard = () => {
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(60, 20, 120);
-    doc.text(`MindSprint Results — PIN: ${currentTest?.pin}`, 14, 22);
+    doc.text(`Bubble Results — PIN: ${currentTest?.pin}`, 14, 22);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
@@ -283,7 +283,7 @@ const AshuDashboard = () => {
       rowPageBreak: 'avoid',
     });
 
-    doc.save(`mindsprint-results-${currentTest?.pin}.pdf`);
+    doc.save(`bubble-results-${currentTest?.pin}.pdf`);
     toast.success('Results downloaded as PDF');
   };
 
