@@ -43,6 +43,8 @@ const GameSelector = () => {
   useEffect(() => {
     if (!currentStudent || !currentTest) {
       navigate('/');
+    } else if (currentTest.status === 'FINISHED') {
+      navigate('/');
     } else if (playedGameIds.length >= numGames) {
       navigate('/');
     }

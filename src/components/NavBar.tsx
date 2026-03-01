@@ -37,7 +37,7 @@ const NavBar = () => {
                         <div className="absolute -inset-0.5 rounded-full bg-accent/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
                     </div>
                     <span className="font-semibold text-foreground text-sm sm:text-[15px] tracking-tight">
-                        Mind<span className="text-accent">Sprint</span>
+                        MindSprint
                     </span>
                 </button>
 
@@ -72,7 +72,7 @@ const NavBar = () => {
 
                 {/* Right */}
                 <div className="flex items-center gap-2">
-                    {isAdmin && adminLoggedIn ? (
+                    {isAdmin ? (
                         <div className="flex items-center gap-1.5 bg-accent/8 border border-accent/20 rounded-full px-3 py-1">
                             <ShieldCheck className="w-3.5 h-3.5 text-accent" />
                             <span className="text-[11px] font-semibold text-accent">Admin</span>

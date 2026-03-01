@@ -52,9 +52,7 @@ const Index = () => {
         {/* Title */}
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-3">
-            <span className="text-foreground">Mind</span>
-            <span className="text-accent">Sprint</span>
-            <span className="text-foreground"> Challenge</span>
+            MindSprint Challenge
           </h1>
         </div>
 

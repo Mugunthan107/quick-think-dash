@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock } from 'lucide-react';
+import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -162,7 +162,8 @@ const AshuDashboard = () => {
     rejectStudent,
     getGameLeaderboard,
     fetchStudents,
-    fetchSessions
+    fetchSessions,
+    stopTest,
   } = useGame();
   const navigate = useNavigate();
 
@@ -402,8 +403,20 @@ const AshuDashboard = () => {
                       <Play className="w-6 h-6 mr-2 fill-current" />START TEST
                     </Button>
                   ) : (
-                    <div className="h-16 w-full sm:w-48 flex items-center justify-center bg-green-50 border border-green-200 rounded-xl">
-                      <span className="text-green-600 font-bold flex items-center gap-2"><Activity className="w-4 h-4 animate-pulse" />RUNNING</span>
+                    <div className="flex flex-col gap-2">
+                      <div className="h-16 w-full sm:w-48 flex items-center justify-center bg-green-50 border border-green-200 rounded-xl">
+                        <span className="text-green-600 font-bold flex items-center gap-2"><Activity className="w-4 h-4 animate-pulse" />RUNNING</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (confirm('Stop the test? All students still playing will be marked as finished.')) {
+                            stopTest();
+                          }
+                        }}
+                        className="h-10 w-full sm:w-48 flex items-center justify-center gap-2 rounded-xl bg-destructive/10 hover:bg-destructive hover:text-white text-destructive border border-destructive/30 font-bold text-sm transition-all duration-200"
+                      >
+                        <Square className="w-4 h-4 fill-current" />Stop Test
+                      </button>
                     </div>
                   )}
                 </div>

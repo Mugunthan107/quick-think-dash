@@ -203,6 +203,12 @@ const NumLinkGame = () => {
   }, [currentStudent, navigate]);
 
   useEffect(() => {
+    if (currentTest?.status === 'FINISHED') {
+      navigate('/');
+    }
+  }, [currentTest?.status, navigate]);
+
+  useEffect(() => {
     if (finished) return;
     const level = LEVELS[currentLevel];
     const newGrid = generatePuzzle(level.gridSize, level.maxNumber);

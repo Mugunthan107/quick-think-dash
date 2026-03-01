@@ -15,6 +15,11 @@ const Lobby = () => {
             return;
         }
 
+        if (currentTest.status === 'FINISHED') {
+            navigate('/');
+            return;
+        }
+
         if (currentTest.status === 'STARTED' && !showCountdown) {
             setShowCountdown(true);
         }
@@ -67,23 +72,20 @@ const Lobby = () => {
                             {students.map((student, i) => (
                                 <div
                                     key={student.username}
-                                    className={`p-3 rounded-xl border flex items-center gap-3 transition-all duration-200 animate-fade-in-scale opacity-0 ${
-                                        student.username === currentStudent.username
+                                    className={`p-3 rounded-xl border flex items-center gap-3 transition-all duration-200 animate-fade-in-scale opacity-0 ${student.username === currentStudent.username
                                             ? 'bg-accent/5 border-accent/30'
                                             : 'bg-card border-border hover:border-accent/15'
-                                    }`}
+                                        }`}
                                     style={{ animationDelay: `${i * 0.03}s`, animationFillMode: 'forwards' }}
                                 >
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                        student.username === currentStudent.username
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${student.username === currentStudent.username
                                             ? 'bg-accent text-accent-foreground'
                                             : 'bg-secondary text-muted-foreground'
-                                    }`}>
+                                        }`}>
                                         <User className="w-4 h-4" />
                                     </div>
-                                    <span className={`font-medium truncate text-sm ${
-                                        student.username === currentStudent.username ? 'text-accent' : 'text-foreground'
-                                    }`}>
+                                    <span className={`font-medium truncate text-sm ${student.username === currentStudent.username ? 'text-accent' : 'text-foreground'
+                                        }`}>
                                         {student.username} {student.username === currentStudent.username && '(You)'}
                                     </span>
                                 </div>

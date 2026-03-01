@@ -182,6 +182,12 @@ const CrossMathGame = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [navigate]);
 
+  useEffect(() => {
+    if (currentTest?.status === 'FINISHED') {
+      navigate('/');
+    }
+  }, [currentTest?.status, navigate]);
+
   const puzzle = puzzles[currentQ];
 
   const getCurrentAnswers = useCallback((): (number | null)[] => {

@@ -86,6 +86,12 @@ const BubbleGame = () => {
         }
     }, [currentStudent, navigate]);
 
+    useEffect(() => {
+        if (currentTest?.status === 'FINISHED') {
+            navigate('/');
+        }
+    }, [currentTest?.status, navigate]);
+
     const startRound = useCallback((lvl: number) => {
         const newBubbles = Array.from({ length: 3 }, () => createExpression(lvl));
         setBubbles(newBubbles);

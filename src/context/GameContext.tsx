@@ -53,6 +53,7 @@ interface GameContextType extends GameState {
   verifyTestPin: (pin: string) => Promise<boolean>;
   joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string; pending?: boolean }>;
   startTest: () => Promise<void>;
+  stopTest: () => Promise<void>;
   updateStudentScore: (username: string, score: number, level: number, correctAnswers: number) => Promise<void>;
   submitGameResult: (username: string, result: GameResult) => Promise<void>;
   finishTest: (username: string) => Promise<void>;
@@ -390,6 +391,33 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     toast.success('Test started!');
   }, [currentTest]);
 
+  const stopTest = useCallback(async () => {
+    if (!currentTest) return;
+
+    const now = new Date().toISOString();
+
+    // Mark session as FINISHED
+    const { error: sessionError } = await supabase
+      .from('test_sessions')
+      .update({ status: 'FINISHED' })
+      .eq('pin', currentTest.pin);
+
+    if (sessionError) {
+      toast.error('Failed to stop test');
+      return;
+    }
+
+    // Bulk-finish all students who haven't completed yet
+    await supabase
+      .from('exam_results')
+      .update({ completed_at: now })
+      .eq('test_pin', currentTest.pin)
+      .is('completed_at', null);
+
+    setCurrentTest(prev => prev ? { ...prev, status: 'FINISHED' } : null);
+    toast.success('Test stopped — all students have been finished.');
+  }, [currentTest]);
+
   const verifyTestPin = useCallback(async (pin: string) => {
     try {
       const { data, error } = await supabase
@@ -723,6 +751,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         verifyTestPin,
         joinTest,
         startTest,
+        stopTest,
         updateStudentScore,
         submitGameResult,
         finishTest,
