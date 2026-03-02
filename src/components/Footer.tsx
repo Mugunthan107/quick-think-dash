@@ -9,7 +9,7 @@ const Footer = () => {
   if (shouldHide) return null;
 
   return (
-    <footer className="relative mt-auto w-full bg-[#F1F3F9] border-t border-[#E5E7EB]/60 py-8">
+    <footer className="relative mt-auto w-full bg-[#F0F4FF] border-t border-[#2563EB]/[0.06] py-8">
       <div className="max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-10 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-md bg-white flex items-center justify-center border border-[#E5E7EB]">
@@ -27,7 +27,7 @@ const Footer = () => {
             <button
               key={link.label}
               onClick={() => navigate(link.path)}
-              className="text-[12px] font-medium text-[#4B5563] hover:text-[#6D4AFE] transition-colors"
+              className="text-[12px] font-medium text-[#4B5563] hover:text-[#2563EB] transition-colors"
             >
               {link.label}
             </button>

@@ -1,161 +1,122 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Play, Brain, Grid3X3, Link2, KeyRound, Gamepad2, Clock, Layers3, Zap, ArrowRight } from 'lucide-react';
+import { Play, Brain, Grid3X3, Link2, KeyRound, Gamepad2, Clock, Layers3, Zap, ArrowRight, BookOpen, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import DecorativeCurve from '@/components/DecorativeCurve';
 
-/* ──────────────────── DATA ──────────────────── */
+/* ──────────────────── ORBITAL FLOATING NUMBERS ──────────────────── */
 
-const showcaseGames = [
-  {
-    icon: Brain,
-    name: 'Bubble Sort',
-    tag: 'Sorting · Speed',
-    desc: 'Sort mathematical expressions from lowest to highest value. Tests rapid calculation and decision-making under time pressure.',
-    accentColor: '#6D4AFE',
-    accentBg: 'rgba(109,74,254,0.06)',
-    accentBorder: 'rgba(109,74,254,0.15)',
-  },
-  {
-    icon: Grid3X3,
-    name: 'Cross Math',
-    tag: 'Logic · Analysis',
-    desc: 'Solve grid-based arithmetic puzzles by placing correct values to satisfy both horizontal and vertical equations.',
-    accentColor: '#3B82F6',
-    accentBg: 'rgba(59,130,246,0.06)',
-    accentBorder: 'rgba(59,130,246,0.15)',
-  },
-  {
-    icon: Link2,
-    name: 'NumLink',
-    tag: 'Pattern · Spatial',
-    desc: 'Connect numbers in sequence using valid paths. Enhances number sense, spatial reasoning, and strategic thinking.',
-    accentColor: '#14B8A6',
-    accentBg: 'rgba(20,184,166,0.06)',
-    accentBorder: 'rgba(20,184,166,0.15)',
-  },
-];
-
-const instructionSteps = [
-  {
-    icon: KeyRound,
-    color: '#3B82F6',
-    bg: 'rgba(59,130,246,0.08)',
-    title: 'Enter Test PIN',
-    desc: 'Enter the Test PIN shared by your instructor to join the live session.',
-  },
-  {
-    icon: Gamepad2,
-    color: '#14B8A6',
-    bg: 'rgba(20,184,166,0.08)',
-    title: 'Solve Challenges',
-    desc: 'Solve logic, sorting, and pattern-based challenges in real time.',
-  },
-  {
-    icon: Clock,
-    color: '#F59E0B',
-    bg: 'rgba(245,158,11,0.08)',
-    title: 'Await Results',
-    desc: 'Wait for the instructor to end the session and release results.',
-  },
-];
-
-/* ──────────────────── FLOATING SYMBOLS ──────────────────── */
-
-const FloatingSymbols = () => (
-  <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-    {/* Symbols — low opacity, gentle float */}
-    <div className="absolute top-[12%] left-[8%] animate-float opacity-[0.07] text-[28px] font-bold text-[#6D4AFE]" style={{ animationDelay: '0s' }}>+</div>
-    <div className="absolute top-[18%] right-[12%] animate-float-reverse opacity-[0.06] text-[24px] font-bold text-[#3B82F6]" style={{ animationDelay: '1s' }}>÷</div>
-    <div className="absolute bottom-[22%] left-[15%] animate-float-delayed opacity-[0.07] text-[26px] font-bold text-[#14B8A6]" style={{ animationDelay: '2s' }}>×</div>
-    <div className="absolute bottom-[30%] right-[10%] animate-float opacity-[0.06] text-[22px] font-bold text-[#F59E0B]" style={{ animationDelay: '0.5s' }}>−</div>
-    <div className="absolute top-[40%] left-[4%] animate-float-reverse opacity-[0.05] text-[20px] font-bold text-[#6366F1]" style={{ animationDelay: '1.5s' }}>∑</div>
-    <div className="absolute top-[8%] left-[45%] animate-float-delayed opacity-[0.05] text-[18px] font-bold text-[#6D4AFE]" style={{ animationDelay: '2.5s' }}>π</div>
-    {/* Hide extras on mobile */}
-    <div className="hidden sm:block absolute bottom-[12%] right-[25%] animate-float opacity-[0.05] text-[20px] font-bold text-[#3B82F6]" style={{ animationDelay: '3s' }}>√</div>
-    <div className="hidden sm:block absolute top-[55%] right-[5%] animate-float-delayed opacity-[0.04] text-[16px] font-bold text-[#14B8A6]" style={{ animationDelay: '1.2s' }}>∞</div>
-  </div>
-);
-
-/* ──────────────────── ROTATING SHOWCASE ──────────────────── */
-
-const RotatingShowcase = () => {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [animState, setAnimState] = useState<'in' | 'out'>('in');
-  const [paused, setPaused] = useState(false);
-
-  const rotateToNext = useCallback(() => {
-    setAnimState('out');
-    setTimeout(() => {
-      setActiveIdx(prev => (prev + 1) % showcaseGames.length);
-      setAnimState('in');
-    }, 350);
-  }, []);
-
-  useEffect(() => {
-    if (paused) return;
-    const timer = setInterval(rotateToNext, 3000);
-    return () => clearInterval(timer);
-  }, [paused, rotateToNext]);
-
-  const game = showcaseGames[activeIdx];
+const OrbitingNumbers = () => {
+  // Numbers orbit around a central circle
+  const orbitItems = [
+    { num: '7', size: 52, orbitRadius: 140, speed: 25, delay: 0, color: '#2563EB' },
+    { num: '3', size: 40, orbitRadius: 170, speed: 30, delay: -8, color: '#3B82F6' },
+    { num: '+', size: 36, orbitRadius: 120, speed: 22, delay: -5, color: '#60A5FA' },
+    { num: '9', size: 44, orbitRadius: 190, speed: 35, delay: -12, color: '#1D4ED8' },
+    { num: '÷', size: 34, orbitRadius: 155, speed: 28, delay: -18, color: '#93C5FD' },
+    { num: '5', size: 38, orbitRadius: 200, speed: 32, delay: -3, color: '#2563EB' },
+    { num: '×', size: 32, orbitRadius: 130, speed: 20, delay: -15, color: '#60A5FA' },
+    { num: '2', size: 46, orbitRadius: 180, speed: 27, delay: -10, color: '#3B82F6' },
+  ];
 
   return (
-    <div
-      className="relative w-full max-w-[420px] mx-auto"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      {/* Soft halo behind card */}
-      <div
-        className="absolute inset-0 rounded-3xl opacity-40 blur-3xl pointer-events-none -z-10"
-        style={{ background: `radial-gradient(circle, ${game.accentColor}12 0%, transparent 70%)` }}
-      />
+    <div className="relative w-[320px] h-[320px] sm:w-[420px] sm:h-[420px]">
+      {/* Outer orbit rings */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] rounded-full border border-[#2563EB]/[0.06]" />
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-[220px] h-[220px] sm:w-[300px] sm:h-[300px] rounded-full border border-[#2563EB]/[0.04]" />
+      </div>
 
-      {/* Card */}
-      <div
-        className={`card-float p-8 sm:p-10 ${animState === 'in' ? 'animate-showcase-in' : 'animate-showcase-out'}`}
-        style={{ perspective: '1200px' }}
-      >
-        {/* Icon */}
-        <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-          style={{ background: game.accentBg, border: `1.5px solid ${game.accentBorder}` }}
-        >
-          <game.icon className="w-7 h-7" style={{ color: game.accentColor }} />
+      {/* Center circle */}
+      <div className="absolute inset-0 flex items-center justify-center z-20">
+        <div className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] rounded-full bg-white shadow-[0_8px_40px_rgba(37,99,235,0.12),_0_0_0_1px_rgba(37,99,235,0.06)] flex items-center justify-center">
+          <img src="/favicon-round.png" alt="MindSprint" className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] object-contain" />
         </div>
-
-        {/* Content */}
-        <h3 className="text-xl font-bold text-[#111827] mb-1">{game.name}</h3>
-        <span className="text-[11px] font-semibold uppercase tracking-widest mb-4 block" style={{ color: game.accentColor }}>
-          {game.tag}
-        </span>
-        <p className="text-[14px] text-[#4B5563] leading-relaxed">{game.desc}</p>
       </div>
 
-      {/* Dots indicator */}
-      <div className="flex items-center justify-center gap-2 mt-6">
-        {showcaseGames.map((g, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              if (i === activeIdx) return;
-              setAnimState('out');
-              setTimeout(() => { setActiveIdx(i); setAnimState('in'); }, 350);
-            }}
-            className="transition-all duration-300 rounded-full"
+      {/* Soft halo behind center */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <div className="w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] rounded-full bg-[#2563EB]/[0.04] blur-2xl" />
+      </div>
+
+      {/* Orbiting numbers */}
+      {orbitItems.map((item, i) => (
+        <div
+          key={i}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{
+            animation: `spin-orbit ${item.speed}s linear infinite`,
+            animationDelay: `${item.delay}s`,
+          }}
+        >
+          <div
+            className="absolute flex items-center justify-center rounded-full bg-white shadow-[0_2px_12px_rgba(37,99,235,0.10)] border border-[#2563EB]/[0.08]"
             style={{
-              width: i === activeIdx ? 24 : 8,
-              height: 8,
-              background: i === activeIdx ? g.accentColor : '#E5E7EB',
+              width: item.size,
+              height: item.size,
+              top: `calc(50% - ${item.orbitRadius}px - ${item.size / 2}px)`,
+              left: `calc(50% - ${item.size / 2}px)`,
+              animation: `counter-spin ${item.speed}s linear infinite`,
+              animationDelay: `${item.delay}s`,
             }}
-          />
-        ))}
-      </div>
+          >
+            <span
+              className="font-bold select-none"
+              style={{
+                fontSize: item.size * 0.45,
+                color: item.color,
+                opacity: 0.8,
+              }}
+            >
+              {item.num}
+            </span>
+          </div>
+        </div>
+      ))}
+
+      {/* Mobile: reduce to fewer items via CSS */}
+      <style>{`
+        @keyframes spin-orbit {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes counter-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+        }
+        @media (max-width: 640px) {
+          .orbit-hide-mobile { display: none; }
+        }
+      `}</style>
     </div>
   );
 };
 
 /* ──────────────────── INSTRUCTIONS CARD ──────────────────── */
+
+const instructionSteps = [
+  {
+    icon: KeyRound,
+    color: '#2563EB',
+    bg: 'rgba(37,99,235,0.07)',
+    title: 'Enter Test PIN',
+    desc: 'Enter the Test PIN shared by your instructor to join the live session.',
+  },
+  {
+    icon: Gamepad2,
+    color: '#0EA5E9',
+    bg: 'rgba(14,165,233,0.07)',
+    title: 'Solve Challenges',
+    desc: 'Solve logic, sorting, and pattern-based challenges in real time.',
+  },
+  {
+    icon: Clock,
+    color: '#6366F1',
+    bg: 'rgba(99,102,241,0.07)',
+    title: 'Await Results',
+    desc: 'Wait for the instructor to end the session and release results.',
+  },
+];
 
 const InstructionsCard = () => {
   const [visible, setVisible] = useState(false);
@@ -177,15 +138,12 @@ const InstructionsCard = () => {
   if (!visible) return null;
 
   return (
-    <div id="instructions-card" className="w-full max-w-[560px] mx-auto animate-fade-in-up">
-      <div className="instruction-card p-6 sm:p-8">
+    <div id="instructions-card" className="w-full max-w-[540px] mx-auto animate-fade-in-up">
+      <div className="bg-white rounded-2xl border border-[#2563EB]/10 shadow-[0_4px_24px_rgba(37,99,235,0.06)] p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-[16px] font-bold text-[#111827]">How to Participate</h3>
           <button
-            onClick={() => {
-              setVisible(false);
-              window.history.replaceState(null, '', window.location.pathname);
-            }}
+            onClick={() => { setVisible(false); window.history.replaceState(null, '', window.location.pathname); }}
             className="text-[12px] font-medium text-[#9CA3AF] hover:text-[#4B5563] transition-colors"
           >
             Close
@@ -194,10 +152,7 @@ const InstructionsCard = () => {
         <div className="space-y-5">
           {instructionSteps.map((step, i) => (
             <div key={i} className="flex items-start gap-4">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                style={{ background: step.bg }}
-              >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: step.bg }}>
                 <step.icon className="w-5 h-5" style={{ color: step.color }} />
               </div>
               <div>
@@ -212,78 +167,105 @@ const InstructionsCard = () => {
   );
 };
 
+/* ──────────────────── GAME CARDS ──────────────────── */
+
+const gameCards = [
+  {
+    icon: Brain,
+    name: 'Bubble Sort',
+    tag: 'Sorting',
+    desc: 'Sort mathematical expressions from lowest to highest value under time pressure.',
+    color: '#2563EB',
+    bg: 'rgba(37,99,235,0.05)',
+  },
+  {
+    icon: Grid3X3,
+    name: 'Cross Math',
+    tag: 'Logic',
+    desc: 'Solve grid-based arithmetic puzzles satisfying horizontal and vertical equations.',
+    color: '#0EA5E9',
+    bg: 'rgba(14,165,233,0.05)',
+  },
+  {
+    icon: Link2,
+    name: 'NumLink',
+    tag: 'Pattern',
+    desc: 'Connect numbers in sequence using valid paths to test spatial reasoning.',
+    color: '#6366F1',
+    bg: 'rgba(99,102,241,0.05)',
+  },
+];
+
 /* ──────────────────── PAGE ──────────────────── */
 
 export default function Index() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FB] font-sans selection:bg-[#6D4AFE]/15">
+    <div className="flex flex-col min-h-screen bg-white font-sans selection:bg-[#2563EB]/10">
 
       {/* ───── HERO ───── */}
-      <section className="relative w-full min-h-[calc(100vh-56px)] flex flex-col justify-center overflow-hidden pt-14">
+      <section className="relative w-full min-h-[calc(100vh-56px)] flex items-center overflow-hidden pt-14">
 
-        {/* Top curve */}
-        <DecorativeCurve
-          invert
-          opacity={0.04}
-          height="h-[40px] sm:h-[70px] lg:h-[100px]"
-          className="absolute top-0 left-0 z-10"
-          animate
-        />
-
-        {/* Floating math symbols */}
-        <FloatingSymbols />
-
-        {/* Subtle radial background hint */}
+        {/* Subtle background */}
         <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#6D4AFE]/[0.03] blur-3xl" />
+          <div className="absolute top-0 right-0 w-[50%] h-full bg-[#F0F4FF] rounded-bl-[80px] sm:rounded-bl-[120px]" />
+          <div className="absolute top-[20%] right-[15%] w-[400px] h-[400px] rounded-full bg-[#2563EB]/[0.03] blur-3xl" />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-10 flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 py-12 lg:py-0">
+        <div className="relative z-10 w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-10 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-8 py-10 lg:py-0">
 
           {/* Left — Text */}
-          <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-[540px]">
+          <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-[520px]">
 
             {/* Badge */}
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white/80 px-3.5 py-1.5">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#2563EB]/10 bg-[#2563EB]/[0.04] px-3.5 py-1.5">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-[#6D4AFE] opacity-75 animate-ping" style={{ animationDuration: '2s' }}></span>
-                <span className="relative inline-flex rounded-full w-2 h-2 bg-[#6D4AFE]"></span>
+                <span className="absolute inline-flex h-full w-full rounded-full bg-[#2563EB] opacity-60 animate-ping" style={{ animationDuration: '2s' }} />
+                <span className="relative inline-flex rounded-full w-2 h-2 bg-[#2563EB]" />
               </span>
-              <span className="text-[11px] font-semibold tracking-[0.12em] text-[#6D4AFE]/80 uppercase">Cognitive Assessment Platform</span>
+              <span className="text-[11px] font-semibold tracking-[0.1em] text-[#2563EB] uppercase">Live Assessment Platform</span>
             </div>
 
             {/* Heading */}
-            <h1 className="text-[clamp(32px,5vw,48px)] font-extrabold tracking-tight text-[#111827] leading-[1.1] mb-4">
+            <h1 className="text-[clamp(30px,5vw,46px)] font-extrabold tracking-tight text-[#111827] leading-[1.12] mb-4">
               Think Fast.{' '}
-              <span className="text-[#6D4AFE]">Solve Smart.</span>
+              <span className="text-[#2563EB]">Solve Smart.</span>
             </h1>
 
             {/* Description */}
-            <p className="text-[15px] sm:text-[16px] text-[#4B5563] leading-relaxed mb-8 max-w-[460px]">
-              A professional assessment environment for mathematical logic, pattern recognition, and speed. Join live sessions to benchmark cognitive performance.
+            <p className="text-[15px] text-[#4B5563] leading-relaxed mb-8 max-w-[440px]">
+              Professional cognitive assessment for mathematical logic, pattern recognition, and speed. Benchmark performance in real-time sessions.
             </p>
 
             {/* CTA */}
-            <button
-              onClick={() => navigate('/student')}
-              className="group btn-primary font-semibold rounded-xl px-8 py-3.5 flex items-center gap-2.5 text-[15px]"
-            >
-              <Play className="w-4 h-4 fill-white" />
-              Enter Test PIN
-              <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -ml-1 group-hover:ml-0 transition-all duration-200" />
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => navigate('/student')}
+                className="group bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-xl px-8 py-3.5 flex items-center justify-center gap-2.5 text-[15px] transition-all duration-200 w-full sm:w-auto shadow-[0_4px_16px_rgba(37,99,235,0.20)]"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                Enter Test PIN
+                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -ml-1 group-hover:ml-0 transition-all duration-200" />
+              </button>
+              <a
+                href="#instructions"
+                className="text-[14px] font-medium text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1 transition-colors"
+              >
+                <BookOpen className="w-4 h-4" />
+                How it works
+                <ChevronRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
 
-            {/* Stats row */}
+            {/* Stats */}
             <div className="mt-10 flex items-center justify-center lg:justify-start gap-3 flex-wrap">
               {[
-                { icon: Layers3, text: '3 Game Modes', color: '#6366F1' },
-                { icon: Zap, text: 'Live Scoring', color: '#14B8A6' },
-                { icon: Clock, text: 'Timed Rounds', color: '#F59E0B' },
+                { icon: Layers3, text: '3 Game Modes', color: '#2563EB' },
+                { icon: Zap, text: 'Live Scoring', color: '#0EA5E9' },
+                { icon: Clock, text: 'Timed Rounds', color: '#6366F1' },
               ].map((s, i) => (
-                <div key={i} className="flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-3 py-1.5">
+                <div key={i} className="flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-3 py-1.5 shadow-sm">
                   <s.icon className="w-3.5 h-3.5" style={{ color: s.color }} />
                   <span className="text-[11px] font-medium text-[#4B5563]">{s.text}</span>
                 </div>
@@ -291,56 +273,77 @@ export default function Index() {
             </div>
           </div>
 
-          {/* Right — Rotating Showcase */}
-          <div className="flex-1 w-full max-w-[480px] flex justify-center">
-            <RotatingShowcase />
+          {/* Right — Orbiting Numbers */}
+          <div className="flex-1 w-full flex justify-center lg:justify-end">
+            <OrbitingNumbers />
           </div>
         </div>
-
-        {/* Bottom curve */}
-        <DecorativeCurve
-          opacity={0.04}
-          height="h-[40px] sm:h-[70px] lg:h-[100px]"
-          className="absolute bottom-0 left-0 z-10"
-          animate
-        />
       </section>
 
-      {/* ───── INSTRUCTIONS (inline reveal) ───── */}
-      <section id="instructions" className="relative z-10 w-full py-12 bg-[#F8F9FB]">
+      {/* ───── INSTRUCTIONS (inline) ───── */}
+      <section id="instructions" className="relative z-10 w-full py-10">
         <div className="max-container">
           <InstructionsCard />
+        </div>
+      </section>
+
+      {/* ───── GAME CATEGORIES ───── */}
+      <section className="relative z-10 w-full py-20 bg-[#F8FAFF]">
+        <div className="max-container">
+          <div className="mb-12 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight">Assessment Modules</h2>
+            <p className="text-[#9CA3AF] mt-2 text-[14px]">Three targeted cognitive challenges designed for precision evaluation.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[900px] mx-auto">
+            {gameCards.map((g) => (
+              <div
+                key={g.name}
+                className="bg-white rounded-2xl p-7 border border-[#E5E7EB] shadow-sm hover:shadow-[0_8px_30px_rgba(37,99,235,0.08)] hover:-translate-y-1 transition-all duration-300"
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                  style={{ background: g.bg, border: `1.5px solid ${g.color}18` }}
+                >
+                  <g.icon className="w-6 h-6" style={{ color: g.color }} />
+                </div>
+                <h3 className="text-[16px] font-bold text-[#111827] mb-1">{g.name}</h3>
+                <span className="text-[11px] font-semibold uppercase tracking-wider mb-3 block" style={{ color: g.color }}>{g.tag}</span>
+                <p className="text-[13px] text-[#4B5563] leading-relaxed">{g.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ───── HOW IT WORKS ───── */}
       <section className="relative z-10 w-full py-20 bg-white">
         <div className="max-container">
-          <div className="mb-12 text-center lg:text-left">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight">How MindSprint Works</h2>
-            <p className="text-[#9CA3AF] mt-2 text-[14px]">Structured assessment flow for institutional precision.</p>
+          <div className="mb-12 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight">How It Works</h2>
+            <p className="text-[#9CA3AF] mt-2 text-[14px]">Simple three-step assessment flow.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[900px] mx-auto">
             {[
-              { num: '01', icon: KeyRound, label: 'Join Session', desc: 'Secure initialization using a unique proctor PIN to sync all students.', color: '#3B82F6' },
-              { num: '02', icon: Gamepad2, label: 'Dynamic Assessment', desc: 'Escalating math-logic challenges that benchmark speed and accuracy.', color: '#6366F1' },
-              { num: '03', icon: Brain, label: 'Performance Audit', desc: 'Real-time metrics provide instant analytics for academic evaluation.', color: '#14B8A6' },
+              { num: '01', icon: KeyRound, label: 'Join Session', desc: 'Enter the unique proctor PIN to sync with your assessment group.', color: '#2563EB' },
+              { num: '02', icon: Gamepad2, label: 'Solve Challenges', desc: 'Complete escalating math-logic puzzles benchmarking speed and accuracy.', color: '#0EA5E9' },
+              { num: '03', icon: Brain, label: 'Get Results', desc: 'Performance metrics are computed in real-time for instant evaluation.', color: '#6366F1' },
             ].map((step) => (
               <div
                 key={step.num}
-                className="card-float p-7 group"
+                className="bg-[#F8FAFF] rounded-2xl p-7 border border-[#E5E7EB] hover:bg-white hover:shadow-[0_8px_30px_rgba(37,99,235,0.06)] transition-all duration-300"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: `${step.color}0F`, border: `1.5px solid ${step.color}25` }}
+                    style={{ background: `${step.color}0D`, border: `1.5px solid ${step.color}20` }}
                   >
                     <step.icon className="w-5 h-5" style={{ color: step.color }} />
                   </div>
                   <span className="text-[13px] font-bold" style={{ color: step.color }}>{step.num}</span>
                 </div>
-                <h3 className="text-[16px] font-bold text-[#111827] mb-2">{step.label}</h3>
+                <h3 className="text-[15px] font-bold text-[#111827] mb-2">{step.label}</h3>
                 <p className="text-[13px] text-[#4B5563] leading-relaxed">{step.desc}</p>
               </div>
             ))}
@@ -349,16 +352,16 @@ export default function Index() {
       </section>
 
       {/* ───── BOTTOM CTA ───── */}
-      <section className="relative z-10 w-full py-20 bg-[#F8F9FB]">
+      <section className="relative z-10 w-full py-20 bg-[#F8FAFF]">
         <div className="max-container">
-          <div className="max-w-[480px] mx-auto text-center">
+          <div className="max-w-[460px] mx-auto text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#111827] mb-4">Ready to Begin?</h2>
             <p className="text-[14px] text-[#4B5563] mb-8 leading-relaxed">
-              Enter your unique session PIN to initialize the assessment. Ensure you are in a quiet environment.
+              Enter your session PIN to start the cognitive assessment.
             </p>
             <button
               onClick={() => navigate('/student')}
-              className="btn-primary font-semibold rounded-xl px-10 py-3.5 text-[15px] w-full sm:w-auto"
+              className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-xl px-10 py-3.5 text-[15px] transition-all duration-200 shadow-[0_4px_16px_rgba(37,99,235,0.20)] w-full sm:w-auto"
             >
               Start Assessment
             </button>
