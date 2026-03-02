@@ -16,24 +16,18 @@ const NavBar = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40">
-      <div className="h-14 flex items-center navbar-glass">
+      <div className="h-14 flex items-center bg-white/85 backdrop-blur-xl border-b border-[#2563EB]/[0.06]">
         <div className="w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-10 flex items-center justify-between">
 
           {/* Left — Logo */}
           <button onClick={() => navigate('/')} className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center border border-[#6D4AFE]/10">
-              <img
-                src="/favicon-round.png"
-                alt="MindSprint"
-                className="w-5 h-5 rounded-sm object-contain"
-              />
+            <div className="w-8 h-8 rounded-lg bg-[#2563EB]/[0.06] flex items-center justify-center border border-[#2563EB]/[0.08]">
+              <img src="/favicon-round.png" alt="MindSprint" className="w-5 h-5 rounded-sm object-contain" />
             </div>
-            <span className="font-bold text-[#111827] text-[15px] tracking-tight">
-              MindSprint
-            </span>
+            <span className="font-bold text-[#111827] text-[15px] tracking-tight">MindSprint</span>
           </button>
 
-          {/* Center tagline — desktop only */}
+          {/* Center tagline */}
           {isHome && (
             <span className="hidden md:block text-[12px] font-medium text-[#9CA3AF] tracking-wide">
               Think · Solve · Win
@@ -43,9 +37,9 @@ const NavBar = () => {
           {/* Right */}
           <div className="flex items-center gap-3">
             {isAdmin ? (
-              <div className="flex items-center gap-1.5 bg-[#6D4AFE]/8 border border-[#6D4AFE]/15 rounded-full px-3 py-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#6D4AFE]" />
-                <span className="text-[11px] font-semibold text-[#6D4AFE]">Admin</span>
+              <div className="flex items-center gap-1.5 bg-[#2563EB]/[0.06] border border-[#2563EB]/[0.10] rounded-full px-3 py-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#2563EB]" />
+                <span className="text-[11px] font-semibold text-[#2563EB]">Admin</span>
               </div>
             ) : inTest && currentStudent ? (
               <button
@@ -57,7 +51,7 @@ const NavBar = () => {
             ) : isHome ? (
               <a
                 href="#instructions"
-                className="btn-ghost-lavender text-[13px] font-medium rounded-lg px-4 py-1.5 flex items-center gap-1.5"
+                className="text-[13px] font-medium text-[#2563EB] border border-[#2563EB]/15 hover:bg-[#2563EB]/[0.04] rounded-lg px-4 py-1.5 flex items-center gap-1.5 transition-all"
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 Instructions
