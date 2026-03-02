@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Brain, Grid3X3, Link2, KeyRound, Gamepad2, BarChart3, Layers3, Activity, ArrowRight, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DecorativeCurve from '@/components/DecorativeCurve';
+import RotatingGameCard from '@/components/RotatingGameCard';
 
 /* ──────────────────── DATA ──────────────────── */
 
@@ -186,11 +187,9 @@ export default function Index() {
               {/* Soft Radial Backing Background */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_hsl(258_76%_98%_/_0.8)_0%,_transparent_70%)] animate-pulse" style={{ animationDuration: '4s' }} />
 
-              {/* Central Element: Large Logo */}
-              <div className="relative z-20 w-[140px] h-[140px] sm:w-[170px] sm:h-[170px] bg-white rounded-full shadow-[0_0_0_1px_rgba(258,76,55,0.05),_0_24px_48px_-12px_rgba(100,60,200,0.25)] flex items-center justify-center animate-float">
-                <img src="/favicon-round.png" alt="MindSprint" className="w-[90px] h-[90px] sm:w-[110px] sm:h-[110px] object-contain ml-2" />
-                {/* Inner Glow Core */}
-                <div className="absolute inset-0 rounded-full shadow-[inset_0_0_30px_rgba(258,76,55,0.05)] pointer-events-none" />
+              {/* Central Element: Rotating Game Card */}
+              <div className="relative z-20 w-full max-w-[440px] flex items-center justify-center">
+                <RotatingGameCard />
               </div>
 
               {/* Orbital Path Rings (Subtle) */}
@@ -277,35 +276,6 @@ export default function Index() {
         </div>
       </section>
 
-
-      {/* ─── SECTION 2: THE GAMES ─── */}
-      <section className="relative z-10 w-full py-20 bg-[#F8F9FB]">
-        <div className="max-container">
-
-          <div className="text-left mb-12">
-            <h2 className="text-3xl font-bold text-[#111827] tracking-tight">Assessment Categories</h2>
-            <p className="text-[#9CA3AF] mt-2 text-[15px]">Targeted cognitive modules serving distinct logic domains.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { name: 'Bubble Sort', g: 'Sorting', icon: Brain, desc: 'Sort mathematical expressions by value using rapid estimation.', iconColor: 'text-[#6D4AFE]', iconBg: 'bg-[#6D4AFE]/8', tagColor: 'text-[#6D4AFE]', cardHover: 'hover:shadow-[#6D4AFE]/8' },
-              { name: 'Cross Math', g: 'Logic', icon: Grid3X3, desc: 'Solve arithmetic grids that test multi-variable logical deduction.', iconColor: 'text-[#3B82F6]', iconBg: 'bg-[#3B82F6]/8', tagColor: 'text-[#3B82F6]', cardHover: 'hover:shadow-[#3B82F6]/8' },
-              { name: 'NumLink', g: 'Pattern', icon: Layers3, desc: 'Connect sequences in complex paths to audit spatial reasoning.', iconColor: 'text-[#14B8A6]', iconBg: 'bg-[#14B8A6]/8', tagColor: 'text-[#14B8A6]', cardHover: 'hover:shadow-[#14B8A6]/8' },
-            ].map((g) => (
-              <div key={g.name} className={`flex flex-col bg-white rounded-2xl p-8 border border-[#E5E7EB] shadow-sm transition-all hover:shadow-lg ${g.cardHover}`}>
-                <div className={`w-12 h-12 rounded-xl ${g.iconBg} flex items-center justify-center mb-6`}>
-                  <g.icon className={`w-6 h-6 ${g.iconColor}`} />
-                </div>
-                <h3 className="text-[17px] font-bold text-[#111827] mb-1">{g.name}</h3>
-                <span className={`text-[11px] font-bold ${g.tagColor} uppercase tracking-wider mb-4`}>{g.g}</span>
-                <p className="text-[14px] text-[#4B5563] leading-relaxed flex-1">{g.desc}</p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
 
 
       {/* ─── SECTION 3: BOTTOM CTA ─── */}
