@@ -9,38 +9,50 @@ interface DecorativeCurveProps {
 }
 
 const DecorativeCurve: React.FC<DecorativeCurveProps> = ({
-    opacity = 0.08,
+    opacity = 0.1,
     className = "",
-    height = "h-[80px] sm:h-[140px] lg:h-[200px]",
+    height = "h-[100px] sm:h-[150px]",
     invert = false,
-    animate = false
+    animate = true
 }) => {
     return (
-        <div className={`w-full overflow-hidden leading-[0] pointer-events-none transform ${invert ? 'rotate-180 mb-[-1px]' : 'translate-y-[1px] mt-[-1px]'} ${className}`}>
+        <div className={`w-full overflow-hidden leading-[0] pointer-events-none ${className}`}>
             <svg
-                viewBox="0 0 1200 120"
+                viewBox="0 0 1440 320"
                 preserveAspectRatio="none"
-                className={`relative block w-[calc(100%+1.3px)] ${height}`}
+                className={`relative block w-full ${height}`}
             >
-                {/* Lighter, deeper layer */}
-                <path
-                    className={animate ? 'animate-wave-slow' : ''}
-                    d="M0,60 C300,140 700,0 1200,100 V120 H0 Z"
-                    fill="hsl(var(--accent) / 0.04)"
-                />
-                {/* Main accent layer */}
-                <path
-                    className={animate ? 'animate-wave' : ''}
-                    d="M0,100 C400,150 800,30 1200,90 V120 H0 Z"
-                    fill="url(#reusable-curve-gradient)"
-                    fillOpacity={opacity}
-                />
                 <defs>
-                    <linearGradient id="reusable-curve-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#EDE9FE" />
-                        <stop offset="100%" stopColor="#E6E1FF" />
+                    <linearGradient id="wave-gradient-indigo" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#6C63FF" stopOpacity={opacity * 0.5} />
+                        <stop offset="50%" stopColor="#22D3EE" stopOpacity={opacity * 1.2} />
+                        <stop offset="100%" stopColor="#6C63FF" stopOpacity={opacity * 0.5} />
                     </linearGradient>
                 </defs>
+
+                {/* Layer 3: Deepest, most subtle wave */}
+                <path
+                    className={animate ? 'animate-wave-slow' : ''}
+                    d="M0,160 C400,300 600,20 900,180 C1200,340 1440,100 1440,180 V320 H0 Z"
+                    fill="#6C63FF"
+                    fillOpacity={opacity * 0.2}
+                />
+
+                {/* Layer 2: Middle wave with offset */}
+                <path
+                    className={animate ? 'animate-wave' : ''}
+                    d="M0,224 C480,288 960,96 1440,224 V320 H0 Z"
+                    fill="#22D3EE"
+                    fillOpacity={opacity * 0.4}
+                    style={{ animationDelay: '-1.5s' }}
+                />
+
+                {/* Layer 1: Main Gradient Wave */}
+                <path
+                    className={animate ? 'animate-wave' : ''}
+                    d="M0,288 C480,336 960,192 1440,288 V320 H0 Z"
+                    fill="url(#wave-gradient-indigo)"
+                />
             </svg>
         </div>
     );
