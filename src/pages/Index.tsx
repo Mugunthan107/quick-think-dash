@@ -4,73 +4,43 @@ import { useNavigate } from 'react-router-dom';
 import DecorativeCurve from '@/components/DecorativeCurve';
 import RotatingGameCard from '@/components/RotatingGameCard';
 
-/* ──────────────────── DATA ──────────────────── */
-
-const games = [
-  {
-    icon: Brain,
-    name: 'Bubble',
-    desc: 'Sort mathematical expressions from lowest to highest value. Tests quick calculation and decision-making under time pressure.',
-    color: 'hsl(258 76% 55%)',
-    bg: 'hsl(258 76% 96%)'
-  },
-  {
-    icon: Grid3X3,
-    name: 'Cross Math',
-    desc: 'Solve grid-based arithmetic puzzles by placing correct values to satisfy both horizontal and vertical equations.',
-    color: 'hsl(158 68% 40%)',
-    bg: 'hsl(158 68% 95%)'
-  },
-  {
-    icon: Link2,
-    name: 'NumLink',
-    desc: 'Connect numbers in sequence using valid paths within the grid. Enhances number sense, spatial reasoning, and pattern recognition.',
-    color: 'hsl(210 90% 55%)',
-    bg: 'hsl(210 90% 95%)'
-  },
-];
-
-const steps = [
-  { num: 1, icon: KeyRound, label: 'Enter Test PIN', desc: 'Get your session PIN from the instructor' },
-  { num: 2, icon: Gamepad2, label: 'Play Games', desc: 'Solve puzzles and beat the clock across 3 games' },
-  { num: 3, icon: BarChart3, label: 'View Results', desc: 'See real-time rankings on the live leaderboard' },
-];
-
 /* ──────────────────── COMPONENTS ──────────────────── */
 
 // A fun component that randomly updates its number and color
-const AnimatedNumber = ({ initialNum, delay, pos, size, floatType, style }: { initialNum: number, delay: string, pos: string, size: string, floatType: string, style?: React.CSSProperties }) => {
-  const [num, setNum] = useState(initialNum);
-  const [colorIdx, setColorIdx] = useState(initialNum % 5);
-
-  const colors = [
-    'text-rose-500',
-    'text-blue-500',
-    'text-emerald-500',
-    'text-amber-500',
-    'text-purple-500' // Using default tailwind colors for guaranteed contrast
-  ];
+// A fun component that randomly updates its number and color
+const AnimatedNumber = ({ initialNum, char, delay, size, color, bg, style, isPulse }: { initialNum?: number, char?: string, delay: string, size: string, color: string, bg: string, style?: React.CSSProperties, isPulse?: boolean }) => {
+  const [num, setNum] = useState(initialNum ?? 0);
+  const isSymbol = char !== undefined;
 
   useEffect(() => {
-    // Random interval between 2s and 4s for each number so they don't change all at once
-    const intervalTime = Math.floor(Math.random() * 2000) + 2000;
-
-    const interval = setInterval(() => {
-      setNum(Math.floor(Math.random() * 10)); // 0-9
-      setColorIdx(prev => (prev + 1) % colors.length); // Cycle through colors
-    }, intervalTime);
-
-    return () => clearInterval(interval);
-  }, []);
+    if (isSymbol) return;
+    // Add initial jitter to prevent all bubbles from syncing up
+    const initialDelay = Math.random() * 1000;
+    const timeout = setTimeout(() => {
+      const intervalTime = Math.floor(Math.random() * 2000) + 2000;
+      const interval = setInterval(() => {
+        setNum(prev => {
+          let next;
+          do {
+            next = Math.floor(Math.random() * 10);
+          } while (next === prev); // Ensure it actually changes
+          return next;
+        });
+      }, intervalTime);
+      return () => clearInterval(interval);
+    }, initialDelay);
+    return () => clearTimeout(timeout);
+  }, [isSymbol]);
 
   return (
-    <div className={`absolute ${pos} ${floatType}`} style={{ ...style, animationDelay: delay }}>
+    <div className="absolute animate-float" style={{ ...style, animationDelay: delay }}>
       <div
-        className={`flex items-center justify-center bg-white/60 backdrop-blur-md rounded-full shadow-md border border-white/80 animate-pulse-scale ${size}`}
+        className={`flex items-center justify-center bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-white/50 relative ${size} ${isPulse ? 'animate-pulse-scale' : ''}`}
         style={{ animationDelay: delay }}
       >
-        <span className={`font-black transition-colors duration-500 ${colors[colorIdx]} opacity-70`}>
-          {num}
+        <div className={`absolute inset-0 rounded-full ${bg} opacity-[0.15] blur-sm`} />
+        <span className={`relative z-10 font-black transition-colors duration-500 ${color} ${isSymbol ? 'text-[24px]' : 'opacity-70'}`}>
+          {isSymbol ? char : num}
         </span>
       </div>
     </div>
@@ -78,14 +48,94 @@ const AnimatedNumber = ({ initialNum, delay, pos, size, floatType, style }: { in
 };
 
 const AnimatedNumbers = () => {
+  // Layer 1: Symbols (Radius 180) - Symmetrical 4 Sides
+  const layer1 = [
+    { char: '×', color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]', angle: 0 },
+    { char: '−', color: 'text-[#22D3EE]', bg: 'bg-[#22D3EE]', angle: 90 },
+    { char: '÷', color: 'text-[#22C55E]', bg: 'bg-[#22C55E]', angle: 180 },
+    { char: '+', color: 'text-[#6C63FF]', bg: 'bg-[#6C63FF]', angle: 270 },
+  ];
+
+  // Layer 2: Numbers (Radius 230) - 12 Items for balanced visual richness
+  const layer2 = [8, 5, 3, 9, 0, 7, 2, 4, 1, 6, 9, 2].map((n, i) => ({
+    num: n,
+    angle: i * 30 + 15, // Uniform 30° intervals
+    color: ['text-[#6C63FF]', 'text-[#22D3EE]', 'text-[#F59E0B]'][i % 3],
+    bg: ['bg-[#6C63FF]', 'bg-[#22D3EE]', 'bg-[#F59E0B]'][i % 3],
+    size: i % 2 === 0 ? "w-10 h-10 text-[20px]" : "w-8 h-8 text-[16px]"
+  }));
+
+  // Layer 3: Anchors (Radius 280) - Slightly larger as requested
+  const layer3 = [
+    { char: <Brain className="w-5 h-5" />, color: 'text-[#6C63FF]', bg: 'bg-[#6C63FF]', angle: -45 }, // Top Right
+    { char: <Zap className="w-5 h-5" />, color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]', angle: 135 }, // Bottom Left
+  ];
+
   return (
-    <>
-      <AnimatedNumber initialNum={8} delay="0.3s" pos="top-[8%] left-[38%]" size="w-14 h-14 text-[30px]" floatType="animate-float" />
-      <AnimatedNumber initialNum={5} delay="1.1s" pos="top-[48%] right-[-8%]" size="w-12 h-12 text-[24px]" floatType="animate-float-reverse" />
-      <AnimatedNumber initialNum={3} delay="0.8s" pos="bottom-[2%] left-[42%]" size="w-10 h-10 text-[20px]" floatType="animate-float-delayed" />
-      <AnimatedNumber initialNum={9} delay="1.6s" pos="bottom-[40%] left-[-6%]" size="w-8 h-8 text-[16px]" floatType="animate-float" />
-      <AnimatedNumber initialNum={0} delay="2.1s" pos="top-[28%] right-[2%]" size="w-6 h-6 text-[12px]" floatType="animate-float-reverse" />
-    </>
+    <div className="absolute inset-0 flex items-center justify-center">
+      {/* Layer 1: Inner Symbols */}
+      {layer1.map((item, i) => {
+        const angleRad = item.angle * (Math.PI / 180);
+        return (
+          <AnimatedNumber
+            key={`l1-${i}`}
+            char={item.char}
+            delay={`${i * 0.4}s`}
+            size="w-11 h-11"
+            color={item.color}
+            bg={item.bg}
+            style={{
+              left: `calc(50% + ${Math.cos(angleRad) * 180}px)`,
+              top: `calc(50% + ${Math.sin(angleRad) * 180}px)`,
+              transform: 'translate(-50%, -50%)'
+            }}
+          />
+        );
+      })}
+
+      {/* Layer 2: Middle Numbers */}
+      {layer2.map((item, i) => {
+        const angleRad = item.angle * (Math.PI / 180);
+        return (
+          <AnimatedNumber
+            key={`l2-${i}`}
+            initialNum={item.num}
+            delay={`${i * 0.2}s`}
+            size={item.size}
+            color={item.color}
+            bg={item.bg}
+            isPulse={true}
+            style={{
+              left: `calc(50% + ${Math.cos(angleRad) * 230}px)`,
+              top: `calc(50% + ${Math.sin(angleRad) * 230}px)`,
+              transform: 'translate(-50%, -50%)'
+            }}
+          />
+        );
+      })}
+
+      {/* Layer 3: Outer Anchors */}
+      {layer3.map((item, i) => {
+        const angleRad = item.angle * (Math.PI / 180);
+        return (
+          <div
+            key={`l3-${i}`}
+            className="absolute animate-float"
+            style={{
+              left: `calc(50% + ${Math.cos(angleRad) * 280}px)`,
+              top: `calc(50% + ${Math.sin(angleRad) * 280}px)`,
+              transform: 'translate(-50%, -50%)',
+              animationDelay: `${i * 1.5}s`
+            }}
+          >
+            <div className="flex items-center justify-center w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-white/50 relative animate-pulse">
+              <div className={`absolute inset-0 rounded-full ${item.bg} opacity-[0.1] blur-sm`} />
+              <div className={item.color}>{item.char}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
@@ -95,210 +145,126 @@ export default function Index() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col bg-[#F8F9FB] min-h-screen font-sans selection:bg-accent/20">
+    <div className="flex flex-col bg-[#FDFDFF] flex-1 overflow-hidden font-sans selection:bg-indigo-100 relative">
+      <div className="w-full flex-1 flex flex-col">
+        {/* ─────────────────────────────────────────────────────────
+                                HERO SECTION
+            ───────────────────────────────────────────────────────── */}
+        <section className="relative w-full flex-1 flex flex-col justify-center overflow-hidden">
 
-      {/* ─────────────────────────────────────────────────────────
-                             HERO SECTION
-          ───────────────────────────────────────────────────────── */}
-      <section className="relative w-full min-h-[calc(100vh-60px)] lg:min-h-[85vh] flex flex-col justify-center overflow-hidden pt-12">
-        {/* Top Decorative Curve - Professional Canvas Frame */}
-        <DecorativeCurve
-          invert={true}
-          opacity={0.05}
-          height="h-[60px] sm:h-[100px] lg:h-[130px]"
-          className="absolute top-0 left-0 z-10"
-          animate={true}
-        />
+          {/* Layer 1: Premium Background Depth */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            {/* Soft Multi-Gradient Base */}
+            <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
 
-        {/* Layer 1: Background Depth (Framed Canvas) */}
-        <div className="absolute inset-x-0 inset-y-0 z-0 pointer-events-none">
-          {/* Base Background (Outside the curve) */}
-          <div className="absolute inset-0 bg-[#F8F9FB]" />
+            {/* Very Faint Radial Glow behind Hero */}
+            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+          </div>
 
-          {/* Hero Canvas (Inside the curves) */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F5F3FF] to-[#F8F9FB] opacity-80" />
+          {/* Master Container */}
+          <div className="relative z-10 w-full max-w-[1240px] mx-auto px-6 sm:px-12 flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-12">
 
-          {/* Radial Highlight - Extremely Subtle (Center) */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#6D4AFE03_0%,_transparent_60%)] blur-2xl" />
-        </div>
+            {/* Layer 2: Content Grid (Left Side) */}
+            <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-[580px]">
 
-        {/* Master Container */}
-        <div className="relative z-10 w-full max-w-[1240px] mx-auto px-6 sm:px-12 flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-12">
+              {/* Pill Badge - Premium Tint */}
+              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/50 backdrop-blur-sm px-4 py-1.5 shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6C63FF] opacity-40"></span>
+                  <span className="relative inline-flex rounded-full w-2 h-2 bg-[#6C63FF]"></span>
+                </span>
+                <span className="text-[11px] font-bold tracking-[0.15em] text-[#6C63FF] uppercase italic">Professional Assessment</span>
+              </div>
 
-          {/* Layer 2: Content Grid (Left Side) */}
-          <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-[580px]">
+              {/* Main Heading - Smooth Elegant Gradient */}
+              <h1 className="text-[clamp(40px,5.5vw,56px)] font-black tracking-tight text-[#0F172A] leading-[1.05] mb-6">
+                MindSprint{' '}
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C63FF] to-[#22D3EE] drop-shadow-sm">
+                  Challenge
+                </span>
+              </h1>
 
+              {/* Value Paragraph - Slate 500 equivalent */}
+              <p className="text-[18px] text-[#64748B] font-medium leading-relaxed mb-10 max-w-[480px]">
+                A high-precision environment designed for mathematical logic and cognitive speed. Benchmarking mental agility with real-time analytics.
+              </p>
 
-            {/* Pill Badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#E6E1FF] bg-white/80 backdrop-blur-sm px-3.5 py-1.5 shadow-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6D4AFE] opacity-75"></span>
-                <span className="relative inline-flex rounded-full w-2 h-2 bg-[#6D4AFE]"></span>
-              </span>
-              <span className="text-[11px] font-bold tracking-[0.15em] text-[#6D4AFE]/80 uppercase">Interactive Assessment Platform</span>
-            </div>
+              {/* Primary CTA - Styled as 'START' - Compact Balanced Scale */}
+              <button
+                onClick={() => navigate('/student')}
+                className="group relative inline-flex items-center justify-center gap-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-black rounded-lg transition-all duration-300 shadow-md shadow-blue-500/20 hover:shadow-blue-600/30 hover:-translate-y-0.5 px-8 py-3"
+              >
+                <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-0.5" />
+                <span className="text-[17px] font-bold tracking-tight uppercase">START</span>
+              </button>
 
-            {/* Main Heading */}
-            <h1 className="text-[clamp(36px,5vw,52px)] font-extrabold tracking-tight text-[#111827] leading-[1.1] mb-5">
-              MindSprint{' '}
-              <span className="text-[#6D4AFE]">Challenge</span>
-            </h1>
-
-            {/* Value Paragraph */}
-            <p className="text-[17px] text-[#4B5563] leading-relaxed mb-8 max-w-[480px]">
-              The professional assessment environment for mathematical logic and speed. Join live sessions to benchmark precision and mental agility.
-            </p>
-
-            {/* Primary CTA */}
-            <button
-              onClick={() => navigate('/student')}
-              className="group relative inline-flex items-center justify-center gap-3 bg-[#6D4AFE] hover:bg-[#6D4AFE]/95 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-[#6D4AFE]/15 px-10 py-4"
-            >
-              {/* Internal subtle glow sweep effect */}
-              <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <Play className="w-4 h-4 fill-white" />
-              <span className="text-[15.5px]">Enter Test PIN</span>
-            </button>
-
-            {/* Supporting Stats Row */}
-            <div className="mt-12 flex items-center justify-center lg:justify-start gap-4 flex-wrap">
-              {[
-                { i: Layers3, t: '30+ Levels', c: 'text-[#6366F1]', bg: 'bg-[#6366F1]/10' },
-                { i: Gamepad2, t: '3 Game Modes', c: 'text-[#14B8A6]', bg: 'bg-[#14B8A6]/10' },
-                { i: Zap, t: 'Live Results', c: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10' },
-              ].map((stat, idx) => (
-                <div key={idx} className="flex items-center gap-2 border border-[#E5E7EB] bg-white/80 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${stat.bg}`}>
-                    <stat.i className={`w-3 h-3 ${stat.c}`} />
+              {/* Supporting Stats Row - Tints at 8-12% */}
+              <div className="mt-14 flex items-center justify-center lg:justify-start gap-4 flex-wrap">
+                {[
+                  { i: Layers3, t: '30+ Levels', c: 'text-[#6C63FF]', bg: 'bg-[#6C63FF]/08', border: 'border-[#6C63FF]/10' },
+                  { i: Gamepad2, t: '3 Game Modes', c: 'text-[#22D3EE]', bg: 'bg-[#22D3EE]/08', border: 'border-[#22D3EE]/10' },
+                  { i: Zap, t: 'Live Results', c: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/08', border: 'border-[#F59E0B]/10' },
+                ].map((stat, idx) => (
+                  <div key={idx} className={`flex items-center gap-2 border ${stat.border} ${stat.bg} backdrop-blur-sm rounded-full px-4 py-2 shadow-sm transition-transform hover:scale-105 duration-300`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center`}>
+                      <stat.i className={`w-3.5 h-3.5 ${stat.c}`} strokeWidth={2.5} />
+                    </div>
+                    <span className="text-[12px] font-bold text-[#4B5563] tracking-wide">{stat.t}</span>
                   </div>
-                  <span className="text-[12px] font-semibold text-[#4B5563]">{stat.t}</span>
+                ))}
+              </div>
+
+            </div>
+
+            {/* Layer 3: Visual Anchor (Right Side) */}
+            <div className="flex-1 w-full max-w-[500px] lg:max-w-none flex justify-center lg:justify-end">
+
+              {/* Abstract Orbital Visual Container */}
+              <div className="relative w-[340px] h-[340px] sm:w-[500px] sm:h-[500px] flex items-center justify-center">
+
+                {/* Soft Radial Backing Background - Extremely faint glow */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#6C63FF05_0%,_transparent_70%)] animate-pulse" style={{ animationDuration: '6s' }} />
+
+                {/* Central Element: Rotating Game Card */}
+                <div className="relative z-20 w-full max-w-[400px] flex items-center justify-center">
+                  <div className="p-4 rounded-[40px] bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl shadow-indigo-100/30">
+                    <RotatingGameCard />
+                  </div>
                 </div>
-              ))}
+
+                {/* Orbital Path Rings (Subtle) */}
+
+
+                {/* Supporting Elements - Precision Unified Orbit */}
+                <div className="absolute w-full h-full z-10 pointer-events-none">
+                  {/* The three-layer concentric system */}
+                  <AnimatedNumbers />
+                </div>
+
+              </div>
             </div>
 
           </div>
 
-          {/* Layer 3: Visual Anchor (Right Side) */}
-          <div className="flex-1 w-full max-w-[500px] lg:max-w-none flex justify-center lg:justify-end">
+          {/* Top Decorative Wave - Organic and subtle */}
+          <DecorativeCurve
+            opacity={0.12}
+            height="h-[250px] sm:h-[360px]"
+            className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none"
+            animate={true}
+          />
 
-            {/* Abstract Orbital Visual Container */}
-            <div className="relative w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] flex items-center justify-center">
+          {/* Bottom Decorative Wave - Organic and subtle */}
+          <DecorativeCurve
+            opacity={0.12}
+            height="h-[250px] sm:h-[360px]"
+            className="absolute bottom-0 left-0 z-0 pointer-events-none"
+            animate={true}
+          />
 
-              {/* Soft Radial Backing Background */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_hsl(258_76%_98%_/_0.8)_0%,_transparent_70%)] animate-pulse" style={{ animationDuration: '4s' }} />
-
-              {/* Central Element: Rotating Game Card */}
-              <div className="relative z-20 w-full max-w-[440px] flex items-center justify-center">
-                <RotatingGameCard />
-              </div>
-
-              {/* Orbital Path Rings (Subtle) */}
-              <div className="absolute w-[240px] h-[240px] sm:w-[320px] sm:h-[320px] border border-accent/[0.04] rounded-full pointer-events-none" />
-              <div className="absolute w-[320px] h-[320px] sm:w-[420px] sm:h-[420px] border border-accent/[0.02] rounded-full pointer-events-none" />
-
-              {/* Supporting Elements - Orbiting Math & Logic Symbols */}
-              <div className="absolute w-full h-full z-10 pointer-events-none">
-
-                {/* Plus Symbol (Top Right) */}
-                <div className="absolute top-[15%] right-[20%] w-12 h-12 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '0.2s', transform: 'rotate(12deg)' }}>
-                  <span className="text-[24px] font-bold text-[#6D4AFE]">+</span>
-                </div>
-
-                {/* Division Symbol (Top Left) */}
-                <div className="absolute top-[25%] left-[10%] w-10 h-10 bg-white/80 backdrop-blur-md rounded-[14px] shadow-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '0.7s', transform: 'rotate(-15deg)' }}>
-                  <span className="text-[22px] font-bold text-[#22C55E]">÷</span>
-                </div>
-
-                {/* Multiplication Symbol (Bottom Right) */}
-                <div className="absolute bottom-[28%] right-[8%] w-11 h-11 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '1.2s', transform: 'rotate(-8deg)' }}>
-                  <span className="text-[24px] font-bold text-[#F59E0B]">×</span>
-                </div>
-
-                {/* Minus Symbol (Bottom Left) */}
-                <div className="absolute bottom-[18%] left-[22%] w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl shadow-sm border border-[#E5E7EB] flex items-center justify-center animate-float" style={{ animationDelay: '0.5s', transform: 'rotate(10deg)' }}>
-                  <span className="text-[26px] font-bold text-[#6366F1] leading-none mb-1">−</span>
-                </div>
-
-                {/* Logic/Brain Icon (Far Top Right) */}
-                <div className="absolute top-[5%] right-[5%] w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '0.9s' }}>
-                  <Brain className="w-4 h-4 text-[#6D4AFE]/60" />
-                </div>
-
-                {/* Grid/Pattern Icon (Far Bottom Left) */}
-                <div className="absolute bottom-[5%] left-[8%] w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '1.5s' }}>
-                  <Grid3X3 className="w-4 h-4 text-[#22C55E]/60" />
-                </div>
-
-                {/* Random Numbers from 0 to 9 scaling higher to lower (Dynamic Component) */}
-                <AnimatedNumbers />
-
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-
-        {/* Bottom Decorative Curve - Professional Canvas Frame */}
-        <DecorativeCurve
-          opacity={0.05}
-          height="h-[60px] sm:h-[100px] lg:h-[130px]"
-          className="absolute bottom-0 left-0 z-10"
-          animate={true}
-        />
-
-      </section>
-
-
-      {/* ─── SECTION 1: HOW IT WORKS ─── */}
-      <section className="relative z-10 w-full py-20 bg-white border-t border-[#E6E1FF]/30">
-        <div className="max-container">
-
-          <div className="text-left mb-12">
-            <h2 className="text-3xl font-bold text-[#111827] tracking-tight">How MindSprint Works</h2>
-            <p className="text-[#9CA3AF] mt-2 text-[15px]">A structured assessment flow designed for institutional precision.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { num: '01', icon: KeyRound, label: 'Join Session', desc: 'Secure initialization using a unique proctor PIN to sync all students.', numColor: 'text-[#3B82F6]', bg: 'hover:shadow-[#3B82F6]/5' },
-              { num: '02', icon: Gamepad2, label: 'Dynamic Assessment', desc: 'Escalating math-logic challenges that benchmark speed and accuracy.', numColor: 'text-[#6366F1]', bg: 'hover:shadow-[#6366F1]/5' },
-              { num: '03', icon: BarChart3, label: 'Performance Audit', desc: 'Real-time metrics provide instant analytics for academic evaluation.', numColor: 'text-[#14B8A6]', bg: 'hover:shadow-[#14B8A6]/5' },
-            ].map((step) => (
-              <div key={step.num} className={`p-8 bg-[#F8F9FB] border border-[#E5E7EB] rounded-2xl transition-all hover:bg-white hover:shadow-xl ${step.bg}`}>
-                <span className={`text-[14px] font-bold ${step.numColor} mb-4 block`}>{step.num}</span>
-                <h3 className="text-[17px] font-bold text-[#111827] mb-3">{step.label}</h3>
-                <p className="text-[14px] text-[#4B5563] leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-
-      {/* ─── SECTION 3: BOTTOM CTA ─── */}
-      <section className="relative z-10 w-full py-24 bg-white">
-        <div className="max-container">
-          <div className="max-w-[500px] mx-auto text-center">
-            <h2 className="text-3xl font-bold text-[#111827] mb-4">Start Assessment</h2>
-            <p className="text-[#4B5563] mb-10 text-[16px] leading-relaxed">
-              Enter your unique session PIN to initialize the assessment. Ensure you are in a quiet environment for the evaluation.
-            </p>
-            <button
-              onClick={() => navigate('/student')}
-              className="bg-[#6D4AFE] hover:bg-[#6D4AFE]/95 text-white font-bold rounded-xl px-12 py-4 shadow-lg shadow-[#6D4AFE]/15 transition-all w-full sm:w-auto"
-            >
-              Initialize Live Session
-            </button>
-          </div>
-        </div>
-      </section>
-
-
-
-
+        </section>
+      </div>
     </div>
   );
 }
+

@@ -30,7 +30,7 @@ const AppContent = () => {
   const isHome = location.pathname === '/';
 
   return (
-    <main className="pt-14 sm:pt-16 min-h-screen bg-[#F8F9FB] flex flex-col relative overflow-hidden">
+    <main className={`relative flex flex-col min-h-screen ${isHome ? 'h-screen overflow-hidden pt-0' : 'pt-14 sm:pt-16'} bg-[#F8F9FB] flex flex-col relative overflow-hidden`}>
       {/* Universal Top Decorative Curve (Hidden on Home and Games) */}
       {!isGame && !isHome && (
         <DecorativeCurve
@@ -41,13 +41,19 @@ const AppContent = () => {
         />
       )}
 
-      {/* Global Light Blend from Navbar */}
-      <div className="absolute top-0 left-0 right-0 h-[600px] bg-gradient-to-b from-[#E4D9FD]/40 via-[#F8F9FB]/80 to-[#F8F9FB] pointer-events-none z-0" />
+      {/* Global Light Blend from Navbar (Hidden on Home for pure design) */}
+      {!isHome && (
+        <div className="absolute top-0 left-0 right-0 h-[600px] bg-gradient-to-b from-[#E4D9FD]/40 via-[#F8F9FB]/80 to-[#F8F9FB] pointer-events-none z-0" />
+      )}
 
-      {/* Ambient Floating Elements */}
-      <div className="absolute top-[10%] left-[5%] w-64 h-64 bg-accent/5 rounded-full blur-[80px] animate-float pointer-events-none z-0" />
-      <div className="absolute top-[40%] right-[10%] w-96 h-96 bg-[#DDC9FB]/20 rounded-full blur-[100px] animate-float-reverse pointer-events-none z-0" />
-      <div className="absolute bottom-[20%] left-[20%] w-72 h-72 bg-emerald-400/5 rounded-full blur-[90px] animate-float-delayed pointer-events-none z-0" />
+      {/* Ambient Floating Elements (Hidden on Home to avoid visual noise) */}
+      {!isHome && (
+        <>
+          <div className="absolute top-[10%] left-[5%] w-64 h-64 bg-accent/5 rounded-full blur-[80px] animate-float pointer-events-none z-0" />
+          <div className="absolute top-[40%] right-[10%] w-96 h-96 bg-[#DDC9FB]/20 rounded-full blur-[100px] animate-float-reverse pointer-events-none z-0" />
+          <div className="absolute bottom-[20%] left-[20%] w-72 h-72 bg-emerald-400/5 rounded-full blur-[90px] animate-float-delayed pointer-events-none z-0" />
+        </>
+      )}
 
       <div className="relative z-10 flex flex-col flex-1 h-full w-full">
         <Routes>
