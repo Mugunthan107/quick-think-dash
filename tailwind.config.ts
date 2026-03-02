@@ -14,8 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
-        mono: ["JetBrains Mono", "monospace"],
+        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -71,6 +70,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Supporting palette as semantic tokens
+        "logic-blue": "#3B82F6",
+        "pattern-teal": "#14B8A6",
+        "energy-amber": "#F59E0B",
+        "soft-indigo": "#6366F1",
       },
       borderRadius: {
         lg: "var(--radius)",
