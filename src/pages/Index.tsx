@@ -246,7 +246,21 @@ export default function Index() {
 
           </div>
 
-          {/* Top Decorative Wave - Organic and subtle */}
+          {/* Top Decorative Wave - Tertiary (Deepest layer) */}
+          <DecorativeCurve
+            opacity={0.04}
+            height="h-[400px] sm:h-[550px]"
+            className="absolute -top-[80px] sm:-top-[120px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-4 mix-blend-multiply"
+            animate={true}
+          />
+          {/* Top Decorative Wave - Secondary (Layered behind) */}
+          <DecorativeCurve
+            opacity={0.06}
+            height="h-[350px] sm:h-[480px]"
+            className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]"
+            animate={true}
+          />
+          {/* Top Decorative Wave - Primary */}
           <DecorativeCurve
             opacity={0.12}
             height="h-[250px] sm:h-[360px]"
@@ -254,7 +268,21 @@ export default function Index() {
             animate={true}
           />
 
-          {/* Bottom Decorative Wave - Organic and subtle */}
+          {/* Bottom Decorative Wave - Tertiary (Deepest layer) */}
+          <DecorativeCurve
+            opacity={0.05}
+            height="h-[400px] sm:h-[550px]"
+            className="absolute -bottom-[80px] sm:-bottom-[120px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-4 mix-blend-multiply"
+            animate={true}
+          />
+          {/* Bottom Decorative Wave - Secondary (Layered behind) */}
+          <DecorativeCurve
+            opacity={0.07}
+            height="h-[350px] sm:h-[480px]"
+            className="absolute -bottom-[50px] sm:-bottom-[80px] left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]"
+            animate={true}
+          />
+          {/* Bottom Decorative Wave - Primary */}
           <DecorativeCurve
             opacity={0.12}
             height="h-[250px] sm:h-[360px]"

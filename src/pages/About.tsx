@@ -1,139 +1,182 @@
+import React from 'react';
 import DecorativeCurve from '@/components/DecorativeCurve';
-import { BookOpen, ShieldCheck, Activity, Trophy, Brain, Grid3X3, Link2 } from 'lucide-react';
+import { Brain, Grid3X3, Link2, CheckCircle2 } from 'lucide-react';
 
-const ABOUT_PILLARS = [
-    { icon: Brain, title: 'Mental Agility', body: 'Exercises designed to strengthen calculation speed, pattern recognition, and quick decision-making.', iconColor: 'text-[#6D4AFE]', iconBg: 'bg-[#6D4AFE]/8' },
-    { icon: Activity, title: 'Real-Time Scoring', body: 'Scores update live as students complete each game. Rankings reflect accuracy and speed together.', iconColor: 'text-[#14B8A6]', iconBg: 'bg-[#14B8A6]/8' },
-    { icon: ShieldCheck, title: 'Admin Controlled', body: 'A single PIN locks the test session. The admin starts, monitors, and can stop the test at any time.', iconColor: 'text-[#3B82F6]', iconBg: 'bg-[#3B82F6]/8' },
-    { icon: Trophy, title: 'Classroom Friendly', body: 'Designed for group tests in classrooms and competitions. Supports 50+ concurrent students.', iconColor: 'text-[#F59E0B]', iconBg: 'bg-[#F59E0B]/8' },
-];
-
-const GAMES = [
+const GAMES_RULES = [
     {
+        id: 'bubble',
         icon: Brain,
         name: 'Bubble Sort',
-        tag: 'Sorting',
-        tagColor: 'text-[#6D4AFE]',
-        desc: 'Sort mathematical expressions from lowest to highest value. Tests quick calculation and decision-making under time pressure.',
+        accentColor: 'text-[#6D4AFE]',
+        accentBg: 'bg-[#6D4AFE]/10',
+        borderColor: 'border-[#6D4AFE]/20',
+        objective: 'Evaluate and sort mathematical expressions in ascending order as quickly as possible under time pressure.',
+        rules: [
+            'A set of floating bubbles containing unique mathematical expressions will appear on screen.',
+            'Mentally calculate the outcome of each expression.',
+            'Select the bubbles sequentially from the lowest calculated value to the highest.',
+            'Maintain a high streak for bonus points, but beware of time penalties for incorrect selections.'
+        ]
     },
     {
+        id: 'crossmath',
         icon: Grid3X3,
         name: 'Cross Math',
-        tag: 'Logic',
-        tagColor: 'text-[#3B82F6]',
-        desc: 'Solve grid-based arithmetic puzzles by placing correct numbers to satisfy both horizontal and vertical equations.',
+        accentColor: 'text-[#3B82F6]',
+        accentBg: 'bg-[#3B82F6]/10',
+        borderColor: 'border-[#3B82F6]/20',
+        objective: 'Apply logical deduction to solve interconnected grid-based arithmetic equations simultaneously.',
+        rules: [
+            'You are presented with a grid containing incomplete mathematical equations intersecting both horizontally and vertically.',
+            'Drag and drop the available numbers into the empty cells.',
+            'Every given equation across the entire board must mathematically balance and evaluate correctly.',
+            'Use intersecting cells to logically deduce the only possible valid numbers for those positions.'
+        ]
     },
     {
+        id: 'numlink',
         icon: Link2,
         name: 'NumLink',
-        tag: 'Spatial',
-        tagColor: 'text-[#14B8A6]',
-        desc: 'Connect numbers in sequence using valid paths within the grid. Enhances number sense and pattern recognition.',
-    },
+        accentColor: 'text-[#14B8A6]',
+        accentBg: 'bg-[#14B8A6]/10',
+        borderColor: 'border-[#14B8A6]/20',
+        objective: 'Connect identical numbers or sequential numbers using continuous, non-overlapping spatial paths.',
+        rules: [
+            'Click, hold, and drag your cursor to create a path linking numbers sequentially (e.g., 1 to 2, 2 to 3) across the grid.',
+            'Paths can only move horizontally or vertically between adjacent squares; diagonal movement is not permitted.',
+            'No two paths can cross each other or overlap at any point.',
+            'Complete the level by successfully connecting the sequence without breaking the spatial constraints.'
+        ]
+    }
 ];
 
 export default function About() {
     return (
-        <div className="flex flex-col flex-1 w-full bg-[#F8F9FB] min-h-screen">
+        <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-[calc(100vh-80px)] relative overflow-hidden">
+            {/* Layer 1: Premium Background Depth */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                {/* Soft Multi-Gradient Base */}
+                <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
 
-            {/* ─── HERO SECTION: PROFESSIONAL CANVAS ─── */}
-            <section className="relative w-full overflow-hidden bg-[#F8F9FB] pt-24 pb-16">
+                {/* Very Faint Radial Glow behind Hero */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+            </div>
 
-                {/* Visual Framing - Sync with Home Page */}
-                <DecorativeCurve
-                    invert={true}
-                    opacity={0.08}
-                    height="h-[40px] sm:h-[60px] lg:h-[80px]"
-                    className="absolute top-0 left-0 z-10"
-                    animate={true}
-                />
+            {/* Top Decorative Wave - Tertiary (Deepest layer) */}
+            <DecorativeCurve
+                opacity={0.04}
+                height="h-[400px] sm:h-[550px]"
+                className="absolute -top-[80px] sm:-top-[120px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-4 mix-blend-multiply"
+                animate={true}
+            />
+            {/* Top Decorative Wave - Secondary (Layered behind) */}
+            <DecorativeCurve
+                opacity={0.06}
+                height="h-[350px] sm:h-[480px]"
+                className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]"
+                animate={true}
+            />
+            {/* Top Decorative Wave - Primary */}
+            <DecorativeCurve
+                opacity={0.12}
+                height="h-[250px] sm:h-[360px]"
+                className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none"
+                animate={true}
+            />
 
-                {/* Hero Backdrop */}
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#F5F3FF] to-[#F8F9FB] opacity-80" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#6D4AFE03_0%,_transparent_60%)] blur-2xl" />
-                </div>
+            <div className="max-w-[1100px] mx-auto px-6 pt-32 pb-24 relative z-10 w-full">
 
-                <div className="max-container relative z-20">
-                    <div className="max-w-2xl">
-                        <div className="w-12 h-12 rounded-xl bg-[#6366F1]/8 flex items-center justify-center mb-6">
-                            <BookOpen className="w-6 h-6 text-[#6366F1]" />
-                        </div>
-                        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#111827] mb-6 leading-[1.1]">
-                            Institutional Grade <br />
-                            <span className="text-[#6D4AFE]">Assessment Platform</span>
-                        </h1>
-                        <p className="text-[18px] text-[#4B5563] leading-relaxed">
-                            MindSprint is an interactive evaluation ecosystem designed for high-stakes classroom sessions and competitive benchmarking. We combine rapid logic games with centralized admin control.
-                        </p>
+                {/* Header Section */}
+                <div className="flex flex-col items-center text-center mb-20">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] mb-8">
+                        <div className="w-2 h-2 rounded-full bg-[#6C63FF] animate-pulse" />
+                        <span className="text-[11px] font-bold tracking-[0.2em] text-[#64748B] uppercase">Official Manual</span>
                     </div>
+                    <h1 className="text-[clamp(36px,5vw,52px)] font-black tracking-tight text-[#0F172A] leading-[1.1] mb-6">
+                        Game <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C63FF] to-[#22D3EE]">Rules & Objectives</span>
+                    </h1>
+                    <p className="text-[18px] text-[#64748B] font-medium max-w-2xl mx-auto leading-relaxed">
+                        Master the mechanics of MindSprint's core challenges. Review the specific objectives and rules below to maximize your accuracy and speed.
+                    </p>
                 </div>
 
-                <DecorativeCurve
-                    opacity={0.08}
-                    height="h-[40px] sm:h-[60px] lg:h-[80px]"
-                    className="absolute bottom-0 left-0 z-10"
-                    animate={true}
-                />
-            </section>
+                {/* Rules List */}
+                <div className="flex flex-col gap-10">
+                    {GAMES_RULES.map((game, index) => (
+                        <div
+                            key={game.id}
+                            className="bg-white rounded-[28px] overflow-hidden border border-[#E5E7EB] shadow-sm hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 group/card"
+                        >
+                            <div className="p-8 sm:p-12 flex flex-col lg:flex-row gap-10 lg:gap-16">
+                                {/* Left side: Game Identity & Objective */}
+                                <div className="lg:w-[35%] flex flex-col">
+                                    <div className="flex items-center gap-5 mb-8">
+                                        <div className={`w-16 h-16 rounded-2xl ${game.accentBg} flex items-center justify-center shrink-0 border ${game.borderColor} group-hover/card:scale-105 transition-transform duration-500`}>
+                                            <game.icon className={`w-8 h-8 ${game.accentColor}`} />
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-[0.2em] mb-1.5 block">Game 0{index + 1}</span>
+                                            <h2 className="text-[28px] font-black text-[#0F172A] leading-none tracking-tight">{game.name}</h2>
+                                        </div>
+                                    </div>
 
-            {/* ─── MAIN CONTENT ─── */}
-            <div className="max-container py-20">
+                                    <div className={`p-6 rounded-2xl border ${game.borderColor} bg-white shadow-sm relative overflow-hidden`}>
+                                        <div className={`absolute top-0 left-0 w-1 h-full ${game.accentBg} brightness-90`} />
+                                        <h3 className="text-[11px] font-bold text-[#64748B] uppercase tracking-[0.15em] mb-3">Primary Objective</h3>
+                                        <p className="text-[15px] text-[#334155] leading-relaxed font-medium">
+                                            {game.objective}
+                                        </p>
+                                    </div>
+                                </div>
 
-                {/* Pillars Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
-                    {ABOUT_PILLARS.map(p => (
-                        <div key={p.title} className="p-8 bg-white border border-[#E5E7EB] rounded-2xl shadow-sm flex gap-6 group hover:shadow-md transition-shadow">
-                            <div className={`w-12 h-12 rounded-xl ${p.iconBg} flex items-center justify-center shrink-0 group-hover:opacity-80 transition-opacity`}>
-                                <p.icon className={`w-6 h-6 ${p.iconColor}`} />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-[#111827] mb-2 text-[17px]">{p.title}</h3>
-                                <p className="text-[#4B5563] text-[15px] leading-relaxed">{p.body}</p>
+                                {/* Right side: Rules List */}
+                                <div className="lg:w-[65%] flex flex-col justify-center">
+                                    <h3 className="text-[13px] font-bold text-[#0F172A] uppercase tracking-[0.1em] mb-8 flex items-center gap-4">
+                                        How to Play
+                                        <div className="flex-1 h-px bg-gradient-to-r from-[#E5E7EB] to-transparent" />
+                                    </h3>
+
+                                    <ul className="flex flex-col gap-5">
+                                        {game.rules.map((rule, rIdx) => (
+                                            <li key={rIdx} className="flex gap-4 items-start group/item">
+                                                <div className="mt-0.5 shrink-0 bg-white p-0.5 rounded-full shadow-sm border border-[#E5E7EB] group-hover/item:border-transparent transition-colors duration-300">
+                                                    <CheckCircle2 className={`w-5 h-5 ${game.accentColor} opacity-80 group-hover/item:opacity-100 transition-opacity`} />
+                                                </div>
+                                                <p className="text-[16px] text-[#475569] leading-relaxed">
+                                                    {rule}
+                                                </p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Module Specification */}
-                <div className="mb-24">
-                    <div className="flex items-center gap-4 mb-12">
-                        <h2 className="text-[11px] font-bold text-[#6D4AFE] uppercase tracking-[0.3em] whitespace-nowrap">Module Specification</h2>
-                        <div className="flex-1 h-px bg-[#E6E1FF]/50" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                        {GAMES.map(g => (
-                            <div key={g.name} className="flex flex-col">
-                                <span className={`text-[10px] font-bold ${g.tagColor} uppercase mb-4 tracking-widest`}>{g.tag}</span>
-                                <h3 className="font-extrabold text-[#111827] mb-3 text-[20px]">{g.name}</h3>
-                                <p className="text-[#4B5563] text-[15px] leading-relaxed mb-6">{g.desc}</p>
-                                <div className="mt-auto pt-6 border-t border-[#E6E1FF]/30">
-                                    <div className="flex items-center gap-2 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#6D4AFE]" />
-                                        Standardized Evaluation
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Professional Mission Bar */}
-                <div className="relative rounded-2xl overflow-hidden bg-white border border-[#E6E1FF]/50 p-6 sm:p-10 text-center shadow-sm">
-                    <div className="relative z-10 max-w-2xl mx-auto">
-                        <span className="text-[10px] font-bold text-[#6D4AFE] uppercase tracking-[0.2em] mb-4 block">Institutional Statement</span>
-                        <p className="text-lg sm:text-xl font-semibold text-[#111827] leading-relaxed mb-6 italic">
-                            "MindSprint is engineered on the principle that academic assessment should be as immersive as it is fair. We reward precision under pressure."
-                        </p>
-                        <div className="flex items-center justify-center gap-3">
-                            <div className="w-6 h-px bg-[#E6E1FF]" />
-                            <span className="text-[#9CA3AF] text-[9px] font-bold uppercase tracking-widest">Engineering Team</span>
-                            <div className="w-6 h-px bg-[#E6E1FF]" />
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
+            {/* Bottom Decorative Wave - Tertiary (Deepest layer) */}
+            <DecorativeCurve
+                opacity={0.05}
+                height="h-[400px] sm:h-[550px]"
+                className="absolute -bottom-[80px] sm:-bottom-[120px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-4 mix-blend-multiply"
+                animate={true}
+            />
+            {/* Bottom Decorative Wave - Secondary (Layered behind) */}
+            <DecorativeCurve
+                opacity={0.07}
+                height="h-[350px] sm:h-[480px]"
+                className="absolute -bottom-[50px] sm:-bottom-[80px] left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]"
+                animate={true}
+            />
+            {/* Bottom Decorative Wave - Primary */}
+            <DecorativeCurve
+                opacity={0.12}
+                height="h-[250px] sm:h-[360px]"
+                className="absolute bottom-0 left-0 z-0 pointer-events-none"
+                animate={true}
+            />
         </div>
     );
 }
