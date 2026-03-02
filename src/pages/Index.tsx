@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Play, Brain, Grid3X3, Link2, KeyRound, Gamepad2, Clock, Layers3, Zap, ArrowRight, BookOpen, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+=======
+import DecorativeCurve from '@/components/DecorativeCurve';
+>>>>>>> parent of d7b7b0b (commit)
 
 /* ──────────────────── ORBITAL FLOATING NUMBERS ──────────────────── */
 
@@ -273,9 +277,71 @@ export default function Index() {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* Right — Orbiting Numbers */}
           <div className="flex-1 w-full flex justify-center lg:justify-end">
             <OrbitingNumbers />
+=======
+          {/* Layer 3: Visual Anchor (Right Side) */}
+          <div className="flex-1 w-full max-w-[500px] lg:max-w-none flex justify-center lg:justify-end">
+
+            {/* Abstract Orbital Visual Container */}
+            <div className="relative w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] flex items-center justify-center">
+
+              {/* Soft Radial Backing Background */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_hsl(258_76%_98%_/_0.8)_0%,_transparent_70%)] animate-pulse" style={{ animationDuration: '4s' }} />
+
+              {/* Central Element: Large Logo */}
+              <div className="relative z-20 w-[140px] h-[140px] sm:w-[170px] sm:h-[170px] bg-white rounded-full shadow-[0_0_0_1px_rgba(258,76,55,0.05),_0_24px_48px_-12px_rgba(100,60,200,0.25)] flex items-center justify-center animate-float">
+                <img src="/favicon-round.png" alt="MindSprint" className="w-[90px] h-[90px] sm:w-[110px] sm:h-[110px] object-contain ml-2" />
+                {/* Inner Glow Core */}
+                <div className="absolute inset-0 rounded-full shadow-[inset_0_0_30px_rgba(258,76,55,0.05)] pointer-events-none" />
+              </div>
+
+              {/* Orbital Path Rings (Subtle) */}
+              <div className="absolute w-[240px] h-[240px] sm:w-[320px] sm:h-[320px] border border-accent/[0.04] rounded-full pointer-events-none" />
+              <div className="absolute w-[320px] h-[320px] sm:w-[420px] sm:h-[420px] border border-accent/[0.02] rounded-full pointer-events-none" />
+
+              {/* Supporting Elements - Orbiting Math & Logic Symbols */}
+              <div className="absolute w-full h-full z-10 pointer-events-none">
+
+                {/* Plus Symbol (Top Right) */}
+                <div className="absolute top-[15%] right-[20%] w-12 h-12 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '0.2s', transform: 'rotate(12deg)' }}>
+                  <span className="text-[24px] font-bold text-[#6D4AFE]">+</span>
+                </div>
+
+                {/* Division Symbol (Top Left) */}
+                <div className="absolute top-[25%] left-[10%] w-10 h-10 bg-white/80 backdrop-blur-md rounded-[14px] shadow-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '0.7s', transform: 'rotate(-15deg)' }}>
+                  <span className="text-[22px] font-bold text-[#22C55E]">÷</span>
+                </div>
+
+                {/* Multiplication Symbol (Bottom Right) */}
+                <div className="absolute bottom-[28%] right-[8%] w-11 h-11 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '1.2s', transform: 'rotate(-8deg)' }}>
+                  <span className="text-[24px] font-bold text-[#F59E0B]">×</span>
+                </div>
+
+                {/* Minus Symbol (Bottom Left) */}
+                <div className="absolute bottom-[18%] left-[22%] w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl shadow-sm border border-[#E5E7EB] flex items-center justify-center animate-float" style={{ animationDelay: '0.5s', transform: 'rotate(10deg)' }}>
+                  <span className="text-[26px] font-bold text-[#6366F1] leading-none mb-1">−</span>
+                </div>
+
+                {/* Logic/Brain Icon (Far Top Right) */}
+                <div className="absolute top-[5%] right-[5%] w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '0.9s' }}>
+                  <Brain className="w-4 h-4 text-[#6D4AFE]/60" />
+                </div>
+
+                {/* Grid/Pattern Icon (Far Bottom Left) */}
+                <div className="absolute bottom-[5%] left-[8%] w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-[#E6E1FF] flex items-center justify-center animate-float" style={{ animationDelay: '1.5s' }}>
+                  <Grid3X3 className="w-4 h-4 text-[#22C55E]/60" />
+                </div>
+
+                {/* Random Numbers from 0 to 9 scaling higher to lower (Dynamic Component) */}
+                <AnimatedNumbers />
+
+              </div>
+
+            </div>
+>>>>>>> parent of d7b7b0b (commit)
           </div>
         </div>
       </section>
@@ -316,8 +382,44 @@ export default function Index() {
         </div>
       </section>
 
+<<<<<<< HEAD
       {/* ───── HOW IT WORKS ───── */}
       <section className="relative z-10 w-full py-20 bg-white">
+=======
+
+      {/* ─── SECTION 2: THE GAMES ─── */}
+      <section className="relative z-10 w-full py-20 bg-[#F8F9FB]">
+        <div className="max-container">
+
+          <div className="text-left mb-12">
+            <h2 className="text-3xl font-bold text-[#111827] tracking-tight">Assessment Categories</h2>
+            <p className="text-[#9CA3AF] mt-2 text-[15px]">Targeted cognitive modules serving distinct logic domains.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { name: 'Bubble Sort', g: 'Sorting', icon: Brain, desc: 'Sort mathematical expressions by value using rapid estimation.', iconColor: 'text-[#6D4AFE]', iconBg: 'bg-[#6D4AFE]/8', tagColor: 'text-[#6D4AFE]', cardHover: 'hover:shadow-[#6D4AFE]/8' },
+              { name: 'Cross Math', g: 'Logic', icon: Grid3X3, desc: 'Solve arithmetic grids that test multi-variable logical deduction.', iconColor: 'text-[#3B82F6]', iconBg: 'bg-[#3B82F6]/8', tagColor: 'text-[#3B82F6]', cardHover: 'hover:shadow-[#3B82F6]/8' },
+              { name: 'NumLink', g: 'Pattern', icon: Layers3, desc: 'Connect sequences in complex paths to audit spatial reasoning.', iconColor: 'text-[#14B8A6]', iconBg: 'bg-[#14B8A6]/8', tagColor: 'text-[#14B8A6]', cardHover: 'hover:shadow-[#14B8A6]/8' },
+            ].map((g) => (
+              <div key={g.name} className={`flex flex-col bg-white rounded-2xl p-8 border border-[#E5E7EB] shadow-sm transition-all hover:shadow-lg ${g.cardHover}`}>
+                <div className={`w-12 h-12 rounded-xl ${g.iconBg} flex items-center justify-center mb-6`}>
+                  <g.icon className={`w-6 h-6 ${g.iconColor}`} />
+                </div>
+                <h3 className="text-[17px] font-bold text-[#111827] mb-1">{g.name}</h3>
+                <span className={`text-[11px] font-bold ${g.tagColor} uppercase tracking-wider mb-4`}>{g.g}</span>
+                <p className="text-[14px] text-[#4B5563] leading-relaxed flex-1">{g.desc}</p>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+
+      {/* ─── SECTION 3: BOTTOM CTA ─── */}
+      <section className="relative z-10 w-full py-24 bg-white">
+>>>>>>> parent of d7b7b0b (commit)
         <div className="max-container">
           <div className="mb-12 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight">How It Works</h2>
