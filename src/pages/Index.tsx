@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 <<<<<<< HEAD
 =======
 import DecorativeCurve from '@/components/DecorativeCurve';
+<<<<<<< HEAD
+>>>>>>> parent of d7b7b0b (commit)
+=======
 >>>>>>> parent of d7b7b0b (commit)
 
 /* ──────────────────── ORBITAL FLOATING NUMBERS ──────────────────── */
@@ -417,6 +420,39 @@ export default function Index() {
       </section>
 
 
+<<<<<<< HEAD
+=======
+      {/* ─── SECTION 2: THE GAMES ─── */}
+      <section className="relative z-10 w-full py-20 bg-[#F8F9FB]">
+        <div className="max-container">
+
+          <div className="text-left mb-12">
+            <h2 className="text-3xl font-bold text-[#111827] tracking-tight">Assessment Categories</h2>
+            <p className="text-[#9CA3AF] mt-2 text-[15px]">Targeted cognitive modules serving distinct logic domains.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { name: 'Bubble Sort', g: 'Sorting', icon: Brain, desc: 'Sort mathematical expressions by value using rapid estimation.', iconColor: 'text-[#6D4AFE]', iconBg: 'bg-[#6D4AFE]/8', tagColor: 'text-[#6D4AFE]', cardHover: 'hover:shadow-[#6D4AFE]/8' },
+              { name: 'Cross Math', g: 'Logic', icon: Grid3X3, desc: 'Solve arithmetic grids that test multi-variable logical deduction.', iconColor: 'text-[#3B82F6]', iconBg: 'bg-[#3B82F6]/8', tagColor: 'text-[#3B82F6]', cardHover: 'hover:shadow-[#3B82F6]/8' },
+              { name: 'NumLink', g: 'Pattern', icon: Layers3, desc: 'Connect sequences in complex paths to audit spatial reasoning.', iconColor: 'text-[#14B8A6]', iconBg: 'bg-[#14B8A6]/8', tagColor: 'text-[#14B8A6]', cardHover: 'hover:shadow-[#14B8A6]/8' },
+            ].map((g) => (
+              <div key={g.name} className={`flex flex-col bg-white rounded-2xl p-8 border border-[#E5E7EB] shadow-sm transition-all hover:shadow-lg ${g.cardHover}`}>
+                <div className={`w-12 h-12 rounded-xl ${g.iconBg} flex items-center justify-center mb-6`}>
+                  <g.icon className={`w-6 h-6 ${g.iconColor}`} />
+                </div>
+                <h3 className="text-[17px] font-bold text-[#111827] mb-1">{g.name}</h3>
+                <span className={`text-[11px] font-bold ${g.tagColor} uppercase tracking-wider mb-4`}>{g.g}</span>
+                <p className="text-[14px] text-[#4B5563] leading-relaxed flex-1">{g.desc}</p>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+
+>>>>>>> parent of d7b7b0b (commit)
       {/* ─── SECTION 3: BOTTOM CTA ─── */}
       <section className="relative z-10 w-full py-24 bg-white">
 >>>>>>> parent of d7b7b0b (commit)
