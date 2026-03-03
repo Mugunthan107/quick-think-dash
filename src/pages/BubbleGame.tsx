@@ -78,6 +78,7 @@ const BubbleGame = () => {
     const [finished, setFinished] = useState(false);
     const [correctAnswersInRound, setCorrectAnswersInRound] = useState(0);
     const [correctAnswersTotal, setCorrectAnswersTotal] = useState(0);
+    const [flash, setFlash] = useState<'correct' | 'wrong' | null>(null);
 
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const lastTickRef = useRef(Date.now());
@@ -148,30 +149,35 @@ const BubbleGame = () => {
             setCorrectAnswersTotal(prev => prev + 1);
             const points = (level > 20) ? 30 : (level > 10) ? 20 : 10;
             setScore(prev => prev + points);
+            setFlash('correct');
+            setTimeout(() => setFlash(null), 400);
+
             if (correctAnswersInRound + 1 === bubbles.length) {
                 setGameActive(false);
                 if (timerRef.current) clearInterval(timerRef.current);
                 if (currentStudent) updateStudentScore(currentStudent.username, score + points, level, correctAnswersTotal + 1);
-                if (level >= TOTAL_LEVELS) setTimeout(() => handleFinish(), 1000);
-                else setTimeout(() => setLevel(prev => prev + 1), 1000);
+                if (level >= TOTAL_LEVELS) setTimeout(() => handleFinish(), 600);
+                else setTimeout(() => setLevel(prev => prev + 1), 600);
             }
         } else {
             setShuffledExp(prev => prev.map(b => b.id === clicked.id ? { ...b, status: 'wrong' } : b));
+            setFlash('wrong');
+            setTimeout(() => setFlash(null), 500);
             failLevel();
         }
     }, [gameActive, bubbles, correctAnswersInRound, score, level, currentStudent, updateStudentScore, failLevel, handleFinish, correctAnswersTotal]);
+
+    const progress = Math.min(100, (level / TOTAL_LEVELS) * 100);
 
     if (finished) {
         return (
             <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
                 <div className="absolute inset-0 z-0 pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-                    <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
                 </div>
-                <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
                 <div className="flex items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
                     <div className="text-center animate-fade-in max-w-md w-full px-4">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
                             <Trophy className="w-10 h-10 text-sky-500" />
                         </div>
                         <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">Bubble Complete!</h1>
@@ -194,12 +200,9 @@ const BubbleGame = () => {
                         </button>
                     </div>
                 </div>
-                <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
             </div>
         );
     }
-
-    const progress = Math.min(100, (level / TOTAL_LEVELS) * 100);
 
     return (
         <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
@@ -207,19 +210,30 @@ const BubbleGame = () => {
                 <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
                 <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
             </div>
-            <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
+
             <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
-                <div className="w-full max-w-[480px] animate-fade-in relative">
+                <div className="w-full max-w-[500px] animate-fade-in relative">
+
+                    {/* Old Structure Header */}
+                    <div className="w-full mb-8 flex flex-col items-center text-center">
+                        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#0F172A] uppercase">
+                            SORT BY VALUE
+                            <span className="text-[13px] font-bold ml-3 text-[#94A3B8] normal-case opacity-60">LOW → HIGH</span>
+                        </h1>
+                        <p className="text-[13px] text-[#64748B] font-bold mt-1">Tap results in order from lowest to highest</p>
+                    </div>
+
                     <div className="flex items-center justify-between mb-4 px-2 tracking-tight font-bold">
                         <span className="text-[13px] text-[#64748B]">{currentStudent?.username}</span>
                         <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-sky-100 shadow-sm">
                             <Clock className="w-3.5 h-3.5 text-sky-500" />
                             <span className="text-[#0F172A] font-mono text-[14px]">{formatTime(elapsed)}</span>
                         </div>
-                        <button onClick={() => handleFinish()} className="text-[11px] text-[#94A3B8] hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest">End Test</button>
+                        <button onClick={() => handleFinish()} className="text-[11px] text-[#94A3B8] hover:text-[#2563EB] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest">End Test</button>
                     </div>
-                    <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.10)] border border-sky-100 overflow-hidden relative">
-                        <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 border-b border-sky-50">
+
+                    <div className={`bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 transition-all duration-300 overflow-hidden relative ${flash === 'wrong' ? 'border-red-200' : flash === 'correct' ? 'border-emerald-200' : 'border-sky-100'}`}>
+                        <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-4 border-b border-sky-50">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Level</span>
@@ -234,33 +248,36 @@ const BubbleGame = () => {
                                 <div className="h-full bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
                             </div>
                         </div>
-                        <div className="p-6 sm:p-10 relative">
-                            <div className="grid grid-cols-2 gap-6 sm:gap-8 w-full">
+
+                        {/* Game Area with Round Bubbles */}
+                        <div className="p-8 sm:p-12 relative min-h-[320px] flex items-center justify-center">
+                            <div className="flex flex-wrap justify-center gap-6 sm:gap-10 w-full animate-fade-in-scale">
                                 {shuffledExp.map((bubble) => (
                                     <button key={bubble.id} onClick={() => handleBubbleClick(bubble)}
-                                        className={`aspect-square rounded-[2rem] flex flex-col items-center justify-center p-4 transition-all duration-300 relative border-2
-                      ${bubble.status === 'correct' ? 'bg-emerald-500 text-white scale-95 shadow-lg shadow-emerald-500/25 border-emerald-400'
-                                            : bubble.status === 'wrong' ? 'bg-[#EF4444] text-white animate-shake shadow-lg shadow-red-500/25 border-red-400'
-                                                : 'bg-white border-sky-100 hover:border-sky-300 hover:-translate-y-1 shadow-sm hover:shadow-[0_8px_24px_rgba(56,189,248,0.15)]'}`}
+                                        className={`w-24 h-24 sm:w-32 sm:h-32 rounded-full flex flex-col items-center justify-center p-4 transition-all duration-300 relative border-2 select-none touch-manipulation
+                                            ${bubble.status === 'correct' ? 'bg-emerald-500 text-white scale-90 shadow-lg shadow-emerald-500/20 border-emerald-400 opacity-40'
+                                                : bubble.status === 'wrong' ? 'bg-red-500 text-white animate-shake shadow-lg shadow-red-500/20 border-red-400'
+                                                    : 'bg-white border-sky-100 hover:border-sky-300 hover:scale-105 shadow-md shadow-sky-500/5 hover:shadow-xl hover:shadow-sky-500/15'}`}
                                     >
-                                        <span className={`text-[17px] sm:text-[20px] font-black tracking-tight ${bubble.status === 'idle' ? 'text-[#0F172A]' : 'text-white'}`}>{bubble.text}</span>
-                                        <div className="mt-2 h-6">
-                                            {bubble.status === 'correct' && <CheckCircle2 className="w-6 h-6" />}
-                                            {bubble.status === 'wrong' && <XCircle className="w-6 h-6" />}
-                                        </div>
+                                        <span className={`text-[16px] sm:text-[19px] font-black tracking-tight ${bubble.status === 'idle' ? 'text-[#0F172A]' : 'text-white'}`}>{bubble.text}</span>
+                                        {bubble.status === 'correct' && <div className="mt-1 text-[10px] font-black uppercase tracking-tighter opacity-60">Done</div>}
                                     </button>
                                 ))}
                             </div>
+                            {/* Flash overlay */}
+                            {flash && (
+                                <div className={`absolute inset-0 pointer-events-none animate-fade-in ${flash === 'wrong' ? 'bg-red-500/5' : 'bg-emerald-500/5'}`} />
+                            )}
                         </div>
-                        <div className="px-6 pb-10">
-                            <div className="bg-sky-50/50 border border-sky-100 rounded-2xl p-4 text-center">
-                                <p className="text-[13px] text-[#64748B] font-bold">Tap results in order from <span className="text-sky-500">lowest</span> to <span className="text-sky-500">highest</span></p>
+
+                        <div className="px-6 pb-10 text-center">
+                            <div className="bg-sky-50/50 border border-sky-100 rounded-2xl py-3 px-4 inline-block">
+                                <p className="text-[12px] text-[#64748B] font-bold tracking-tight">Level Bonus: <span className="text-sky-500">+{level > 20 ? 30 : level > 10 ? 20 : 10} pts</span></p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
         </div>
     );
 };

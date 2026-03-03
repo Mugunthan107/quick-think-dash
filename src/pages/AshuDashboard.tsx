@@ -192,7 +192,7 @@ const AshuDashboard = () => {
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
-  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink'>('overall');
+  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink' | 'aptirush' | 'motion'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
   const [selectedGames, setSelectedGames] = useState<string[]>(['bubble']);
   const [isCreatingPin, setIsCreatingPin] = useState(false);
@@ -201,6 +201,8 @@ const AshuDashboard = () => {
     { id: 'bubble', name: 'Bubble' },
     { id: 'crossmath', name: 'Cross Math' },
     { id: 'numlink', name: 'NumLink' },
+    { id: 'aptirush', name: 'AptiRush' },
+    { id: 'motion', name: 'Motion' },
   ];
 
   useEffect(() => {
@@ -251,14 +253,14 @@ const AshuDashboard = () => {
     doc.setTextColor(100, 100, 120);
     doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}   |   Total Students: ${students.length}`, 14, 30);
 
-    const tableColumn = ["#", "Name", "Bubble", "CrossMath", "NumLink", "Total", "Time (s)"];
+    const tableColumn = ["#", "Name", "Bubble", "Math", "Link", "Apti", "Motion", "Total", "Time"];
 
     const tableRows = leaderboard.map((student, index) => {
       const totalTime = student.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || 0;
       const getGameCell = (gameId: string) => {
         const g = student.gameHistory?.find(h => h.gameId === gameId);
         if (!g) return '—';
-        return `${g.correctAnswers}/${g.totalQuestions} (${g.score}pts)`;
+        return `${g.correctAnswers}/${g.totalQuestions} (${g.score})`;
       };
       return [
         index + 1,
@@ -266,6 +268,8 @@ const AshuDashboard = () => {
         getGameCell('bubble'),
         getGameCell('crossmath'),
         getGameCell('numlink'),
+        getGameCell('aptirush'),
+        getGameCell('motion'),
         student.score,
         totalTime.toFixed(1),
       ];
@@ -286,13 +290,15 @@ const AshuDashboard = () => {
         font: 'helvetica',
       },
       columnStyles: {
-        0: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
-        1: { cellWidth: 45, halign: 'left' },
-        2: { cellWidth: 28, halign: 'center' },
-        3: { cellWidth: 28, halign: 'center' },
-        4: { cellWidth: 28, halign: 'center' },
-        5: { cellWidth: 20, halign: 'right', fontStyle: 'bold' },
-        6: { cellWidth: 20, halign: 'right' },
+        0: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
+        1: { cellWidth: 35, halign: 'left' },
+        2: { cellWidth: 22, halign: 'center' },
+        3: { cellWidth: 22, halign: 'center' },
+        4: { cellWidth: 22, halign: 'center' },
+        5: { cellWidth: 22, halign: 'center' },
+        6: { cellWidth: 22, halign: 'center' },
+        7: { cellWidth: 18, halign: 'right', fontStyle: 'bold' },
+        8: { cellWidth: 16, halign: 'right' },
       },
       headStyles: {
         fillColor: [120, 60, 220],
@@ -589,11 +595,11 @@ const AshuDashboard = () => {
                 {/* Tabs + Search */}
                 <div className="p-4 border-b border-border bg-secondary/40 shrink-0 space-y-3">
                   <div className="flex gap-1 p-1 bg-white rounded-xl border border-border flex-wrap">
-                    {(['overall', 'bubble', 'crossmath', 'numlink'] as const).map(tab => (
+                    {(['overall', 'bubble', 'crossmath', 'numlink', 'aptirush', 'motion'] as const).map(tab => (
                       <button key={tab} onClick={() => setLeaderboardTab(tab)}
                         className={`flex-1 py-1.5 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all min-w-[60px]
                           ${leaderboardTab === tab ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary text-muted-foreground'}`}>
-                        {tab === 'overall' ? 'Overall' : tab === 'bubble' ? 'Bubble' : tab === 'crossmath' ? 'Cross Math' : 'NumLink'}
+                        {tab === 'overall' ? 'Overall' : tab === 'bubble' ? 'Bubble' : tab === 'crossmath' ? 'Cross Math' : tab === 'numlink' ? 'NumLink' : tab === 'aptirush' ? 'AptiRush' : 'Motion'}
                       </button>
                     ))}
                   </div>

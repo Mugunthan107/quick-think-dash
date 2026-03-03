@@ -67,9 +67,9 @@ const Leaderboard = () => {
         ) : (
           <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-[4rem_1fr_4.5rem_4.5rem_4.5rem_6rem_5.5rem] gap-2 px-8 py-6 border-b border-[#F1F5F9] bg-white/40 backdrop-blur-sm">
-              {['Rank', 'Candidate', 'BS', 'CM', 'NL', 'Total', 'Time'].map((h, idx) => (
-                <span key={h} className={`text-[11px] font-black text-[#94A3B8] uppercase tracking-widest ${idx === 0 ? 'text-center' : idx >= 5 ? 'text-right' : ''}`}>{h}</span>
+            <div className="grid grid-cols-[3rem_1fr_3.5rem_3.5rem_3.5rem_3.5rem_3.5rem_5rem_5rem] gap-2 px-6 py-6 border-b border-[#F1F5F9] bg-white/40 backdrop-blur-sm">
+              {['Rank', 'Candidate', 'BS', 'CM', 'NL', 'AR', 'MC', 'Total', 'Time'].map((h, idx) => (
+                <span key={h} className={`text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ${idx === 0 ? 'text-center' : idx >= 7 ? 'text-right' : 'text-center'}`}>{h}</span>
               ))}
             </div>
 
@@ -82,15 +82,15 @@ const Leaderboard = () => {
                   const g = s.gameHistory?.find(h => h.gameId === id);
                   return g ? { score: g.score, correct: g.correctAnswers, total: g.totalQuestions } : null;
                 };
-                const bubble = getGame('bubble'), crossmath = getGame('crossmath'), numlink = getGame('numlink');
+                const bubble = getGame('bubble'), crossmath = getGame('crossmath'), numlink = getGame('numlink'), aptirush = getGame('aptirush'), motion = getGame('motion');
                 const rs = rankStyle(i);
 
                 return (
                   <div key={s.username}
-                    className={`grid grid-cols-[4rem_1fr_4.5rem_4.5rem_4.5rem_6rem_5.5rem] gap-2 px-8 py-5 items-center transition-all duration-300 hover:bg-white/60 group ${isMe ? 'bg-blue-50/40' : ''}`}>
+                    className={`grid grid-cols-[3rem_1fr_3.5rem_3.5rem_3.5rem_3.5rem_3.5rem_5rem_5rem] gap-2 px-6 py-5 items-center transition-all duration-300 hover:bg-white/60 group ${isMe ? 'bg-blue-50/40' : ''}`}>
                     {/* Rank */}
                     <div className="flex justify-center">
-                      <span className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black shadow-lg ${rs.bg} ${rs.text} ${rs.shadow} ${i > 2 ? 'border border-[#E2E8F0]' : ''}`}>
+                      <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-lg ${rs.bg} ${rs.text} ${rs.shadow} ${i > 2 ? 'border border-[#E2E8F0]' : ''}`}>
                         {i + 1}
                       </span>
                     </div>
@@ -103,19 +103,19 @@ const Leaderboard = () => {
                       </div>
                     </div>
                     {/* Game scores */}
-                    {[bubble, crossmath, numlink].map((gd, gi) => (
+                    {[bubble, crossmath, numlink, aptirush, motion].map((gd, gi) => (
                       <div key={gi} className="text-center group-hover:scale-110 transition-transform">
                         {gd ? (
                           <div className="flex flex-col">
-                            <span className="font-mono font-black text-[15px] text-[#0F172A] leading-none mb-1">{gd.score}</span>
-                            <span className="text-[10px] text-emerald-500 font-black">{gd.correct}/{gd.total}</span>
+                            <span className="font-mono font-black text-[13px] text-[#0F172A] leading-none mb-1">{gd.score}</span>
+                            <span className="text-[9px] text-emerald-500 font-black">{gd.correct}/{gd.total}</span>
                           </div>
-                        ) : <span className="text-[#CBD5E1] text-[15px] font-black">—</span>}
+                        ) : <span className="text-[#CBD5E1] text-[13px] font-black">—</span>}
                       </div>
                     ))}
                     {/* Total */}
                     <div className="text-right">
-                      <span className="font-mono font-black text-[22px] text-[#2563EB] tabular-nums"
+                      <span className="font-mono font-black text-[20px] text-[#2563EB] tabular-nums"
                         style={{ textShadow: '0 0 20px rgba(37,99,235,0.1)' }}>{s.score}</span>
                     </div>
                     {/* Time */}

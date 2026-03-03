@@ -74,7 +74,7 @@ interface GameContextType extends GameState {
 
 const ADMIN_PASSWORD = 'admin123';
 
-const AVAILABLE_GAMES = ['bubble', 'crossmath', 'numlink'];
+const AVAILABLE_GAMES = ['bubble', 'crossmath', 'numlink', 'aptirush', 'motion'];
 
 const GameContext = createContext<GameContextType | null>(null);
 

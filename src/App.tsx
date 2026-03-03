@@ -41,10 +41,10 @@ const AppContent = () => {
       {!isGame && !isHome && (
         <DecorativeCurve invert={true} opacity={0.04} height="h-[60px] sm:h-[100px]" className="absolute top-0 left-0 z-0" />
       )}
-      {!isHome && (
+      {!isHome && !isGame && (
         <div className="absolute top-0 left-0 right-0 h-[600px] bg-gradient-to-b from-[#E0F2FE]/40 via-[#F0F9FF]/80 to-[#F0F7FF] pointer-events-none z-0" />
       )}
-      {!isHome && (
+      {!isHome && !isGame && (
         <>
           <div className="absolute top-[10%] left-[5%] w-64 h-64 bg-sky-200/10 rounded-full blur-[80px] animate-float pointer-events-none z-0" />
           <div className="absolute top-[40%] right-[10%] w-96 h-96 bg-sky-100/20 rounded-full blur-[100px] animate-float-reverse pointer-events-none z-0" />
