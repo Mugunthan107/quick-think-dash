@@ -6,7 +6,7 @@ const Footer = () => {
     const location = useLocation();
 
     // List of routes where the footer should be hidden
-    const hiddenRoutes = ['/', '/game', '/crossmath', '/numlink', '/lobby', '/about'];
+    const hiddenRoutes = ['/', '/game', '/crossmath', '/numlink', '/lobby', '/about', '/student'];
 
     // Check if current path matches any of the hidden routes
     // Using exact match for '/' to only hide on home, and startsWith for others

@@ -55,39 +55,33 @@ export default function About() {
         <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-[calc(100vh-80px)] relative overflow-hidden">
             {/* Layer 1: Premium Background Depth */}
             <div className="absolute inset-0 z-0 pointer-events-none">
-                {/* Soft Multi-Gradient Base */}
-                <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
+                {/* Soft Multi-Gradient Base - Sky Blue Focus */}
+                <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#ECFEFF_40%,_#F0F9FF_100%)]" />
 
                 {/* Very Faint Radial Glow behind Hero */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+                <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
             </div>
 
-            {/* Top Decorative Wave - Tertiary (Deepest layer) */}
+            {/* === TOP WAVES (CLEAN) === */}
+            {/* Top Wave - Deepest Layer */}
             <DecorativeCurve
-                opacity={0.04}
+                opacity={0.03}
                 height="h-[400px] sm:h-[550px]"
-                className="absolute -top-[80px] sm:-top-[120px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-4 mix-blend-multiply"
+                className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-8 mix-blend-multiply"
                 animate={true}
             />
-            {/* Top Decorative Wave - Secondary (Layered behind) */}
+            {/* Top Wave - Primary Smooth Layer */}
             <DecorativeCurve
-                opacity={0.06}
-                height="h-[350px] sm:h-[480px]"
-                className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]"
-                animate={true}
-            />
-            {/* Top Decorative Wave - Primary */}
-            <DecorativeCurve
-                opacity={0.12}
-                height="h-[250px] sm:h-[360px]"
-                className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none"
+                opacity={0.08}
+                height="h-[250px] sm:h-[350px]"
+                className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none w-full"
                 animate={true}
             />
 
-            <div className="max-w-[1100px] mx-auto px-6 pt-32 pb-24 relative z-10 w-full">
+            <div className="max-w-[1100px] mx-auto px-6 pt-10 sm:pt-14 pb-24 relative z-10 w-full hover:bg-[rgba(255,255,255,0.01)] transition-colors duration-300">
 
                 {/* Header Section */}
-                <div className="flex flex-col items-center text-center mb-20">
+                <div className="flex flex-col items-center text-center mb-10">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] mb-8">
                         <div className="w-2 h-2 rounded-full bg-[#6C63FF] animate-pulse" />
                         <span className="text-[11px] font-bold tracking-[0.2em] text-[#64748B] uppercase">Official Manual</span>
@@ -105,9 +99,12 @@ export default function About() {
                     {GAMES_RULES.map((game, index) => (
                         <div
                             key={game.id}
-                            className="bg-white rounded-[28px] overflow-hidden border border-[#E5E7EB] shadow-sm hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 group/card"
+                            className="relative z-20 overflow-hidden rounded-[32px] bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgba(20,20,40,0.04)] hover:shadow-[0_20px_40px_rgba(109,74,254,0.12)] hover:-translate-y-1 transition-all duration-500 group/card"
                         >
-                            <div className="p-8 sm:p-12 flex flex-col lg:flex-row gap-10 lg:gap-16">
+                            {/* Inner Soft Gradient Glow to give it volume */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/20 to-transparent pointer-events-none" />
+
+                            <div className="relative z-10 p-8 sm:p-12 flex flex-col lg:flex-row gap-10 lg:gap-16">
                                 {/* Left side: Game Identity & Objective */}
                                 <div className="lg:w-[35%] flex flex-col">
                                     <div className="flex items-center gap-5 mb-8">
@@ -156,25 +153,19 @@ export default function About() {
 
             </div>
 
-            {/* Bottom Decorative Wave - Tertiary (Deepest layer) */}
+            {/* === BOTTOM WAVES (CLEAN) === */}
+            {/* Bottom Wave - Deepest Layer */}
             <DecorativeCurve
-                opacity={0.05}
+                opacity={0.03}
                 height="h-[400px] sm:h-[550px]"
-                className="absolute -bottom-[80px] sm:-bottom-[120px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-4 mix-blend-multiply"
+                className="absolute -bottom-[50px] sm:-bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-8 mix-blend-multiply"
                 animate={true}
             />
-            {/* Bottom Decorative Wave - Secondary (Layered behind) */}
+            {/* Bottom Wave - Primary Smooth Layer */}
             <DecorativeCurve
-                opacity={0.07}
-                height="h-[350px] sm:h-[480px]"
-                className="absolute -bottom-[50px] sm:-bottom-[80px] left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]"
-                animate={true}
-            />
-            {/* Bottom Decorative Wave - Primary */}
-            <DecorativeCurve
-                opacity={0.12}
-                height="h-[250px] sm:h-[360px]"
-                className="absolute bottom-0 left-0 z-0 pointer-events-none"
+                opacity={0.08}
+                height="h-[250px] sm:h-[350px]"
+                className="absolute bottom-0 left-0 z-0 pointer-events-none w-full"
                 animate={true}
             />
         </div>

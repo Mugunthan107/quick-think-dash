@@ -28,9 +28,9 @@ const NavBar = () => {
     ];
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col h-14 sm:h-auto">
-            <div className={`h-14 flex items-center ${isHome ? 'bg-transparent shadow-none border-b-0' : 'bg-white/95 backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm'} relative z-10`}>
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />
+        <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col h-14 sm:h-16">
+            <div className={`h-full flex items-center ${isHome || path === '/about' || path === '/student' ? 'bg-[#E0F2FE]/60 backdrop-blur-md shadow-none border-b-0' : 'bg-white/95 backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm'} relative z-10`}>
+                {!(isHome || path === '/about' || path === '/student') && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />}
                 <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-10 flex items-center justify-between gap-4">
 
                     {/* Left — Logo */}
@@ -52,7 +52,7 @@ const NavBar = () => {
                         {!hideCta && !inTest && !isAdmin && (
                             <button
                                 onClick={() => navigate(path === '/about' ? '/' : '/about')}
-                                className="hidden sm:block text-[13px] font-bold text-[#000000] hover:text-[#6D4AFE] transition-colors"
+                                className="hidden sm:block text-[14px] font-bold text-gray-900 hover:text-[#6D4AFE] transition-colors"
                             >
                                 {path === '/about' ? 'Home' : 'About'}
                             </button>
@@ -72,7 +72,7 @@ const NavBar = () => {
                         ) : !hideCta ? (
                             <button
                                 onClick={() => setShowInstructions(true)}
-                                className="text-[13px] font-bold text-[#000000] hover:text-[#6D4AFE] hover:underline underline-offset-4 transition-all"
+                                className="text-[14px] font-bold text-gray-900 hover:text-[#6D4AFE] transition-all"
                             >
                                 Instructions
                             </button>
