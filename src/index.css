@@ -16,8 +16,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 221 39% 11%;
 
-    /* ── Brand Blue #2563EB ── */
-    --primary: 217 91% 53%;
+    /* ── Sky Blue #38BDF8 ── */
+    --primary: 199 93% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 25% 96%;
@@ -26,7 +26,7 @@
     --muted: 220 20% 94%;
     --muted-foreground: 215 14% 65%;
 
-    --accent: 217 91% 53%;
+    --accent: 199 93% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 348 82% 54%;
@@ -34,7 +34,7 @@
 
     --border: 220 20% 91%;
     --input: 220 20% 92%;
-    --ring: 217 91% 53%;
+    --ring: 199 93% 60%;
 
     --radius: 0.875rem;
 
@@ -56,12 +56,12 @@
     /* ── Sidebar ── */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 221 35% 12%;
-    --sidebar-primary: 217 91% 53%;
+    --sidebar-primary: 199 93% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 25% 96%;
     --sidebar-accent-foreground: 221 20% 38%;
     --sidebar-border: 220 20% 91%;
-    --sidebar-ring: 217 91% 53%;
+    --sidebar-ring: 199 93% 60%;
   }
 }
 
