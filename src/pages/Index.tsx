@@ -167,14 +167,7 @@ export default function Index() {
             {/* Layer 2: Content Grid (Left Side) */}
             <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-[580px]">
 
-              {/* Pill Badge - Premium Tint */}
-              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/50 backdrop-blur-sm px-4 py-1.5 shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6C63FF] opacity-40"></span>
-                  <span className="relative inline-flex rounded-full w-2 h-2 bg-[#6C63FF]"></span>
-                </span>
-                <span className="text-[11px] font-bold tracking-[0.15em] text-[#6C63FF] uppercase italic">Professional Assessment</span>
-              </div>
+              {/* Pill Badge - Premium Tint (Removed) */}
 
               {/* Main Heading - Smooth Elegant Gradient */}
               <h1 className="text-[clamp(40px,5.5vw,56px)] font-black tracking-tight text-[#0F172A] leading-[1.05] mb-6">
@@ -198,21 +191,7 @@ export default function Index() {
                 <span className="text-[17px] font-bold tracking-tight uppercase">START</span>
               </button>
 
-              {/* Supporting Stats Row - Tints at 8-12% */}
-              <div className="mt-14 flex items-center justify-center lg:justify-start gap-4 flex-wrap">
-                {[
-                  { i: Layers3, t: '30+ Levels', c: 'text-[#6C63FF]', bg: 'bg-[#6C63FF]/08', border: 'border-[#6C63FF]/10' },
-                  { i: Gamepad2, t: '3 Game Modes', c: 'text-[#22D3EE]', bg: 'bg-[#22D3EE]/08', border: 'border-[#22D3EE]/10' },
-                  { i: Zap, t: 'Live Results', c: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/08', border: 'border-[#F59E0B]/10' },
-                ].map((stat, idx) => (
-                  <div key={idx} className={`flex items-center gap-2 border ${stat.border} ${stat.bg} backdrop-blur-sm rounded-full px-4 py-2 shadow-sm transition-transform hover:scale-105 duration-300`}>
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center`}>
-                      <stat.i className={`w-3.5 h-3.5 ${stat.c}`} strokeWidth={2.5} />
-                    </div>
-                    <span className="text-[12px] font-bold text-[#4B5563] tracking-wide">{stat.t}</span>
-                  </div>
-                ))}
-              </div>
+              {/* Supporting Stats Row (Removed) */}
 
             </div>
 

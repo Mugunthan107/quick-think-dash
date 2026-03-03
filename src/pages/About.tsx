@@ -7,9 +7,9 @@ const GAMES_RULES = [
         id: 'bubble',
         icon: Brain,
         name: 'Bubble Sort',
-        accentColor: 'text-[#6D4AFE]',
-        accentBg: 'bg-[#6D4AFE]/10',
-        borderColor: 'border-[#6D4AFE]/20',
+        accentColor: 'text-[#2563EB]',
+        accentBg: 'bg-[#2563EB]/10',
+        borderColor: 'border-[#2563EB]/20',
         objective: 'Evaluate and sort mathematical expressions in ascending order as quickly as possible under time pressure.',
         rules: [
             'A set of floating bubbles containing unique mathematical expressions will appear on screen.',
@@ -55,39 +55,27 @@ export default function About() {
         <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-[calc(100vh-80px)] relative overflow-hidden">
             {/* Layer 1: Premium Background Depth */}
             <div className="absolute inset-0 z-0 pointer-events-none">
-                {/* Soft Multi-Gradient Base - Sky Blue Focus */}
-                <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#ECFEFF_40%,_#F0F9FF_100%)]" />
+                {/* Soft Multi-Gradient Base */}
+                <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
 
                 {/* Very Faint Radial Glow behind Hero */}
                 <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
             </div>
 
-            {/* === TOP WAVES (CLEAN) === */}
-            {/* Top Wave - Deepest Layer */}
-            <DecorativeCurve
-                opacity={0.03}
-                height="h-[400px] sm:h-[550px]"
-                className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-8 mix-blend-multiply"
-                animate={true}
-            />
-            {/* Top Wave - Primary Smooth Layer */}
-            <DecorativeCurve
-                opacity={0.08}
-                height="h-[250px] sm:h-[350px]"
-                className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none w-full"
-                animate={true}
-            />
+            {/* === TOP WAVES (MATCHING LANDING) === */}
+            {/* Top Wave - Tertiary (Deepest layer) */}
+            <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[80px] sm:-top-[120px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-4 mix-blend-multiply" animate={true} />
+            {/* Top Wave - Secondary (Layered behind) */}
+            <DecorativeCurve opacity={0.06} height="h-[350px] sm:h-[480px]" className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]" animate={true} />
+            {/* Top Wave - Primary */}
+            <DecorativeCurve opacity={0.12} height="h-[250px] sm:h-[360px]" className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none" animate={true} />
 
             <div className="max-w-[1100px] mx-auto px-6 pt-10 sm:pt-14 pb-24 relative z-10 w-full hover:bg-[rgba(255,255,255,0.01)] transition-colors duration-300">
 
                 {/* Header Section */}
                 <div className="flex flex-col items-center text-center mb-10">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] mb-8">
-                        <div className="w-2 h-2 rounded-full bg-[#6C63FF] animate-pulse" />
-                        <span className="text-[11px] font-bold tracking-[0.2em] text-[#64748B] uppercase">Official Manual</span>
-                    </div>
                     <h1 className="text-[clamp(36px,5vw,52px)] font-black tracking-tight text-[#0F172A] leading-[1.1] mb-6">
-                        Game <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C63FF] to-[#22D3EE]">Rules & Objectives</span>
+                        Game <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C63FF] to-[#22D3EE] drop-shadow-sm">Rules & Objectives</span>
                     </h1>
                     <p className="text-[18px] text-[#64748B] font-medium max-w-2xl mx-auto leading-relaxed">
                         Master the mechanics of MindSprint's core challenges. Review the specific objectives and rules below to maximize your accuracy and speed.
@@ -99,7 +87,7 @@ export default function About() {
                     {GAMES_RULES.map((game, index) => (
                         <div
                             key={game.id}
-                            className="relative z-20 overflow-hidden rounded-[32px] bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgba(20,20,40,0.04)] hover:shadow-[0_20px_40px_rgba(109,74,254,0.12)] hover:-translate-y-1 transition-all duration-500 group/card"
+                            className="relative z-20 overflow-hidden rounded-[32px] bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgba(20,20,40,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.12)] hover:-translate-y-1 transition-all duration-500 group/card"
                         >
                             {/* Inner Soft Gradient Glow to give it volume */}
                             <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/20 to-transparent pointer-events-none" />
@@ -153,21 +141,13 @@ export default function About() {
 
             </div>
 
-            {/* === BOTTOM WAVES (CLEAN) === */}
-            {/* Bottom Wave - Deepest Layer */}
-            <DecorativeCurve
-                opacity={0.03}
-                height="h-[400px] sm:h-[550px]"
-                className="absolute -bottom-[50px] sm:-bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-8 mix-blend-multiply"
-                animate={true}
-            />
-            {/* Bottom Wave - Primary Smooth Layer */}
-            <DecorativeCurve
-                opacity={0.08}
-                height="h-[250px] sm:h-[350px]"
-                className="absolute bottom-0 left-0 z-0 pointer-events-none w-full"
-                animate={true}
-            />
+            {/* === BOTTOM WAVES (MATCHING LANDING) === */}
+            {/* Bottom Wave - Tertiary (Deepest layer) */}
+            <DecorativeCurve opacity={0.05} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[80px] sm:-bottom-[120px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-4 mix-blend-multiply" animate={true} />
+            {/* Bottom Wave - Secondary (Layered behind) */}
+            <DecorativeCurve opacity={0.07} height="h-[350px] sm:h-[480px]" className="absolute -bottom-[50px] sm:-bottom-[80px] left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]" animate={true} />
+            {/* Bottom Wave - Primary */}
+            <DecorativeCurve opacity={0.12} height="h-[250px] sm:h-[360px]" className="absolute bottom-0 left-0 z-0 pointer-events-none" animate={true} />
         </div>
     );
 }

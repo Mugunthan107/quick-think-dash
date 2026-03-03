@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Clock, Trophy, RotateCcw } from 'lucide-react';
+import { Clock, Trophy, RefreshCcw, Undo2 } from 'lucide-react';
+import DecorativeCurve from '@/components/DecorativeCurve';
 
 // ─── Types ──────────────────────────────────────────────
 interface Cell {
@@ -26,7 +27,7 @@ const LEVELS: LevelConfig[] = [
 ];
 
 const ROUNDS_PER_LEVEL = 2;
-const TOTAL_ROUNDS = LEVELS.length * ROUNDS_PER_LEVEL; // 8
+const TOTAL_ROUNDS = LEVELS.length * ROUNDS_PER_LEVEL;
 const TIME_PER_ROUND = 60;
 
 function getMarksForRound(round: number): number {
@@ -37,42 +38,6 @@ function getMarksForRound(round: number): number {
 }
 
 // ─── Puzzle Generator ───────────────────────────────────
-function generatePuzzle(gridSize: number, maxNumber: number): Cell[][] {
-  const totalCells = gridSize * gridSize;
-  const path = generateHamiltonianPath(gridSize);
-
-  if (!path || path.length < totalCells) {
-    return generateSnakePuzzle(gridSize, maxNumber);
-  }
-
-  const numberPositions = new Map<string, number>();
-  const step = Math.floor((path.length - 1) / (maxNumber - 1));
-
-  for (let i = 0; i < maxNumber; i++) {
-    const pathIndex = i === maxNumber - 1 ? path.length - 1 : i * step;
-    const pos = path[pathIndex];
-    numberPositions.set(`${pos.row}-${pos.col}`, i + 1);
-  }
-
-  const grid: Cell[][] = [];
-  for (let r = 0; r < gridSize; r++) {
-    const row: Cell[] = [];
-    for (let c = 0; c < gridSize; c++) {
-      const key = `${r}-${c}`;
-      row.push({
-        row: r,
-        col: c,
-        number: numberPositions.get(key) || null,
-        filled: false,
-        inPath: false,
-      });
-    }
-    grid.push(row);
-  }
-
-  return grid;
-}
-
 function generateHamiltonianPath(size: number): { row: number; col: number }[] | null {
   const visited = Array.from({ length: size }, () => Array(size).fill(false));
   const path: { row: number; col: number }[] = [];
@@ -84,66 +49,47 @@ function generateHamiltonianPath(size: number): { row: number; col: number }[] |
   visited[startRow][startCol] = true;
   path.push({ row: startRow, col: startCol });
 
-  if (backtrack(path, visited, size, totalCells)) {
-    return path;
-  }
+  const backtrack = (p: { row: number; col: number }[], v: boolean[][]): boolean => {
+    if (p.length === totalCells) return true;
+    const current = p[p.length - 1];
+    const dirs = [{ dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 }];
+    for (let i = dirs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+    }
+    for (const { dr, dc } of dirs) {
+      const nr = current.row + dr, nc = current.col + dc;
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size && !v[nr][nc]) {
+        v[nr][nc] = true; p.push({ row: nr, col: nc });
+        if (backtrack(p, v)) return true;
+        p.pop(); v[nr][nc] = false;
+      }
+    }
+    return false;
+  };
 
+  if (backtrack(path, visited)) return path;
   return null;
 }
 
-function backtrack(
-  path: { row: number; col: number }[],
-  visited: boolean[][],
-  size: number,
-  total: number
-): boolean {
-  if (path.length === total) return true;
+function generatePuzzle(gridSize: number, maxNumber: number): Cell[][] {
+  let finalPath = generateHamiltonianPath(gridSize);
 
-  const current = path[path.length - 1];
-  const dirs = [
-    { dr: -1, dc: 0 },
-    { dr: 1, dc: 0 },
-    { dr: 0, dc: -1 },
-    { dr: 0, dc: 1 },
-  ];
-
-  for (let i = dirs.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
-  }
-
-  for (const { dr, dc } of dirs) {
-    const nr = current.row + dr;
-    const nc = current.col + dc;
-
-    if (nr >= 0 && nr < size && nc >= 0 && nc < size && !visited[nr][nc]) {
-      visited[nr][nc] = true;
-      path.push({ row: nr, col: nc });
-
-      if (backtrack(path, visited, size, total)) return true;
-
-      path.pop();
-      visited[nr][nc] = false;
-    }
-  }
-
-  return false;
-}
-
-function generateSnakePuzzle(gridSize: number, maxNumber: number): Cell[][] {
-  const path: { row: number; col: number }[] = [];
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      const col = r % 2 === 0 ? c : gridSize - 1 - c;
-      path.push({ row: r, col });
+  if (!finalPath) {
+    // Basic snake fallback if Hamiltonian path generation fails
+    finalPath = [];
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        finalPath.push({ row: r, col: r % 2 === 0 ? c : gridSize - 1 - c });
+      }
     }
   }
 
   const numberPositions = new Map<string, number>();
-  const step = Math.floor((path.length - 1) / (maxNumber - 1));
+  const step = Math.floor((finalPath.length - 1) / (maxNumber - 1));
   for (let i = 0; i < maxNumber; i++) {
-    const pathIndex = i === maxNumber - 1 ? path.length - 1 : i * step;
-    const pos = path[pathIndex];
+    const idx = i === maxNumber - 1 ? finalPath.length - 1 : i * step;
+    const pos = finalPath[idx];
     numberPositions.set(`${pos.row}-${pos.col}`, i + 1);
   }
 
@@ -151,20 +97,13 @@ function generateSnakePuzzle(gridSize: number, maxNumber: number): Cell[][] {
   for (let r = 0; r < gridSize; r++) {
     const row: Cell[] = [];
     for (let c = 0; c < gridSize; c++) {
-      row.push({
-        row: r,
-        col: c,
-        number: numberPositions.get(`${r}-${c}`) || null,
-        filled: false,
-        inPath: false,
-      });
+      row.push({ row: r, col: c, number: numberPositions.get(`${r}-${c}`) || null, filled: false, inPath: false });
     }
     grid.push(row);
   }
   return grid;
 }
 
-// ─── Component ──────────────────────────────────────────
 const NumLinkGame = () => {
   const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
   const navigate = useNavigate();
@@ -187,25 +126,16 @@ const NumLinkGame = () => {
   const [showFlash, setShowFlash] = useState<'correct' | 'wrong' | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startTimeRef = useRef(Date.now());
-  const gridRef = useRef<HTMLDivElement>(null);
-  const isDrawingRef = useRef(false);
-  const pathStackRef = useRef<{ row: number; col: number }[]>([]);
   const gridStateRef = useRef<Cell[][]>([]);
   const expectedNumberRef = useRef(1);
+  const pathStackRef = useRef<{ row: number; col: number }[]>([]);
 
   useEffect(() => {
-    if (!currentStudent) {
-      navigate('/student');
-      return;
-    }
-    startTimeRef.current = Date.now();
+    if (!currentStudent) { navigate('/student'); return; }
   }, [currentStudent, navigate]);
 
   useEffect(() => {
-    if (currentTest?.status === 'FINISHED') {
-      navigate('/');
-    }
+    if (currentTest?.status === 'FINISHED') navigate('/');
   }, [currentTest?.status, navigate]);
 
   useEffect(() => {
@@ -218,63 +148,45 @@ const NumLinkGame = () => {
     pathStackRef.current = [];
     setExpectedNumber(1);
     expectedNumberRef.current = 1;
-    setIsDrawing(false);
-    isDrawingRef.current = false;
     setRoundComplete(false);
     setRoundFailed(false);
     setTimeLeft(TIME_PER_ROUND);
   }, [currentLevel, currentRound, finished]);
 
   useEffect(() => {
-    if (finished || roundComplete || roundFailed) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-
+    if (finished || roundComplete || roundFailed) return;
     timerRef.current = setInterval(() => {
       setElapsed(prev => prev + 1);
       setTimeLeft(prev => {
         if (prev <= 1) {
-          setRoundFailed(true);
-          setShowFlash('wrong');
+          setRoundFailed(true); setShowFlash('wrong');
           setTimeout(() => setShowFlash(null), 500);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [finished, roundComplete, roundFailed, currentLevel, currentRound]);
-
-  const isAdjacent = (a: { row: number; col: number }, b: { row: number; col: number }) => {
-    return (Math.abs(a.row - b.row) + Math.abs(a.col - b.col)) === 1;
-  };
 
   const handleCellInteraction = useCallback((row: number, col: number) => {
     const currentGrid = gridStateRef.current;
     const cell = currentGrid[row]?.[col];
     if (!cell || roundComplete || roundFailed) return;
 
-    const drawing = isDrawingRef.current;
     const stack = pathStackRef.current;
     const expected = expectedNumberRef.current;
 
-    if (!drawing) {
+    if (!isDrawing) {
       if (cell.number === 1) {
-        isDrawingRef.current = true;
         setIsDrawing(true);
         const newStack = [{ row, col }];
         pathStackRef.current = newStack;
         setPathStack(newStack);
-
         const newGrid = currentGrid.map(r => r.map(c => ({ ...c, inPath: false, filled: false })));
         newGrid[row][col].filled = true;
-        gridStateRef.current = newGrid;
-        setGrid(newGrid);
-
-        expectedNumberRef.current = 2;
-        setExpectedNumber(2);
+        gridStateRef.current = newGrid; setGrid(newGrid);
+        expectedNumberRef.current = 2; setExpectedNumber(2);
       }
       return;
     }
@@ -282,102 +194,79 @@ const NumLinkGame = () => {
     const lastPos = stack[stack.length - 1];
     if (!lastPos) return;
 
+    // Undo move if moving back
     if (stack.length >= 2) {
       const prevPos = stack[stack.length - 2];
       if (prevPos.row === row && prevPos.col === col) {
         const removedPos = stack[stack.length - 1];
         const removedCell = currentGrid[removedPos.row][removedPos.col];
-
         const newStack = stack.slice(0, -1);
-        pathStackRef.current = newStack;
-        setPathStack(newStack);
-
+        pathStackRef.current = newStack; setPathStack(newStack);
         const newGrid = currentGrid.map(r => r.map(c => ({ ...c })));
         if (removedCell.number === null) {
           newGrid[removedPos.row][removedPos.col].inPath = false;
           newGrid[removedPos.row][removedPos.col].filled = false;
         } else {
           newGrid[removedPos.row][removedPos.col].filled = false;
-          const newExpected = removedCell.number;
-          expectedNumberRef.current = newExpected;
-          setExpectedNumber(newExpected);
+          expectedNumberRef.current = removedCell.number; setExpectedNumber(removedCell.number);
         }
-        gridStateRef.current = newGrid;
-        setGrid(newGrid);
+        gridStateRef.current = newGrid; setGrid(newGrid);
         return;
       }
     }
 
     if (cell.filled || cell.inPath) return;
-    if (!isAdjacent(lastPos, { row, col })) return;
+    if (Math.abs(lastPos.row - row) + Math.abs(lastPos.col - col) !== 1) return;
 
     if (cell.number !== null) {
-      if (cell.number !== expected) {
-        return;
-      }
-
+      if (cell.number !== expected) return;
       const newStack = [...stack, { row, col }];
-      pathStackRef.current = newStack;
-      setPathStack(newStack);
-
+      pathStackRef.current = newStack; setPathStack(newStack);
       const newGrid = currentGrid.map(r => r.map(c => ({ ...c })));
       newGrid[row][col].filled = true;
-      gridStateRef.current = newGrid;
-      setGrid(newGrid);
+      gridStateRef.current = newGrid; setGrid(newGrid);
+      const nextExpected = expected + 1;
+      expectedNumberRef.current = nextExpected; setExpectedNumber(nextExpected);
 
-      const newExpected = expected + 1;
-      expectedNumberRef.current = newExpected;
-      setExpectedNumber(newExpected);
-
-      const level = LEVELS[currentLevel];
       const allFilled = newGrid.every(r => r.every(c => c.filled || c.inPath));
-      if (newExpected > level.maxNumber && allFilled) {
-        isDrawingRef.current = false;
-        setIsDrawing(false);
-        setRoundComplete(true);
-
+      if (nextExpected > LEVELS[currentLevel].maxNumber && allFilled) {
+        setIsDrawing(false); setRoundComplete(true);
         const marks = getMarksForRound(globalRound + 1);
-        const newScore = score + marks;
-        const newCorrect = correctCount + 1;
-        setScore(newScore);
-        setCorrectCount(newCorrect);
-        setShowFlash('correct');
-        setTimeout(() => setShowFlash(null), 600);
-
-        if (currentStudent) {
-          updateStudentScore(currentStudent.username, newScore, globalRound + 1, newCorrect);
-        }
+        setScore(prev => prev + marks); setCorrectCount(prev => prev + 1);
+        setShowFlash('correct'); setTimeout(() => setShowFlash(null), 600);
+        if (currentStudent) updateStudentScore(currentStudent.username, score + marks, globalRound + 1, correctCount + 1);
       }
     } else {
       const newStack = [...stack, { row, col }];
-      pathStackRef.current = newStack;
-      setPathStack(newStack);
-
+      pathStackRef.current = newStack; setPathStack(newStack);
       const newGrid = currentGrid.map(r => r.map(c => ({ ...c })));
-      newGrid[row][col].inPath = true;
-      newGrid[row][col].filled = true;
-      gridStateRef.current = newGrid;
-      setGrid(newGrid);
+      newGrid[row][col].inPath = true; newGrid[row][col].filled = true;
+      gridStateRef.current = newGrid; setGrid(newGrid);
     }
-  }, [currentLevel, globalRound, score, correctCount, currentStudent, updateStudentScore, roundComplete, roundFailed]);
-
-  const handleMouseUp = useCallback(() => {
-    isDrawingRef.current = false;
-    setIsDrawing(false);
-  }, []);
+  }, [isDrawing, roundComplete, roundFailed, currentLevel, globalRound, score, correctCount, currentStudent, updateStudentScore]);
 
   useEffect(() => {
-    const handler = () => {
-      isDrawingRef.current = false;
-      setIsDrawing(false);
-    };
-    window.addEventListener('mouseup', handler);
-    window.addEventListener('touchend', handler);
-    return () => {
-      window.removeEventListener('mouseup', handler);
-      window.removeEventListener('touchend', handler);
-    };
+    const endDraw = () => setIsDrawing(false);
+    window.addEventListener('mouseup', endDraw);
+    window.addEventListener('touchend', endDraw);
+    return () => { window.removeEventListener('mouseup', endDraw); window.removeEventListener('touchend', endDraw); };
   }, []);
+
+  const handleFinishAction = useCallback(() => {
+    setFinished(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (currentStudent && currentTest) {
+      submitGameResult(currentStudent.username, {
+        gameId: 'numlink', score, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: TOTAL_ROUNDS, completedAt: Date.now()
+      }).then(() => addCompletedGame('numlink'));
+    }
+  }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
+
+  const handleNextRound = () => {
+    if (globalRound + 1 >= TOTAL_ROUNDS) { handleFinishAction(); return; }
+    if (currentRound + 1 >= ROUNDS_PER_LEVEL) { setCurrentLevel(prev => prev + 1); setCurrentRound(0); }
+    else setCurrentRound(prev => prev + 1);
+  };
 
   const handleReset = () => {
     const newGrid = grid.map(r => r.map(c => ({ ...c, filled: false, inPath: false })));
@@ -387,46 +276,20 @@ const NumLinkGame = () => {
     pathStackRef.current = [];
     setExpectedNumber(1);
     expectedNumberRef.current = 1;
-    setIsDrawing(false);
-    isDrawingRef.current = false;
   };
 
-  const handleNextRound = () => {
-    if (globalRound + 1 >= TOTAL_ROUNDS) {
-      setFinished(true);
-      if (timerRef.current) clearInterval(timerRef.current);
-
-      if (currentStudent) {
-        submitGameResult(currentStudent.username, {
-          gameId: 'numlink',
-          score,
-          timeTaken: elapsed,
-          correctAnswers: correctCount,
-          totalQuestions: TOTAL_ROUNDS,
-          completedAt: Date.now()
-        }).then(() => {
-          addCompletedGame('numlink');
-        });
-      }
-      return;
-    }
-
-    if (currentRound + 1 >= ROUNDS_PER_LEVEL) {
-      setCurrentLevel(prev => prev + 1);
-      setCurrentRound(0);
-    } else {
-      setCurrentRound(prev => prev + 1);
-    }
+  const handleUndo = () => {
+    const stack = pathStackRef.current;
+    if (stack.length <= 1) return;
+    const lastPos = stack[stack.length - 1];
+    const prevPos = stack[stack.length - 2];
+    handleCellInteraction(prevPos.row, prevPos.col);
   };
 
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
-    if (nextGame) {
-      navigate('/select-game');
-    } else {
-      if (currentStudent) finishTest(currentStudent.username);
-      navigate('/');
-    }
+    if (nextGame) navigate('/select-game');
+    else { if (currentStudent) finishTest(currentStudent.username); navigate('/'); }
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
   const formatTime = (s: number) => {
@@ -435,249 +298,124 @@ const NumLinkGame = () => {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  const getCellFromTouch = (touch: React.Touch): { row: number; col: number } | null => {
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!element) return null;
-    const row = element.getAttribute('data-row');
-    const col = element.getAttribute('data-col');
-    if (row === null || col === null) return null;
-    return { row: parseInt(row), col: parseInt(col) };
-  };
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const cellPos = getCellFromTouch(touch);
-    if (cellPos) {
-      handleCellInteraction(cellPos.row, cellPos.col);
-    }
-  }, [handleCellInteraction]);
-
-  // ─── Finished Screen ─────────────────────────────────
   if (finished) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4 relative z-10">
-        <div className="text-center animate-fade-in max-w-md w-full px-2">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-6 sm:mb-8 animate-pulse-ring">
-            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-success" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">NumLink Complete!</h1>
-          <p className="text-muted-foreground mb-8 font-medium">Great work, {currentStudent?.username}!</p>
-
-          <div className="bg-white rounded-2xl border border-border p-6 mb-8 shadow-sm">
-            <div className="flex items-center justify-center gap-6">
-              <div className="text-center">
-                <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider block mb-1">Score</span>
-                <span className="font-mono font-bold text-2xl sm:text-3xl text-accent">{score}</span>
-              </div>
-              <div className="w-px h-12 bg-border" />
-              <div className="text-center">
-                <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider block mb-1">Rounds</span>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="font-mono font-bold text-2xl sm:text-3xl text-success">{correctCount}</span>
-                  <span className="text-sm text-muted-foreground">/ {TOTAL_ROUNDS}</span>
+      <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F0F7FF_0%,_#F8FAFC_40%,_#FDFDFF_100%)]" />
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#3B82F6] opacity-[0.04] blur-[120px] rounded-full" />
+        </div>
+        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none mix-blend-multiply" animate={true} />
+        <div className="flex items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
+          <div className="text-center animate-fade-in max-w-md w-full px-4">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-500/10"><Trophy className="w-10 h-10 text-emerald-500" /></div>
+            <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">NumLink Complete!</h1>
+            <p className="text-[15px] text-[#64748B] mb-10 font-medium">Great work, {currentStudent?.username}!</p>
+            <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center justify-center gap-10">
+                <div className="text-center">
+                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
+                  <span className="font-mono font-black text-3xl sm:text-4xl text-[#2563EB]">{score}</span>
+                </div>
+                <div className="w-px h-14 bg-[#F1F5F9]" />
+                <div className="text-center">
+                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Time</span>
+                  <span className="font-mono font-black text-3xl sm:text-4xl text-[#1E293B]">{formatTime(elapsed)}</span>
                 </div>
               </div>
-              <div className="w-px h-12 bg-border" />
-              <div className="text-center">
-                <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider block mb-1">Time</span>
-                <span className="font-mono font-bold text-2xl sm:text-3xl text-foreground">{formatTime(elapsed)}</span>
-              </div>
             </div>
+            <button onClick={handlePostFinish} className="w-full sm:w-auto px-12 py-4.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-blue-500/25 transition-all hover:scale-105 active:scale-95">{getNextGame() ? 'Next Game →' : 'Finish Session'}</button>
           </div>
-
-          <button
-            onClick={handlePostFinish}
-            className="bg-accent text-accent-foreground px-10 py-4 rounded-xl font-semibold hover:bg-accent/90 transition-all hover:scale-105 text-base sm:text-lg shadow-lg shadow-accent/25"
-          >
-            {getNextGame() ? 'Next Game →' : 'Finish'}
-          </button>
         </div>
+        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
       </div>
     );
   }
 
-  const level = LEVELS[currentLevel];
   const progress = ((globalRound + 1) / TOTAL_ROUNDS) * 100;
   const timerProgress = (timeLeft / TIME_PER_ROUND) * 100;
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-3 sm:p-4 relative z-10">
-      <div className="w-full max-w-lg animate-fade-in">
-        {/* Top Stats */}
-        <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
-          <span className="text-xs sm:text-sm text-muted-foreground font-medium">{currentStudent?.username}</span>
-          <div className="flex items-center gap-2 text-sm font-mono">
-            <Clock className="w-3.5 h-3.5 text-accent" />
-            <span className="text-foreground font-bold">{formatTime(elapsed)}</span>
+    <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F0F7FF_0%,_#F8FAFC_40%,_#FDFDFF_100%)]" />
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#3B82F6] opacity-[0.04] blur-[120px] rounded-full" />
+      </div>
+      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none mix-blend-multiply" animate={true} />
+      <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
+        <div className="w-full max-w-lg animate-fade-in relative">
+          <div className="flex items-center justify-between mb-4 px-2 tracking-tight font-bold">
+            <span className="text-[13px] text-[#64748B]">{currentStudent?.username}</span>
+            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/80 shadow-sm">
+              <Clock className="w-3.5 h-3.5 text-[#2563EB]" />
+              <span className="text-[#0F172A] font-mono text-[14px]">{formatTime(elapsed)}</span>
+            </div>
+            <button onClick={handleFinishAction} className="text-[11px] text-[#94A3B8] hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/60 border border-white/80 font-bold uppercase tracking-widest">End Test</button>
           </div>
-          <button
-            onClick={() => {
-              setFinished(true);
-              if (timerRef.current) clearInterval(timerRef.current);
-              if (currentStudent) {
-                submitGameResult(currentStudent.username, {
-                  gameId: 'numlink',
-                  score,
-                  timeTaken: elapsed,
-                  correctAnswers: correctCount,
-                  totalQuestions: TOTAL_ROUNDS,
-                  completedAt: Date.now()
-                }).then(() => addCompletedGame('numlink'));
-              }
-            }}
-            className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary border border-border font-medium"
-          >
-            End Test
-          </button>
-        </div>
-
-        {/* Main Card */}
-        <div className={`bg-white rounded-2xl shadow-[0_8px_32px_hsl(260_40%_88%/0.6)] border overflow-hidden transition-all duration-300
-          ${showFlash === 'correct' ? 'border-success/40' : showFlash === 'wrong' ? 'border-destructive/40' : 'border-border'}`}>
-
-          {/* Header */}
-          <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider
-                  ${currentLevel <= 1 ? 'bg-success/10 text-success' :
-                    currentLevel === 2 ? 'bg-accent/10 text-accent' :
-                      'bg-destructive/10 text-destructive'}`}>
-                  {level.label}
-                </span>
-                <span className="text-xs sm:text-sm font-semibold text-foreground">
-                  Round {globalRound + 1} / {TOTAL_ROUNDS}
-                </span>
-                <span className="text-[10px] text-muted-foreground">(1 → {level.maxNumber})</span>
+          <div className={`bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] border transition-all duration-300 overflow-hidden ${showFlash === 'correct' ? 'border-emerald-400/40' : showFlash === 'wrong' ? 'border-red-400/40' : 'border-white/60'}`}>
+            <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-4 border-b border-[#F1F5F9]">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">{LEVELS[currentLevel].label}</span>
+                  <span className="text-[#0F172A] text-2xl font-black">Round {globalRound + 1} / {TOTAL_ROUNDS}</span>
+                </div>
+                <div className="text-right flex flex-col gap-1">
+                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">SCORE</span>
+                  <span className="font-mono font-black text-2xl text-[#2563EB]">{score}</span>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] text-muted-foreground font-medium block">SCORE</span>
-                <span className="font-mono font-bold text-lg text-foreground">{score}</span>
+              <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#2563EB] to-[#60A5FA] rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
               </div>
             </div>
-            <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-
-          {/* Timer */}
-          <div className="px-4 sm:px-6 pb-2">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-1000 ease-linear ${timeLeft <= 10 ? 'bg-destructive' : 'bg-accent'}`}
-                  style={{ width: `${timerProgress}%` }}
-                />
+            <div className="p-6 sm:p-10 select-none">
+              <div className="flex items-center justify-between mb-4 px-2">
+                <div className="flex-1 h-3 bg-[#F1F5F9] rounded-full overflow-hidden mr-4">
+                  <div className={`h-full transition-all duration-1000 ease-linear ${timeLeft <= 10 ? 'bg-[#EF4444]' : 'bg-[#2563EB]'}`} style={{ width: `${timerProgress}%` }} />
+                </div>
+                <span className={`font-mono font-black text-[15px] ${timeLeft <= 10 ? 'text-[#EF4444]' : 'text-[#0F172A]'}`}>{timeLeft}s</span>
               </div>
-              <span className={`font-mono text-sm font-bold ${timeLeft <= 10 ? 'text-destructive' : 'text-foreground'}`}>
-                {timeLeft}s
-              </span>
-            </div>
-          </div>
-
-          {/* Grid */}
-          <div className="px-4 sm:px-6 py-4 sm:py-6 flex justify-center">
-            <div
-              ref={gridRef}
-              className="inline-grid gap-1.5"
-              style={{ gridTemplateColumns: `repeat(${level.gridSize}, 1fr)` }}
-              onTouchMove={handleTouchMove}
-              onMouseUp={handleMouseUp}
-            >
-              {grid.map((row, r) =>
-                row.map((cell, c) => {
-                  const isNumberCell = cell.number !== null;
-                  const isPath = cell.inPath;
-                  const isFilled = cell.filled;
-
-                  const cellSize = level.gridSize <= 5 ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-10 h-10 sm:w-12 sm:h-12';
-
+              <div className="grid gap-2 mb-8 bg-[#F8FAFC] p-4 rounded-[2rem] border border-[#E2E8F0]" style={{ gridTemplateColumns: `repeat(${LEVELS[currentLevel].gridSize}, minmax(0, 1fr))`, touchAction: 'none' }}>
+                {grid.map((row, rIdx) => row.map((cell, cIdx) => {
+                  const node = pathStack.find(n => n.row === rIdx && n.col === cIdx);
+                  const isLastNode = pathStack.length > 0 && pathStack[pathStack.length - 1].row === rIdx && pathStack[pathStack.length - 1].col === cIdx;
                   return (
-                    <div
-                      key={`${r}-${c}`}
-                      data-row={r}
-                      data-col={c}
-                      onMouseDown={() => handleCellInteraction(r, c)}
-                      onMouseEnter={() => {
-                        if (isDrawingRef.current) handleCellInteraction(r, c);
+                    <div key={`cell-${rIdx}-${cIdx}`} onMouseDown={() => handleCellInteraction(rIdx, cIdx)} onMouseEnter={() => { if (isDrawing) handleCellInteraction(rIdx, cIdx); }}
+                      className={`aspect-square rounded-xl flex items-center justify-center text-lg sm:text-2xl font-black transition-all duration-200 relative
+                        ${cell.number !== null ? 'bg-white shadow-sm border-2 border-[#E2E8F0]' : 'cursor-pointer'}
+                        ${node ? (isLastNode ? 'ring-4 ring-blue-500/20' : '') : ''}
+                      `}
+                      style={{
+                        backgroundColor: showFlash === 'correct' && node ? '#10B981' : showFlash === 'wrong' && node ? '#EF4444' : node ? '#2563EB' : cell.number !== null ? 'white' : 'transparent',
+                        color: node || showFlash ? 'white' : cell.number !== null ? '#0F172A' : '#94A3B8',
+                        borderColor: node ? 'transparent' : '#E2E8F0'
                       }}
-                      onTouchStart={(e) => {
-                        e.preventDefault();
-                        handleCellInteraction(r, c);
-                      }}
-                      className={`${cellSize} rounded-xl flex items-center justify-center font-bold text-base sm:text-lg select-none touch-none cursor-pointer transition-all duration-150
-                        ${isNumberCell
-                          ? isFilled
-                            ? 'bg-accent text-accent-foreground shadow-md scale-105'
-                            : 'bg-white border-2 border-accent/30 text-foreground shadow-sm'
-                          : isPath
-                            ? 'bg-success/25 shadow-inner border border-success/20'
-                            : 'bg-secondary border border-border hover:border-accent/30 hover:bg-secondary/80'
-                        }`}
                     >
-                      {isNumberCell ? cell.number : ''}
+                      {cell.number !== null ? cell.number : node ? '•' : ''}
                     </div>
                   );
-                })
-              )}
+                }))}
+              </div>
+              <div className="flex gap-4">
+                {roundComplete || roundFailed ? (
+                  <button onClick={handleNextRound} className={`flex-1 py-4 rounded-2xl font-black text-[15px] text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] ${roundComplete ? 'bg-emerald-500 shadow-emerald-500/20' : 'bg-[#EF4444] shadow-red-500/20'}`}>
+                    {globalRound + 1 >= TOTAL_ROUNDS ? 'View Final Results' : 'Continue Round →'}
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={handleReset} className="flex-1 py-4 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] rounded-2xl font-black text-[14px] flex items-center justify-center gap-2 transition-all active:scale-95"><RefreshCcw className="w-4 h-4" /> Reset</button>
+                    <button onClick={handleUndo} className="flex-1 py-4 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] rounded-2xl font-black text-[14px] flex items-center justify-center gap-2 transition-all active:scale-95"><Undo2 className="w-4 h-4" /> Undo</button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Controls */}
-          <div className="px-4 sm:px-6 pb-4 sm:pb-6 flex gap-2">
-            {roundComplete ? (
-              <button
-                onClick={handleNextRound}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm sm:text-base bg-success text-success-foreground hover:bg-success/90 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                {globalRound + 1 >= TOTAL_ROUNDS ? '🏆 View Results' : 'Next Round →'}
-              </button>
-            ) : roundFailed ? (
-              <button
-                onClick={handleNextRound}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm sm:text-base bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive hover:text-destructive-foreground transition-all"
-              >
-                {globalRound + 1 >= TOTAL_ROUNDS ? '🏆 View Results' : 'Skip to Next →'}
-              </button>
-            ) : (
-              <button
-                onClick={handleReset}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm sm:text-base bg-secondary text-foreground hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 border border-border"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Reset Path
-              </button>
-            )}
-          </div>
-
-          {/* Status Message */}
-          {(roundComplete || roundFailed) && (
-            <div className={`px-4 sm:px-6 pb-4 text-center text-sm font-semibold ${roundComplete ? 'text-success' : 'text-destructive'}`}>
-              {roundComplete
-                ? `✓ Solved! +${getMarksForRound(globalRound + 1)} points`
-                : timeLeft <= 0
-                  ? '⏱ Time\'s up! 0 points this round'
-                  : '✗ Failed! 0 points this round'
-              }
+            <div className="px-6 pb-10 text-center">
+              <p className="text-[13px] text-[#64748B] font-bold leading-tight">Connect numbers sequentially (1 → 2 → 3...) to fill all cells</p>
             </div>
-          )}
-
-          {/* Flash overlay */}
-          {showFlash && (
-            <div className={`absolute inset-0 pointer-events-none animate-fade-in rounded-2xl
-              ${showFlash === 'wrong' ? 'bg-destructive/5' : 'bg-success/5'}`} />
-          )}
-        </div>
-
-        {/* Marks Info */}
-        <div className="mt-3 px-1">
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium">
-            <span>Round marks: {getMarksForRound(globalRound + 1)} pts</span>
-            <span>Max possible: {[5, 5, 10, 10, 15, 15, 20, 20].reduce((a, b) => a + b, 0)} pts</span>
           </div>
         </div>
       </div>
+      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
     </div>
   );
 };

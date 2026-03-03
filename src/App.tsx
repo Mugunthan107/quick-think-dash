@@ -27,10 +27,13 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const location = useLocation();
   const isGame = ['/game', '/crossmath', '/numlink'].some(path => location.pathname.startsWith(path));
+  const isDashboard = location.pathname.startsWith('/ashu');
   const isHome = location.pathname === '/';
+  const noScroll = isHome || isGame || isDashboard || location.pathname === '/lobby' || location.pathname === '/select-game';
+  const noFooter = isGame || isDashboard || isHome || location.pathname === '/select-game';
 
   return (
-    <main className={`relative flex flex-col min-h-screen ${isHome ? 'h-screen overflow-hidden pt-0' : 'pt-14 sm:pt-16'} bg-[#F8F9FB] flex flex-col relative overflow-hidden`}>
+    <main className={`relative flex flex-col min-h-screen ${noScroll ? 'h-screen overflow-hidden pt-0' : 'pt-14 sm:pt-16'} bg-[#FDFDFF] flex flex-col relative overflow-hidden`}>
       {/* Universal Top Decorative Curve (Hidden on Home and Games) */}
       {!isGame && !isHome && (
         <DecorativeCurve
@@ -92,7 +95,6 @@ const App = () => (
         >
           <NavBar />
           <AppContent />
-          <Footer />
         </BrowserRouter>
       </GameProvider>
     </TooltipProvider>

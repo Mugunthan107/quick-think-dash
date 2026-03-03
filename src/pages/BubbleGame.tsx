@@ -1,20 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Zap, Trophy } from 'lucide-react';
-import GradientBg from '@/components/GradientBg';
+import { Clock, Trophy, CheckCircle2, XCircle } from 'lucide-react';
+import DecorativeCurve from '@/components/DecorativeCurve';
 
 interface BubbleData {
     text: string;
     value: number;
     id: string;
-    selected: boolean;
-    wrong: boolean;
-    order: number | null;
+    status: 'idle' | 'correct' | 'wrong';
 }
 
-const MAX_LEVEL = 30;
-const TIME_PER_ROUND = 10;
+const TOTAL_LEVELS = 30;
 
 function getLevelConfig(level: number) {
     if (level <= 5) return { max: 9, ops: ['+', '-'], decimalAllowed: false, label: 'EASY' };
@@ -54,10 +51,16 @@ function createExpression(level: number): BubbleData {
         text: `${dispA} ${op} ${dispB}`,
         value: result!,
         id: Math.random().toString(36).substr(2, 9),
-        selected: false,
-        wrong: false,
-        order: null,
+        status: 'idle',
     };
+}
+
+function formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+    return `${formattedMinutes}:${formattedSeconds}`;
 }
 
 const BubbleGame = () => {
@@ -66,40 +69,32 @@ const BubbleGame = () => {
 
     const [level, setLevel] = useState(1);
     const [score, setScore] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(TIME_PER_ROUND);
     const [elapsed, setElapsed] = useState(0);
     const [bubbles, setBubbles] = useState<BubbleData[]>([]);
-    const [correctCount, setCorrectCount] = useState(0);
-    const [clickOrder, setClickOrder] = useState(0);
+    const [shuffledExp, setShuffledExp] = useState<BubbleData[]>([]);
     const [gameActive, setGameActive] = useState(true);
-    const [flash, setFlash] = useState<'wrong' | 'correct' | null>(null);
     const [finished, setFinished] = useState(false);
-    const [transitioning, setTransitioning] = useState(false);
-    const [streak, setStreak] = useState(0);
+    const [correctAnswersInRound, setCorrectAnswersInRound] = useState(0);
+    const [correctAnswersTotal, setCorrectAnswersTotal] = useState(0);
+
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const startTimeRef = useRef(Date.now());
     const lastTickRef = useRef(Date.now());
 
     useEffect(() => {
-        if (!currentStudent) {
-            navigate('/student');
-            return;
-        }
+        if (!currentStudent) { navigate('/student'); return; }
     }, [currentStudent, navigate]);
 
     useEffect(() => {
-        if (currentTest?.status === 'FINISHED') {
-            navigate('/');
-        }
+        if (currentTest?.status === 'FINISHED') navigate('/');
     }, [currentTest?.status, navigate]);
 
     const startRound = useCallback((lvl: number) => {
-        const newBubbles = Array.from({ length: 3 }, () => createExpression(lvl));
-        setBubbles(newBubbles);
-        setClickOrder(0);
-        setTimeLeft(TIME_PER_ROUND);
+        const newBubbles = Array.from({ length: 4 }, () => createExpression(lvl));
+        const sortedBubbles = [...newBubbles].sort((a, b) => a.value - b.value);
+        setBubbles(sortedBubbles);
+        setShuffledExp(newBubbles.sort(() => Math.random() - 0.5));
+        setCorrectAnswersInRound(0);
         setGameActive(true);
-        setTransitioning(false);
     }, []);
 
     useEffect(() => {
@@ -113,17 +108,10 @@ const BubbleGame = () => {
 
         if (currentStudent && currentTest) {
             submitGameResult(currentStudent.username, {
-                gameId: 'bubble',
-                score: score,
-                timeTaken: elapsed,
-                correctAnswers: correctCount,
-                totalQuestions: 30,
-                completedAt: Date.now()
-            }).then(() => {
-                addCompletedGame('bubble');
-            });
+                gameId: 'bubble', score, timeTaken: elapsed, correctAnswers: correctAnswersTotal, totalQuestions: TOTAL_LEVELS, completedAt: Date.now()
+            }).then(() => addCompletedGame('bubble'));
         }
-    }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
+    }, [score, correctAnswersTotal, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
 
     const handlePostFinish = useCallback(() => {
         const nextGame = getNextGame();
@@ -137,272 +125,150 @@ const BubbleGame = () => {
 
     const failLevel = useCallback(() => {
         setGameActive(false);
-        setTransitioning(true);
         if (timerRef.current) clearInterval(timerRef.current);
-        setFlash('wrong');
-        setStreak(0);
-
-        const newLevel = level + 1;
-
-        if (currentStudent) {
-            updateStudentScore(currentStudent.username, score, newLevel, correctCount);
-        }
-
-        setTimeout(() => setFlash(null), 500);
+        setShuffledExp(prev => prev.map(b => b.status === 'idle' ? { ...b, status: 'wrong' } : b));
         setTimeout(() => {
-            if (level >= MAX_LEVEL) {
-                handleFinish();
-            } else {
-                setLevel(newLevel);
-            }
-        }, 800);
-    }, [score, level, currentStudent, updateStudentScore, handleFinish, correctCount]);
+            if (level >= TOTAL_LEVELS) handleFinish();
+            else setLevel(prev => prev + 1);
+        }, 1000);
+    }, [level, handleFinish]);
 
     useEffect(() => {
-        if (!gameActive) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            return;
-        }
-
+        if (!gameActive) return;
         lastTickRef.current = Date.now();
         timerRef.current = setInterval(() => {
             const now = Date.now();
             const delta = Math.floor((now - lastTickRef.current) / 1000);
-
             if (delta >= 1) {
                 setElapsed(prev => prev + delta);
                 lastTickRef.current = now;
-                setTimeLeft(prev => {
-                    if (prev <= delta) {
-                        failLevel();
-                        return 0;
-                    }
-                    return prev - delta;
-                });
             }
         }, 100);
-
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [gameActive, failLevel]);
+    }, [gameActive]);
 
     const handleBubbleClick = useCallback((clicked: BubbleData) => {
-        if (!gameActive || clicked.selected || transitioning) return;
-
-        const sorted = [...bubbles].sort((a, b) => a.value - b.value);
-        const expected = sorted[clickOrder];
-
-        if (Math.abs(clicked.value - expected.value) < 0.001) {
-            const newOrder = clickOrder + 1;
-            setBubbles(prev => prev.map(b => b.id === clicked.id ? { ...b, selected: true, order: newOrder } : b));
-            setClickOrder(newOrder);
-
-            if (newOrder === 3) {
+        if (!gameActive || clicked.status !== 'idle') return;
+        const expected = bubbles[correctAnswersInRound];
+        if (clicked.id === expected.id) {
+            setShuffledExp(prev => prev.map(b => b.id === clicked.id ? { ...b, status: 'correct' } : b));
+            setCorrectAnswersInRound(prev => prev + 1);
+            setCorrectAnswersTotal(prev => prev + 1);
+            const points = (level > 20) ? 30 : (level > 10) ? 20 : 10;
+            setScore(prev => prev + points);
+            if (correctAnswersInRound + 1 === bubbles.length) {
                 setGameActive(false);
-                setTransitioning(true);
                 if (timerRef.current) clearInterval(timerRef.current);
-                const points = (level > 20) ? 30 : (level > 10) ? 20 : 10;
-                let bonus = 0;
-                if (streak >= 9) bonus = 5;
-
-                const newScore = score + points + bonus;
-                const newCorrectCount = correctCount + 1;
-
-                setScore(newScore);
-                setCorrectCount(newCorrectCount);
-                setStreak(prev => prev + 1);
-                setFlash('correct');
-                setTimeout(() => setFlash(null), 400);
-                if (currentStudent) updateStudentScore(currentStudent.username, newScore, level, newCorrectCount);
-
-                if (level >= MAX_LEVEL) {
-                    setTimeout(() => handleFinish(), 600);
-                } else {
-                    setTimeout(() => setLevel(prev => prev + 1), 600);
-                }
+                if (currentStudent) updateStudentScore(currentStudent.username, score + points, level, correctAnswersTotal + 1);
+                if (level >= TOTAL_LEVELS) setTimeout(() => handleFinish(), 1000);
+                else setTimeout(() => setLevel(prev => prev + 1), 1000);
             }
         } else {
-            setBubbles(prev => prev.map(b => b.id === clicked.id ? { ...b, wrong: true } : b));
+            setShuffledExp(prev => prev.map(b => b.id === clicked.id ? { ...b, status: 'wrong' } : b));
             failLevel();
         }
-    }, [gameActive, transitioning, bubbles, clickOrder, score, level, currentStudent, updateStudentScore, failLevel, handleFinish, streak, correctCount]);
+    }, [gameActive, bubbles, correctAnswersInRound, score, level, currentStudent, updateStudentScore, failLevel, handleFinish, correctAnswersTotal]);
 
     if (finished) {
         return (
-            <div className="page-bg flex min-h-screen items-center justify-center p-4">
-                <GradientBg />
-                <div className="text-center animate-fade-in max-w-md w-full px-2">
-                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6">
-                        <div className="w-full h-full rounded-full bg-emerald-50 border border-emerald-200/60 flex items-center justify-center animate-pulse-ring"
-                            style={{ boxShadow: '0 0 28px hsl(158 70% 38% / 0.25)' }}>
-                            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" />
+            <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F0F7FF_0%,_#F8FAFC_40%,_#FDFDFF_100%)]" />
+                    <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#3B82F6] opacity-[0.04] blur-[120px] rounded-full" />
+                </div>
+                <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none mix-blend-multiply" animate={true} />
+                <div className="flex items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
+                    <div className="text-center animate-fade-in max-w-md w-full px-4">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-500/10">
+                            <Trophy className="w-10 h-10 text-emerald-500" />
                         </div>
-                        <div className="absolute -inset-1 rounded-full bg-emerald-400/10 blur-xl -z-10 animate-pulse" />
-                    </div>
-                    <h1 className="text-[26px] sm:text-[32px] font-extrabold text-foreground mb-2 tracking-tight">Bubble Complete!</h1>
-                    <p className="text-base text-muted-foreground mb-8 font-medium">Great work, {currentStudent?.username}!</p>
-
-                    <div className="bg-white rounded-2xl border border-border p-6 mb-8"
-                        style={{ boxShadow: '0 0 24px hsl(258 80% 58% / 0.08), 0 8px 20px hsl(224 30% 12% / 0.05)' }}>
-                        <div className="flex items-center justify-center gap-8">
-                            <div className="text-center">
-                                <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider block mb-1">Score</span>
-                                <span className="font-bold text-2xl sm:text-3xl text-accent font-mono" style={{ textShadow: '0 0 16px hsl(258 80% 58% / 0.22)' }}>{score}</span>
-                            </div>
-                            <div className="w-px h-10 bg-border" />
-                            <div className="text-center">
-                                <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider block mb-1">Correct</span>
-                                <div className="flex items-baseline justify-center gap-1">
-                                    <span className="font-bold text-2xl sm:text-3xl text-emerald-500 font-mono">{correctCount}</span>
-                                    <span className="text-sm text-muted-foreground">/ {MAX_LEVEL}</span>
+                        <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">Bubble Complete!</h1>
+                        <p className="text-[15px] text-[#64748B] mb-10 font-medium">Excellent work, {currentStudent?.username}!</p>
+                        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)]">
+                            <div className="flex items-center justify-center gap-10">
+                                <div className="text-center">
+                                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
+                                    <span className="font-mono font-black text-3xl sm:text-4xl text-[#2563EB]">{score}</span>
+                                </div>
+                                <div className="w-px h-14 bg-[#F1F5F9]" />
+                                <div className="text-center">
+                                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Time</span>
+                                    <span className="font-mono font-black text-3xl sm:text-4xl text-[#1E293B]">{formatTime(elapsed)}</span>
                                 </div>
                             </div>
                         </div>
+                        <button onClick={handlePostFinish} className="w-full sm:w-auto px-12 py-4.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-blue-500/25 transition-all hover:scale-105 active:scale-95">
+                            {getNextGame() ? 'Next Game →' : 'Finish Session'}
+                        </button>
                     </div>
-
-                    <button
-                        onClick={handlePostFinish}
-                        className="bg-accent text-accent-foreground px-10 py-3.5 rounded-xl font-semibold hover:bg-accent/90 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg btn-glow"
-                        style={{ boxShadow: '0 0 20px hsl(258 80% 58% / 0.28), 0 4px 14px hsl(258 80% 58% / 0.18)' }}
-                    >
-                        {getNextGame() ? 'Next Game →' : 'Finish'}
-                    </button>
                 </div>
+                <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
             </div>
         );
     }
 
-    const config = getLevelConfig(level);
-    const progress = Math.min(100, (level / MAX_LEVEL) * 100);
-    const timerProgress = (timeLeft / TIME_PER_ROUND) * 100;
+    const progress = Math.min(100, (level / TOTAL_LEVELS) * 100);
 
     return (
-        <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 relative z-10">
-            <div className="w-full max-w-[700px] animate-fade-in">
-                {/* Header Section */}
-                <div className="w-full mb-6 flex flex-col items-center text-center font-['Inter']">
-                    <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground uppercase">
-                        SORT BY VALUE
-                        <span className="text-sm font-normal ml-3 opacity-40 text-muted-foreground normal-case">LOW → HIGH</span>
-                    </h1>
-                    <p className="text-[13px] sm:text-sm font-normal tracking-wide opacity-50 text-muted-foreground mt-1 px-4 max-w-[340px]">
-                        Click bubbles in ascending order of their mathematical result
-                    </p>
-                </div>
-
-                {/* Top Stats Bar */}
-                <div className="flex items-center justify-between mb-4 px-2">
-                    <div className="flex items-center gap-3">
-                        <span className="text-[12px] sm:text-sm font-medium text-muted-foreground">{currentStudent?.username}</span>
+        <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F0F7FF_0%,_#F8FAFC_40%,_#FDFDFF_100%)]" />
+                <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#3B82F6] opacity-[0.04] blur-[120px] rounded-full" />
+            </div>
+            <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none mix-blend-multiply" animate={true} />
+            <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
+                <div className="w-full max-w-[480px] animate-fade-in relative">
+                    <div className="flex items-center justify-between mb-4 px-2 tracking-tight font-bold">
+                        <span className="text-[13px] text-[#64748B]">{currentStudent?.username}</span>
+                        <div className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/80 shadow-sm">
+                            <Clock className="w-3.5 h-3.5 text-[#2563EB]" />
+                            <span className="text-[#0F172A] font-mono text-[14px]">{formatTime(elapsed)}</span>
+                        </div>
+                        <button onClick={() => handleFinish()} className="text-[11px] text-[#94A3B8] hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/60 border border-white/80 font-bold uppercase tracking-widest">End Test</button>
                     </div>
-                    <div className="flex items-center gap-2">
-                        {streak > 1 && (
-                            <div className="flex items-center gap-1 text-accent text-[11px] font-semibold animate-fade-in bg-accent/8 px-2 py-0.5 rounded-full border border-accent/20">
-                                <Zap className="w-2.5 h-2.5" />
-                                {streak}
-                            </div>
-                        )}
-                        <button
-                            onClick={handleFinish}
-                            className="text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary border border-border uppercase tracking-wider"
-                        >
-                            End Test
-                        </button>
-                    </div>
-                </div>
-
-                {/* Main Game Card */}
-                <div className={`bg-white rounded-[24px] relative flex flex-col items-center border overflow-hidden transition-all duration-300 ${flash === 'wrong' ? 'border-destructive/40' : flash === 'correct' ? 'border-emerald-400/40' : 'border-border'}`}
-                    style={{ boxShadow: flash === 'wrong' ? '0 0 28px hsl(348 85% 55% / 0.4), 0 8px 20px hsl(224 30% 12% / 0.05)' : flash === 'correct' ? '0 0 28px hsl(158 70% 38% / 0.4), 0 8px 20px hsl(224 30% 12% / 0.05)' : '0 0 24px hsl(258 80% 58% / 0.07), 0 8px 24px hsl(224 30% 12% / 0.05)' }}>
-
-                    <div className="w-full px-4 sm:px-8 pt-6 sm:pt-10 pb-3 flex items-start justify-between">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                                <div className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${config.label === 'EASY' ? 'bg-success/10 text-success' :
-                                    config.label === 'MEDIUM' ? 'bg-accent/10 text-accent' :
-                                        'bg-destructive/10 text-destructive'
-                                    }`}>
-                                    {config.label}
+                    <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] border border-white/60 overflow-hidden relative">
+                        <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 border-b border-[#F1F5F9]">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Level</span>
+                                    <span className="text-[#0F172A] text-2xl font-black">{level} / {TOTAL_LEVELS}</span>
                                 </div>
-                                <span className="text-[13px] font-semibold text-foreground/70 tracking-tight">Lv.{level} <span className="text-muted-foreground/40 font-normal">/ {MAX_LEVEL}</span></span>
+                                <div className="text-right flex flex-col gap-1">
+                                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Score</span>
+                                    <span className="font-mono font-black text-2xl text-[#2563EB]">{score}</span>
+                                </div>
                             </div>
-                            <div className="w-full max-w-[140px] h-1.5 bg-secondary rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
-                                    style={{ width: `${progress}%` }}
-                                />
+                            <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#2563EB] to-[#60A5FA] rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
                             </div>
                         </div>
-
-                        <div className="text-right">
-                            <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider block mb-0.5">Score</span>
-                            <span className="font-bold text-lg sm:text-xl text-foreground tabular-nums leading-none font-mono">{score}</span>
+                        <div className="p-6 sm:p-10 relative">
+                            <div className="grid grid-cols-2 gap-6 sm:gap-8 w-full">
+                                {shuffledExp.map((bubble) => (
+                                    <button key={bubble.id} onClick={() => handleBubbleClick(bubble)}
+                                        className={`aspect-square rounded-[2rem] flex flex-col items-center justify-center p-4 transition-all duration-300 relative border-2
+                      ${bubble.status === 'correct' ? 'bg-emerald-500 text-white scale-95 shadow-lg shadow-emerald-500/25 border-emerald-400'
+                                                : bubble.status === 'wrong' ? 'bg-[#EF4444] text-white animate-shake shadow-lg shadow-red-500/25 border-red-400'
+                                                    : 'bg-white border-[#E2E8F0] hover:border-[#2563EB] hover:-translate-y-1 shadow-sm hover:shadow-md'}`}
+                                    >
+                                        <span className={`text-[17px] sm:text-[20px] font-black tracking-tight ${bubble.status === 'idle' ? 'text-[#0F172A]' : 'text-white'}`}>{bubble.text}</span>
+                                        <div className="mt-2 h-6">
+                                            {bubble.status === 'correct' && <CheckCircle2 className="w-6 h-6" />}
+                                            {bubble.status === 'wrong' && <XCircle className="w-6 h-6" />}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="px-6 pb-10">
+                            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 text-center">
+                                <p className="text-[13px] text-[#64748B] font-bold">Tap results in order from <span className="text-[#2563EB]">lowest</span> to <span className="text-[#2563EB]">highest</span></p>
+                            </div>
                         </div>
                     </div>
-
-                    {/* Game Area */}
-                    <div className="w-full px-4 sm:px-8 py-8 sm:py-12">
-                        <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
-                            {bubbles.map((bubble) => (
-                                <button
-                                    key={bubble.id}
-                                    onClick={() => handleBubbleClick(bubble)}
-                                    disabled={bubble.selected || transitioning}
-                                    className={`w-[88px] h-[88px] sm:w-[116px] sm:h-[116px] rounded-full flex flex-col items-center justify-center transition-all duration-300 select-none touch-manipulation border-2
-                                        ${bubble.selected
-                                            ? 'bg-secondary text-muted-foreground/40 scale-90 border-secondary shadow-none'
-                                            : bubble.wrong
-                                                ? 'bg-red-50 text-destructive animate-shake border-destructive/40'
-                                                : 'bg-white text-foreground border-border hover:scale-105 hover:border-accent/40 cursor-pointer active:scale-95'
-                                        }`}
-                                    style={{
-                                        WebkitTapHighlightColor: 'transparent',
-                                        boxShadow: bubble.wrong ? '0 0 18px hsl(348 85% 55% / 0.18)' : undefined,
-                                    }}
-                                >
-                                    <span className="text-sm sm:text-base font-semibold tracking-tight leading-none px-2 text-center">{bubble.text}</span>
-                                    {bubble.selected && bubble.order && (
-                                        <span className="text-[10px] mt-1 opacity-30 font-medium uppercase tracking-tighter">Done</span>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Bottom Bar */}
-                    <div className="w-full px-4 sm:px-8 pb-6 sm:pb-10 flex items-center justify-between mt-auto">
-                        <div className="flex items-center gap-3">
-                            <div className="relative w-9 h-9">
-                                <svg className="w-full h-full -rotate-90" viewBox="0 0 48 48">
-                                    <circle cx="24" cy="24" r="21" fill="none" stroke="hsl(var(--secondary))" strokeWidth="3" />
-                                    <circle
-                                        cx="24" cy="24" r="21" fill="none"
-                                        stroke={timeLeft <= 3 ? 'hsl(var(--destructive))' : 'hsl(var(--accent))'}
-                                        strokeWidth="3"
-                                        strokeDasharray={`${2 * Math.PI * 21}`}
-                                        strokeDashoffset={`${2 * Math.PI * 21 * (1 - timerProgress / 100)}`}
-                                        strokeLinecap="round"
-                                        className="transition-all duration-1000 ease-linear"
-                                    />
-                                </svg>
-                                <span className={`absolute inset-0 flex items-center justify-center font-bold text-[11px] tabular-nums ${timeLeft <= 3 ? 'text-destructive' : 'text-foreground'}`}>
-                                    {timeLeft}
-                                </span>
-                            </div>
-                            <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Time</span>
-                        </div>
-
-                        <div className="text-right">
-                            <span className="text-[12px] sm:text-[13px] font-medium text-muted-foreground/50 tracking-tight">Keep going!</span>
-                        </div>
-                    </div>
-
-                    {/* Flash overlay */}
-                    {flash && (
-                        <div className={`absolute inset-0 pointer-events-none animate-fade-in rounded-[24px] ${flash === 'wrong' ? 'bg-destructive/5' : 'bg-success/5'
-                            }`} />
-                    )}
                 </div>
             </div>
+            <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
         </div>
     );
 };

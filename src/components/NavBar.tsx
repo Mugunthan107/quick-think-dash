@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { ShieldCheck, Users, Activity, Trophy, Zap, BookOpen, Shield, X, Info, FileText } from 'lucide-react';
+import { ShieldCheck, Users, Activity, Trophy, Zap, BookOpen, Shield, X, Info, FileText, LogOut } from 'lucide-react';
 import DecorativeCurve from './DecorativeCurve';
 
 const IN_TEST_ROUTES = ['/game', '/crossmath', '/numlink', '/select-game', '/lobby', '/waiting-approval'];
@@ -10,7 +10,7 @@ const HIDE_CTA_ROUTES = ['/student', '/leaderboard'];
 const NavBar = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { currentStudent, students, adminLoggedIn } = useGame();
+    const { currentStudent, students, adminLoggedIn, adminLogout } = useGame();
     const [showInstructions, setShowInstructions] = useState(false);
 
     const path = location.pathname;
@@ -29,20 +29,20 @@ const NavBar = () => {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col h-14 sm:h-16">
-            <div className={`h-full flex items-center ${isHome || path === '/about' || path === '/student' ? 'bg-[#E0F2FE]/60 backdrop-blur-md shadow-none border-b-0' : 'bg-white/95 backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm'} relative z-10`}>
-                {!(isHome || path === '/about' || path === '/student') && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />}
+            <div className={`h-full flex items-center ${isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || isAdmin ? 'bg-[#E0F2FE]/60 backdrop-blur-md shadow-none border-b-0' : 'bg-white/95 backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm'} relative z-10`}>
+                {!(isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || isAdmin) && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />}
                 <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-10 flex items-center justify-between gap-4">
 
                     {/* Left — Logo */}
                     <button onClick={() => navigate('/')} className="flex items-center gap-2 group shrink-0 relative z-50">
-                        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm border border-[#E6E1FF] transition-all duration-500 ease-out group-hover:scale-[2.5] group-hover:shadow-[0_10px_40px_-10px_rgba(109,74,254,0.4)] group-hover:border-[#6D4AFE]/50 group-hover:z-50 origin-center">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center shadow-md border border-[#F1F5F9] transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-blue-500/10 origin-center">
                             <img
                                 src="/favicon-round.png"
                                 alt="MindSprint"
-                                className="w-5 h-5 rounded-full object-contain transition-all duration-500 group-hover:w-full group-hover:h-full group-hover:p-0.5"
+                                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-contain"
                             />
                         </div>
-                        <span className="font-bold text-[#111827] text-[15px] tracking-tight transition-all duration-300 group-hover:opacity-0 group-hover:translate-x-2">
+                        <span className="font-bold text-[#0F172A] text-[19px] sm:text-[20px] tracking-tight transition-all duration-300">
                             MindSprint
                         </span>
                     </button>
@@ -52,31 +52,37 @@ const NavBar = () => {
                         {!hideCta && !inTest && !isAdmin && (
                             <button
                                 onClick={() => navigate(path === '/about' ? '/' : '/about')}
-                                className="hidden sm:block text-[14px] font-bold text-gray-900 hover:text-[#6D4AFE] transition-colors"
+                                className="hidden sm:block text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-colors"
                             >
                                 {path === '/about' ? 'Home' : 'About'}
                             </button>
                         )}
 
-                        {isAdmin ? (
-                            <div className="flex items-center gap-1.5 bg-[#6D4AFE]/10 border border-[#6D4AFE]/20 rounded-full px-3 py-1">
-                                <span className="text-[11px] font-bold text-[#6D4AFE]">Admin Mode</span>
-                            </div>
-                        ) : inTest && currentStudent ? (
+                        {isAdmin && adminLoggedIn ? (
+                            <button
+                                onClick={() => { adminLogout(); navigate('/'); }}
+                                className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all bg-transparent p-0 flex items-center gap-1.5 no-underline"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                <span>Logout</span>
+                            </button>
+                        ) : isAdmin ? null : inTest && currentStudent ? (
                             <button
                                 onClick={() => navigate('/')}
-                                className="text-[12px] font-semibold text-[#4B5563] hover:text-[#111827] bg-white border border-[#E6E1FF] rounded-lg px-4 py-1.5 transition-all shadow-sm"
+                                className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all bg-transparent p-0 no-underline"
                             >
                                 Exit Test
                             </button>
-                        ) : !hideCta ? (
-                            <button
-                                onClick={() => setShowInstructions(true)}
-                                className="text-[14px] font-bold text-gray-900 hover:text-[#6D4AFE] transition-all"
-                            >
-                                Instructions
-                            </button>
-                        ) : null}
+                        ) : (
+                            !hideCta && (
+                                <button
+                                    onClick={() => setShowInstructions(true)}
+                                    className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all"
+                                >
+                                    Instructions
+                                </button>
+                            )
+                        )}
                     </div>
                 </div>
             </div>
@@ -94,8 +100,8 @@ const NavBar = () => {
                             </button>
 
                             <div className="flex items-center gap-3 mb-8">
-                                <div className="w-10 h-10 rounded-2xl bg-[#6D4AFE]/10 flex items-center justify-center">
-                                    <FileText className="w-5 h-5 text-[#6D4AFE]" />
+                                <div className="w-10 h-10 rounded-2xl bg-[#2563EB]/10 flex items-center justify-center">
+                                    <FileText className="w-5 h-5 text-[#2563EB]" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900">Session Rules</h2>
@@ -122,7 +128,7 @@ const NavBar = () => {
                                     setShowInstructions(false);
                                     navigate('/student');
                                 }}
-                                className="w-full bg-[#6D4AFE] hover:bg-[#6D4AFE]/95 text-white font-bold rounded-2xl py-4 shadow-xl shadow-[#6D4AFE]/20 transition-all flex items-center justify-center gap-2"
+                                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-black rounded-2xl py-4 shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
                             >
                                 <Zap className="w-4 h-4 fill-white text-white" />
                                 Start Assessment

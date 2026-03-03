@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { ArrowLeft, Trophy, Medal, Clock } from 'lucide-react';
+import { ArrowLeft, Trophy, Medal, Clock, ChevronLeft } from 'lucide-react';
+import DecorativeCurve from '@/components/DecorativeCurve';
 
 const Leaderboard = () => {
   const { getLeaderboard, currentStudent, adminLoggedIn } = useGame();
@@ -12,56 +13,68 @@ const Leaderboard = () => {
   const leaderboard = getLeaderboard();
 
   const rankStyle = (i: number) => {
-    if (i === 0) return { bg: 'bg-[#F59E0B]', text: 'text-white', shadow: 'shadow-[#F59E0B]/30' };
-    if (i === 1) return { bg: 'bg-slate-400', text: 'text-white', shadow: '' };
-    if (i === 2) return { bg: 'bg-orange-400', text: 'text-white', shadow: '' };
-    return { bg: 'bg-[#F1F3F9]', text: 'text-[#9CA3AF]', shadow: '' };
-  };
-
-  const rowBg = (i: number, isMe: boolean) => {
-    if (isMe) return 'bg-[#6D4AFE]/5 hover:bg-[#6D4AFE]/8';
-    return 'hover:bg-slate-50/80';
+    if (i === 0) return { bg: 'bg-[#FBBF24]', text: 'text-white', shadow: 'shadow-amber-500/30' };
+    if (i === 1) return { bg: 'bg-slate-300', text: 'text-[#475569]', shadow: 'shadow-slate-500/10' };
+    if (i === 2) return { bg: 'bg-[#B45309]/20', text: 'text-[#B45309]', shadow: 'shadow-orange-900/5' };
+    return { bg: 'bg-white', text: 'text-[#64748B]', shadow: '' };
   };
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#F8F9FB] min-h-screen">
-      <div className="max-container py-12">
+    <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
+      {/* Layer 1: Premium Background Depth */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F0F7FF_0%,_#F8FAFC_40%,_#FDFDFF_100%)]" />
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#3B82F6] opacity-[0.04] blur-[120px] rounded-full" />
+      </div>
 
-        <button onClick={() => navigate('/')}
-          className="mb-8 flex items-center gap-2 text-[#9CA3AF] hover:text-[#111827] transition-colors text-sm font-medium">
-          <ArrowLeft className="w-4 h-4" />Back to Platform
+      <DecorativeCurve
+        opacity={0.04}
+        height="h-[400px] sm:h-[550px]"
+        className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none mix-blend-multiply"
+        animate={true}
+      />
+
+      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-12 relative z-10 animate-fade-in">
+        <button
+          onClick={() => navigate('/')}
+          className="group mb-8 flex items-center gap-2 text-[#64748B] hover:text-[#0F172A] transition-all font-bold text-[14px] px-4 py-2 bg-white/40 hover:bg-white/60 backdrop-blur-md rounded-xl border border-white/80 shadow-sm"
+        >
+          <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          Back to Platform
         </button>
 
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-12 h-12 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-[#F59E0B]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[#111827]">Session Leaderboard</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#14B8A6] animate-pulse" />
-              <p className="text-xs text-[#9CA3AF] font-medium">{leaderboard.length} candidates synchronized</p>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-[2rem] bg-[#2563EB]/10 flex items-center justify-center shadow-lg shadow-blue-500/5 rotate-3">
+              <Trophy className="w-8 h-8 text-[#2563EB]" />
+            </div>
+            <div>
+              <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-2">Leaderboard</h1>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-[14px] text-[#64748B] font-bold uppercase tracking-widest">{leaderboard.length} Candidates Active</p>
+              </div>
             </div>
           </div>
         </div>
 
         {leaderboard.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-[#E6E1FF]/40 rounded-2xl">
-            <Medal className="w-12 h-12 text-[#9CA3AF]/20 mx-auto mb-4" />
-            <p className="text-[#4B5563] font-semibold">Assessment results pending</p>
-            <p className="text-sm text-[#9CA3AF] mt-1">Standings will populate as candidates complete the evaluation.</p>
+          <div className="text-center py-24 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)]">
+            <Medal className="w-16 h-16 text-[#CBD5E1] mx-auto mb-6 opacity-40" />
+            <h3 className="text-xl font-black text-[#0F172A] mb-2">No results yet</h3>
+            <p className="text-[#64748B] font-medium">Results will appear here as candidates complete their tests.</p>
           </div>
         ) : (
-          <div className="bg-white border border-[#E6E1FF]/40 shadow-sm rounded-2xl overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-[3.5rem_1fr_4rem_4rem_4rem_5.5rem_5rem] gap-2 px-6 py-4 border-b border-[#E6E1FF]/40 bg-[#EDE9FE]/20">
+            <div className="grid grid-cols-[4rem_1fr_4.5rem_4.5rem_4.5rem_6rem_5.5rem] gap-2 px-8 py-6 border-b border-[#F1F5F9] bg-white/40 backdrop-blur-sm">
               {['Rank', 'Candidate', 'BS', 'CM', 'NL', 'Total', 'Time'].map((h, idx) => (
-                <span key={h} className={`text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider ${idx === 0 ? 'text-center' : idx >= 5 ? 'text-right' : ''}`}>{h}</span>
+                <span key={h} className={`text-[11px] font-black text-[#94A3B8] uppercase tracking-widest ${idx === 0 ? 'text-center' : idx >= 5 ? 'text-right' : ''}`}>{h}</span>
               ))}
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-border/50">
+            <div className="divide-y divide-[#F1F5F9]">
               {leaderboard.map((s, i) => {
                 const isMe = currentStudent?.username === s.username;
                 const totalTime = s.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || 0;
@@ -74,38 +87,43 @@ const Leaderboard = () => {
 
                 return (
                   <div key={s.username}
-                    className={`grid grid-cols-[2.5rem_1fr_4rem_4rem_4rem_5.5rem_4.5rem] gap-2 px-4 py-3 items-center transition-all duration-150 ${rowBg(i, isMe)}`}>
+                    className={`grid grid-cols-[4rem_1fr_4.5rem_4.5rem_4.5rem_6rem_5.5rem] gap-2 px-8 py-5 items-center transition-all duration-300 hover:bg-white/60 group ${isMe ? 'bg-blue-50/40' : ''}`}>
                     {/* Rank */}
                     <div className="flex justify-center">
-                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm ${rs.bg} ${rs.text} ${rs.shadow}`}>
+                      <span className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black shadow-lg ${rs.bg} ${rs.text} ${rs.shadow} ${i > 2 ? 'border border-[#E2E8F0]' : ''}`}>
                         {i + 1}
                       </span>
                     </div>
                     {/* Name */}
-                    <div className="min-w-0">
-                      <span className="font-semibold text-foreground text-sm truncate block">{s.username}</span>
-                      <div className="flex items-center gap-1">
-                        {isMe && <span className="text-[10px] text-accent font-bold">(You)</span>}
-                        {s.gamesPlayed ? <span className="text-[10px] text-muted-foreground">{s.gamesPlayed} game{s.gamesPlayed !== 1 ? 's' : ''}</span> : null}
+                    <div className="min-w-0 pr-4">
+                      <span className="font-black text-[#0F172A] text-[16px] truncate block group-hover:text-[#2563EB] transition-colors">{s.username}</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {isMe && <span className="text-[10px] bg-[#2563EB] text-white px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">You</span>}
+                        <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-wider">{s.gamesPlayed || 0} Games</span>
                       </div>
                     </div>
                     {/* Game scores */}
                     {[bubble, crossmath, numlink].map((gd, gi) => (
-                      <div key={gi} className="text-center">
-                        {gd ? <div><span className="font-mono font-bold text-sm text-[#111827] block">{gd.score}</span>
-                          <span className="text-[10px] text-[#14B8A6] font-semibold">{gd.correct}/{gd.total}</span></div>
-                          : <span className="text-[#9CA3AF]/30 text-xs">—</span>}
+                      <div key={gi} className="text-center group-hover:scale-110 transition-transform">
+                        {gd ? (
+                          <div className="flex flex-col">
+                            <span className="font-mono font-black text-[15px] text-[#0F172A] leading-none mb-1">{gd.score}</span>
+                            <span className="text-[10px] text-emerald-500 font-black">{gd.correct}/{gd.total}</span>
+                          </div>
+                        ) : <span className="text-[#CBD5E1] text-[15px] font-black">—</span>}
                       </div>
                     ))}
                     {/* Total */}
                     <div className="text-right">
-                      <span className="font-mono font-bold text-base sm:text-lg text-[#F59E0B]"
-                        style={{ textShadow: '0 0 14px rgba(245,158,11,0.25)' }}>{s.score}</span>
+                      <span className="font-mono font-black text-[22px] text-[#2563EB] tabular-nums"
+                        style={{ textShadow: '0 0 20px rgba(37,99,235,0.1)' }}>{s.score}</span>
                     </div>
                     {/* Time */}
-                    <div className="text-right flex items-center justify-end gap-1">
-                      <Clock className="w-3 h-3 text-muted-foreground/40 shrink-0" />
-                      <span className="font-mono text-xs text-muted-foreground">{totalTime.toFixed(1)}s</span>
+                    <div className="text-right flex flex-col items-end">
+                      <div className="flex items-center gap-1.5 h-full">
+                        <Clock className="w-3.5 h-3.5 text-[#94A3B8] group-hover:text-[#2563EB] transition-colors" />
+                        <span className="font-mono text-[14px] font-black text-[#0F172A]">{totalTime.toFixed(1)}s</span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -114,6 +132,13 @@ const Leaderboard = () => {
           </div>
         )}
       </div>
+
+      <DecorativeCurve
+        opacity={0.04}
+        height="h-[400px] sm:h-[550px]"
+        className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none"
+        animate={true}
+      />
     </div>
   );
 };

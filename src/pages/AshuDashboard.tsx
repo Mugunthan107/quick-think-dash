@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Download, Trash2, LogOut, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square, Trophy, Medal, Filter, Eye, Crown, User } from 'lucide-react';
+import { Copy, Download, Trash2, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square, Trophy, Medal, Filter, Eye, Crown, User } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState } from 'react';
 import CountdownOverlay from '@/components/CountdownOverlay';
+import DecorativeCurve from '@/components/DecorativeCurve';
 
 import AshuLogin from './AshuLogin';
 
@@ -336,63 +337,84 @@ const AshuDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#F8F9FB] min-h-screen p-4 sm:p-6 lg:p-8">
+    <div className="relative flex flex-col flex-1 w-full h-full bg-[#FDFDFF] overflow-y-auto font-sans selection:bg-indigo-100 pb-16 pt-6 sm:pt-10">
       {showCountdown && <CountdownOverlay onComplete={() => setShowCountdown(false)} />}
-      <div className="relative w-full max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-fade-in pb-16">
 
-        {/* Header Section */}
-        <div className="flex items-center justify-between gap-4 mb-2 sm:mb-4 px-2">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium">Manage tests and monitor progress</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Button
-                variant="ghost" size="icon"
-                onClick={() => setShowRequestsModal(true)}
-                className={`rounded-full hover:bg-secondary relative ${pendingStudents.length > 0 ? 'text-accent' : 'text-muted-foreground'}`}
-              >
-                <Bell className="w-5 h-5" />
-                {pendingStudents.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-accent-foreground text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
-                    {pendingStudents.length}
-                  </span>
-                )}
-              </Button>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => { adminLogout(); navigate('/'); }} className="text-muted-foreground hover:text-foreground">
-              <LogOut className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
+      {/* Layer 1: Premium Background Depth */}
+      <div className="absolute inset-0 z-0 pointer-events-none fixed">
+        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+      </div>
+
+      {/* Decorative Waves */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Top Decorative Wave - Tertiary */}
+        <DecorativeCurve opacity={0.04} height="h-[200px] sm:h-[300px]" className="absolute -top-[40px] left-[-10%] w-[120%] rotate-180 scale-x-[1.1] translate-x-4 mix-blend-multiply" animate={true} />
+        {/* Top Decorative Wave - Secondary */}
+        <DecorativeCurve opacity={0.06} height="h-[150px] sm:h-[250px]" className="absolute top-0 left-[-5%] w-[110%] rotate-180 scale-x-[1.05]" animate={true} />
+        {/* Top Decorative Wave - Primary */}
+        <DecorativeCurve opacity={0.12} height="h-[100px] sm:h-[180px]" className="absolute top-0 left-0 rotate-180" animate={true} />
+
+        {/* Bottom Decorative Wave - Tertiary */}
+        <DecorativeCurve opacity={0.05} height="h-[200px] sm:h-[300px]" className="absolute -bottom-[40px] left-[-10%] w-[120%] scale-x-[1.1] -translate-x-4 mix-blend-multiply" animate={true} />
+        {/* Bottom Decorative Wave - Secondary */}
+        <DecorativeCurve opacity={0.07} height="h-[150px] sm:h-[250px]" className="absolute bottom-0 left-[-5%] w-[110%] scale-x-[1.05]" animate={true} />
+        {/* Bottom Decorative Wave - Primary */}
+        <DecorativeCurve opacity={0.12} height="h-[100px] sm:h-[180px]" className="absolute bottom-0 left-0" animate={true} />
+      </div>
+
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-10 animate-fade-in group/container space-y-8">
+
+        <div className="flex items-center justify-between gap-4 mb-6 sm:mb-8 px-2">
+          <div className="flex flex-col">
+            <h1 className="text-2xl sm:text-[28px] font-black text-[#0F172A] tracking-tight leading-none mb-2">Admin Dashboard</h1>
+            <p className="text-[13px] sm:text-[14px] text-[#64748B] font-medium leading-tight">Manage tests and monitor progress</p>
           </div>
         </div>
 
         {/* Test PIN Section */}
-        <div className="card-glass rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">Test Session</h2>
-            {sessions.length > 0 ? (
-              <Select value={currentTest?.pin} onValueChange={(value) => {
-                const selected = sessions.find(s => s.pin === value);
-                if (selected) { setCurrentStudent(null); switchSession(selected); }
-              }}>
-                <SelectTrigger className="w-[140px] sm:w-[180px] h-8 text-xs">
-                  <SelectValue placeholder="Select Session" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessions.map((session) => (
-                    <SelectItem key={session.pin} value={session.pin}>
-                      PIN: {session.pin} {session.isActive ? '(Active)' : '(Inactive)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Button variant="ghost" size="sm" onClick={fetchSessions} className="h-8 text-[10px] text-muted-foreground hover:text-foreground">
-                <RefreshCw className="w-3 h-3 mr-1" />Reload Sessions
-              </Button>
-            )}
+        <div className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-[0_8px_30px_rgba(20,20,40,0.04)] p-6 sm:p-10 mb-6 sm:mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-widest">Test Session</h2>
+            <div className="flex items-center gap-4">
+              {/* Notification Bell next to Session Picker */}
+              <div className="relative">
+                <Button
+                  variant="ghost" size="icon"
+                  onClick={() => setShowRequestsModal(true)}
+                  className={`rounded-full hover:bg-[#F1F5F9] relative ${pendingStudents.length > 0 ? 'text-[#3B82F6]' : 'text-[#94A3B8]'}`}
+                >
+                  <Bell className="w-5 h-5" />
+                  {pendingStudents.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#EF4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                      {pendingStudents.length}
+                    </span>
+                  )}
+                </Button>
+              </div>
+
+              {sessions.length > 0 ? (
+                <Select value={currentTest?.pin} onValueChange={(value) => {
+                  const selected = sessions.find(s => s.pin === value);
+                  if (selected) { setCurrentStudent(null); switchSession(selected); }
+                }}>
+                  <SelectTrigger className="w-[140px] sm:w-[180px] h-9 text-xs bg-white text-[#475569] border-[#E2E8F0] shadow-sm rounded-xl hover:bg-[#F8FAFC] transition-colors">
+                    <SelectValue placeholder="Select Session" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sessions.map((session) => (
+                      <SelectItem key={session.pin} value={session.pin}>
+                        PIN: {session.pin} {session.isActive ? '(Active)' : '(Inactive)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Button variant="ghost" size="sm" onClick={fetchSessions} className="h-8 text-[10px] text-muted-foreground hover:text-foreground">
+                  <RefreshCw className="w-3 h-3 mr-1" />Reload Sessions
+                </Button>
+              )}
+            </div>
           </div>
 
           {currentTest ? (
@@ -472,9 +494,9 @@ const AshuDashboard = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground text-sm mb-4 font-medium">No active session selected</p>
-              <Button onClick={() => setShowCreatePinDialog(true)} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl h-12 px-6 shadow-md shadow-accent/20">
+            <div className="text-center py-10 sm:py-14">
+              <p className="text-[#94A3B8] text-[15px] mb-6 font-semibold">No active session selected</p>
+              <Button onClick={() => setShowCreatePinDialog(true)} className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-[14px] h-[46px] px-8 text-[14px] font-bold shadow-md shadow-blue-500/20 hover:-translate-y-0.5 hover:shadow-blue-500/40 transition-all duration-300">
                 <Plus className="w-4 h-4 mr-2" />Create Test PIN
               </Button>
             </div>
@@ -482,12 +504,12 @@ const AshuDashboard = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6 flex-wrap">
-          <Button onClick={handleDownload} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl h-10 sm:h-11 text-xs sm:text-sm flex-1 sm:flex-none shadow-sm shadow-accent/20">
-            <Download className="w-3.5 h-3.5 mr-1" />Download PDF
+        <div className="flex gap-4 mb-8 sm:mb-12 flex-wrap pb-4">
+          <Button onClick={handleDownload} className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-[14px] h-[40px] px-6 text-[14px] font-bold shadow-md shadow-blue-500/20 hover:-translate-y-0.5 hover:shadow-blue-500/40 transition-all duration-300">
+            <Download className="w-4 h-4 mr-2" />Download PDF
           </Button>
-          <Button onClick={handleDelete} variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-xl h-10 sm:h-11 text-xs sm:text-sm flex-1 sm:flex-none">
-            <Trash2 className="w-3.5 h-3.5 mr-1" />Delete All
+          <Button onClick={handleDelete} variant="outline" className="border-[#FECACA] text-[#EF4444] bg-white hover:bg-[#FEF2F2] hover:text-[#DC2626] rounded-[14px] h-[40px] px-6 text-[14px] font-bold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm">
+            <Trash2 className="w-4 h-4 mr-2" />Delete All
           </Button>
         </div>
 
