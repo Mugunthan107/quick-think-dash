@@ -164,9 +164,10 @@ const CrossMathGame = () => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [showResult, setShowResult] = useState<'correct' | 'wrong' | null>(null);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [roundTimeLeft, setRoundTimeLeft] = useState(20);
+  const [questionActive, setQuestionActive] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTickRef = useRef(Date.now());
 
@@ -190,6 +191,48 @@ const CrossMathGame = () => {
   useEffect(() => {
     if (currentTest?.status === 'FINISHED') navigate('/');
   }, [currentTest?.status, navigate]);
+
+  const handleFinish = useCallback(() => {
+    setFinished(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (currentStudent && currentTest) {
+      submitGameResult(currentStudent.username, {
+        gameId: 'crossmath',
+        score: score,
+        timeTaken: elapsed,
+        correctAnswers: correctCount,
+        totalQuestions: TOTAL_QUESTIONS,
+        completedAt: Date.now()
+      }).then(() => {
+        addCompletedGame('crossmath');
+      });
+    }
+  }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
+
+  // Reset per-question timer when moving to a new puzzle
+  useEffect(() => {
+    if (finished) return;
+    setRoundTimeLeft(20);
+    setQuestionActive(true);
+  }, [currentQ, finished]);
+
+  // Per-question countdown: when it hits 0, skip to next without scoring
+  useEffect(() => {
+    if (finished || !questionActive) return;
+    if (roundTimeLeft <= 0) {
+      setQuestionActive(false);
+      setSelectedOption(null);
+      if (currentQ + 1 >= TOTAL_QUESTIONS) {
+        handleFinish();
+      } else {
+        setCurrentQ(prev => prev + 1);
+      }
+      return;
+    }
+
+    const t = setTimeout(() => setRoundTimeLeft(prev => prev - 1), 1000);
+    return () => clearTimeout(t);
+  }, [roundTimeLeft, finished, questionActive, currentQ, handleFinish]);
 
   const puzzle = puzzles[currentQ];
 
@@ -254,26 +297,8 @@ const CrossMathGame = () => {
     return true;
   }, [getCurrentAnswers, puzzle]);
 
-  const handleFinish = useCallback(() => {
-    setFinished(true);
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (currentStudent && currentTest) {
-      submitGameResult(currentStudent.username, {
-        gameId: 'crossmath',
-        score: score,
-        timeTaken: elapsed,
-        correctAnswers: correctCount,
-        totalQuestions: TOTAL_QUESTIONS,
-        completedAt: Date.now()
-      }).then(() => {
-        addCompletedGame('crossmath');
-      });
-    }
-  }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
-
   const handleSubmit = useCallback(() => {
     const isCorrect = checkAnswer();
-    setShowResult(isCorrect ? 'correct' : 'wrong');
 
     let newScore = score;
     let newCorrect = correctCount;
@@ -290,15 +315,13 @@ const CrossMathGame = () => {
       updateStudentScore(currentStudent.username, newScore, currentQ + 1, newCorrect);
     }
 
-    setTimeout(() => {
-      setShowResult(null);
-      setSelectedOption(null);
-      if (currentQ + 1 >= TOTAL_QUESTIONS) {
-        handleFinish();
-      } else {
-        setCurrentQ(prev => prev + 1);
-      }
-    }, 800);
+    setQuestionActive(false);
+    setSelectedOption(null);
+    if (currentQ + 1 >= TOTAL_QUESTIONS) {
+      handleFinish();
+    } else {
+      setCurrentQ(prev => prev + 1);
+    }
   }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentScore, handleFinish]);
 
   const handlePostFinish = useCallback(() => {
@@ -327,16 +350,24 @@ const CrossMathGame = () => {
     }
     if (isBlankCell && blankIndex !== undefined) {
       const filledValue = currentAnswers[blankIndex];
-      const isWrong = showResult === 'wrong' && filledValue !== null;
-      const isRight = showResult === 'correct' && filledValue !== null;
       return (
         <button
           onClick={() => handleCellTap(blankIndex)}
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => {
+            e.preventDefault();
+            if (finished) return;
+            const data = e.dataTransfer.getData('text/plain');
+            if (!data) return;
+            const value = Number(data);
+
+            const current = [...currentAnswers];
+            current[blankIndex] = value;
+            setAnswers(prev => new Map(prev).set(currentQ, current));
+          }}
           className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl border-2 border-dashed flex items-center justify-center font-black text-lg sm:text-xl transition-all shrink-0
             ${filledValue !== null
-              ? isRight ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20' :
-                isWrong ? 'bg-red-500 border-red-400 text-white animate-shake shadow-lg shadow-red-500/20' :
-                  'bg-sky-50 border-sky-300 text-sky-600'
+              ? 'bg-sky-50 border-sky-300 text-sky-600'
               : 'border-sky-200 text-sky-300 bg-white/50 hover:border-sky-400'
             }`}
         >
@@ -431,16 +462,18 @@ const CrossMathGame = () => {
             }} className="text-[11px] text-[#94A3B8] hover:text-[#2563EB] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest">End Test</button>
           </div>
 
-          <div className={`bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 transition-all duration-300 overflow-hidden relative ${showResult === 'wrong' ? 'border-red-200' : showResult === 'correct' ? 'border-emerald-200' : 'border-sky-100'}`}>
+          <div className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 border-sky-100 transition-all duration-300 overflow-hidden relative">
             <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-4 border-b border-sky-50">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest ${puzzle.difficulty === 'easy' ? 'bg-emerald-50 text-emerald-600' : puzzle.difficulty === 'medium' ? 'bg-sky-50 text-sky-500' : 'bg-red-50 text-red-500'}`}>{puzzle.difficulty}</span>
                   <span className="text-[14px] font-black text-[#0F172A]">Q{currentQ + 1} / {TOTAL_QUESTIONS}</span>
                 </div>
-                <div className="text-right flex flex-col gap-1">
-                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">SCORE</span>
-                  <span className="font-mono font-black text-2xl text-sky-500">{score}</span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">TIME LEFT</span>
+                  <span className={`font-mono font-black text-sm ${roundTimeLeft <= 3 ? 'text-red-500' : 'text-[#0F172A]'}`}>
+                    {roundTimeLeft}s
+                  </span>
                 </div>
               </div>
               <div className="w-full h-2 bg-sky-50 rounded-full overflow-hidden">
@@ -507,6 +540,11 @@ const CrossMathGame = () => {
                         key={`${val}-${i}`}
                         onClick={() => !isThisUsed && handleOptionTap(val)}
                         disabled={isThisUsed}
+                        draggable={!isThisUsed}
+                        onDragStart={e => {
+                          if (isThisUsed) return;
+                          e.dataTransfer.setData('text/plain', String(val));
+                        }}
                         className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl font-black text-base sm:text-lg transition-all select-none touch-manipulation border-2
                           ${isThisUsed
                             ? 'bg-sky-50/50 text-[#94A3B8]/30 border-transparent cursor-not-allowed scale-90'
@@ -524,26 +562,24 @@ const CrossMathGame = () => {
 
               <button
                 onClick={handleSubmit}
-                disabled={!allFilled || showResult !== null}
+                disabled={!allFilled}
                 className={`w-full py-4 rounded-2xl font-black text-[15px] uppercase tracking-widest transition-all
-                  ${allFilled && !showResult
+                  ${allFilled
                     ? 'bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] text-white shadow-xl shadow-sky-500/20 hover:scale-[1.02] active:scale-[0.98]'
                     : 'bg-sky-50 text-[#94A3B8] cursor-not-allowed'
                   }`}
               >
-                {showResult === 'correct' ? '✓ Correct!' : showResult === 'wrong' ? '✕ Wrong' : 'Submit Answer'}
+                Submit Answer
               </button>
             </div>
-
-            {showResult && (
-              <div className={`absolute inset-0 pointer-events-none animate-fade-in ${showResult === 'wrong' ? 'bg-red-500/5' : 'bg-emerald-500/5'}`} />
-            )}
           </div>
 
           <div className="text-center mt-6">
             <div className="flex items-center gap-1.5 justify-center text-[13px] text-[#64748B] font-bold">
               <GripHorizontal className="w-4 h-4 text-sky-500" />
-              <span>Tap a number, then tap a <span className="text-sky-500">?</span> space</span>
+              <span>
+                Drag a number into a <span className="text-sky-500">?</span> box, or tap to place it.
+              </span>
             </div>
           </div>
 
