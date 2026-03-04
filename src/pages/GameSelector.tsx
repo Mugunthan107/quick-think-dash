@@ -22,7 +22,7 @@ const games = [
   },
   {
     id: 'motion', name: 'Motion Challenge', route: '/motion-challenge',
-    description: 'Navigate to targets on a grid. Fewer moves = higher score!',
+    description: 'Place the green ball into the black hole in as few moves as possible!',
     icon: Move,
   },
   {

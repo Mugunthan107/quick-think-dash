@@ -107,7 +107,9 @@ const Leaderboard = () => {
                       <div key={gi} className="text-center group-hover:scale-110 transition-transform">
                         {gd ? (
                           <div className="flex flex-col">
-                            <span className="font-mono font-black text-[13px] text-[#0F172A] leading-none mb-1">{gd.score}</span>
+                            <span className="font-mono font-black text-[13px] text-[#0F172A] leading-none mb-1">
+                              {gd.score}
+                            </span>
                             <span className="text-[9px] text-emerald-500 font-black">{gd.correct}/{gd.total}</span>
                           </div>
                         ) : <span className="text-[#CBD5E1] text-[13px] font-black">—</span>}

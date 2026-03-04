@@ -653,16 +653,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }, [currentStudent]);
 
   const getLeaderboard = useCallback(() => {
+    const isMotionOnly = currentTest?.selectedGames && currentTest.selectedGames.length === 1 && currentTest.selectedGames[0] === 'motion';
+
     return [...students]
       .filter(s => s.isFinished)
       .sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
+        if (isMotionOnly) {
+          if (a.score !== b.score) return a.score - b.score; // Lower moves better
+        } else {
+          if (b.score !== a.score) return b.score - a.score; // Higher points better
+        }
         // Secondary: Total Time (Ascending - lower is better)
         const timeA = a.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || (a.completedAt! - a.startedAt) / 1000;
         const timeB = b.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || (b.completedAt! - b.startedAt) / 1000;
         return timeA - timeB;
       });
-  }, [students]);
+  }, [students, currentTest]);
 
   const deleteAllUsers = useCallback(async () => {
     if (!currentTest) return;
@@ -727,7 +733,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       .sort((a, b) => {
         const resA = a.gameHistory.find(g => g.gameId === gameId)!;
         const resB = b.gameHistory.find(g => g.gameId === gameId)!;
-        if (resB.score !== resA.score) return resB.score - resA.score;
+        if (resB.score !== resA.score) {
+          return gameId === 'motion' ? resA.score - resB.score : resB.score - resA.score;
+        }
         return resA.timeTaken - resB.timeTaken;
       });
   }, [students]);

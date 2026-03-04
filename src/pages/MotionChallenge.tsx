@@ -1,263 +1,742 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Clock, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Pause, RefreshCcw } from 'lucide-react';
+import { Trophy, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import NavBar from '@/components/NavBar';
 import DecorativeCurve from '@/components/DecorativeCurve';
 
-const GRID_SIZE = 5;
-const TOTAL_LEVELS = 20;
-const DIRECTIONS = ['up', 'down', 'left', 'right'] as const;
-type Direction = typeof DIRECTIONS[number];
-
-interface Target {
-  row: number;
-  col: number;
+/* ─────────────────────────────────────────────────────────────────────────────
+   TYPES
+───────────────────────────────────────────────────────────────────────────── */
+interface Block {
+  id: string;
+  color: string;            // hex color
+  cells: [number, number][]; // [row, col] pairs
 }
 
-function randomTarget(exclude?: { row: number; col: number }): Target {
-  let t: Target;
-  do {
-    t = { row: Math.floor(Math.random() * GRID_SIZE), col: Math.floor(Math.random() * GRID_SIZE) };
-  } while (exclude && t.row === exclude.row && t.col === exclude.col);
-  return t;
+interface LevelDef {
+  gridRows: number;
+  gridCols: number;
+  blocks: Block[];
+  ballPos: [number, number];
+  holePos: [number, number];
 }
 
-const DIRECTION_ICONS = { up: ArrowUp, down: ArrowDown, left: ArrowLeft, right: ArrowRight };
+/* ─────────────────────────────────────────────────────────────────────────────
+   PROCEDURAL LEVEL GENERATION & BFS SOLVABILITY CHECK
+───────────────────────────────────────────────────────────────────────────── */
+const TOTAL_LEVELS = 10;
 
+/** 
+ * Robust BFS to check for solvability.
+ * Uses a rigorous hash and optimized occupancy check.
+ */
+function isSolvable(level: LevelDef): number | null {
+  const { gridRows: rows, gridCols: cols, holePos, ballPos, blocks: defs } = level;
+
+  interface State {
+    ball: [number, number];
+    blocks: { [id: string]: [number, number][] };
+  }
+
+  const start: State = {
+    ball: ballPos,
+    blocks: defs.reduce((acc, b) => ({ ...acc, [b.id]: b.cells }), {})
+  };
+
+  // Rigorous hash with separators to prevent coordinate collisions
+  function hash(s: State) {
+    let res = `B:${s.ball[0]},${s.ball[1]}|`;
+    const sortedIds = defs.map(d => d.id).sort(); // defs is constant
+    for (const id of sortedIds) {
+      res += `${id}:`;
+      for (const [r, c] of s.blocks[id]) res += `${r}${c}`;
+      res += ';';
+    }
+    return res;
+  }
+
+  const queue: { state: State; dist: number }[] = [{ state: start, dist: 0 }];
+  const visited = new Set<string>();
+  visited.add(hash(start));
+
+  let head = 0;
+  const MAX_ITER = 8000;
+
+  while (head < queue.length && head < MAX_ITER) {
+    const { state: current, dist } = queue[head++];
+
+    // Win check
+    if (current.ball[0] === holePos[0] && current.ball[1] === holePos[1]) return dist;
+
+    // Build current occupancy
+    const currentBlocksMap = new Map(defs.map(d => [d.id, current.blocks[d.id]]));
+    const currentBlocks: Block[] = defs.map(d => ({ ...d, cells: current.blocks[d.id] }));
+    const occ = buildOccupancyMap(currentBlocks, rows, cols);
+
+    // Ball moves
+    for (const d of (['up', 'down', 'left', 'right'] as const)) {
+      if (canBallMove(d, current.ball, occ, rows, cols)) {
+        const dr = d === 'up' ? -1 : d === 'down' ? 1 : 0;
+        const dc = d === 'left' ? -1 : d === 'right' ? 1 : 0;
+        const nextState: State = { ...current, ball: [current.ball[0] + dr, current.ball[1] + dc] };
+        const h = hash(nextState);
+        if (!visited.has(h)) {
+          visited.add(h);
+          queue.push({ state: nextState, dist: dist + 1 });
+        }
+      }
+    }
+
+    // Block moves
+    for (const bDef of defs) {
+      const bCurrent = { ...bDef, cells: current.blocks[bDef.id] };
+      for (const d of (['up', 'down', 'left', 'right'] as const)) {
+        if (canSlide(bCurrent, d, occ, rows, cols, current.ball, holePos)) {
+          const moved = slideBlock(bCurrent, d);
+          const nextBlocks = { ...current.blocks, [bDef.id]: moved.cells };
+          const nextState: State = { ...current, blocks: nextBlocks };
+          const h = hash(nextState);
+          if (!visited.has(h)) {
+            visited.add(h);
+            queue.push({ state: nextState, dist: dist + 1 });
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+
+function canBallReachWithoutBlockMoves(level: LevelDef): boolean {
+  const rows = level.gridRows; const cols = level.gridCols; const holePos = level.holePos;
+  const occ = buildOccupancyMap(level.blocks, rows, cols);
+  const queue: [number, number][] = [level.ballPos];
+  const visited = new Set<string>();
+  visited.add(`${level.ballPos[0]}${level.ballPos[1]}`);
+  let head = 0;
+  while (head < queue.length) {
+    const [r, c] = queue[head++];
+    if (r === holePos[0] && c === holePos[1]) return true;
+    for (const d of (['up', 'down', 'left', 'right'] as const)) {
+      if (canBallMove(d, [r, c], occ, rows, cols)) {
+        const dr = d === 'up' ? -1 : d === 'down' ? 1 : 0;
+        const dc = d === 'left' ? -1 : d === 'right' ? 1 : 0;
+        const h = `${r + dr}${c + dc}`;
+        if (!visited.has(h)) { visited.add(h); queue.push([r + dr, c + dc]); }
+      }
+    }
+  }
+  return false;
+}
+
+function generateSolvableLevel(idx: number): LevelDef {
+  const rows = idx < 4 ? 5 : 6;
+  const cols = idx < 4 ? 5 : 6;
+  const colors = ['#EAB308', '#3B82F6', '#22C55E', '#A855F7', '#EF4444', '#38BDF8', '#F97316', '#14B8A6', '#EC4899', '#6366F1'];
+
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const holePos: [number, number] = Math.random() > 0.5
+      ? [Math.floor(Math.random() * rows), Math.random() > 0.5 ? 0 : cols - 1]
+      : [Math.random() > 0.5 ? 0 : rows - 1, Math.floor(Math.random() * cols)];
+
+    let ballPos: [number, number] = [Math.floor(Math.random() * rows), Math.floor(Math.random() * cols)];
+    while (ballPos[0] === holePos[0] && ballPos[1] === holePos[1]) {
+      ballPos = [Math.floor(Math.random() * rows), Math.floor(Math.random() * cols)];
+    }
+
+    const numBlocks = 5 + Math.floor(idx / 2);
+    const blocks: Block[] = [];
+    const used = Array.from({ length: rows }, () => Array(cols).fill(false));
+    used[ballPos[0]][ballPos[1]] = true; used[holePos[0]][holePos[1]] = true;
+
+    for (let i = 0; i < numBlocks; i++) {
+      const len = 2 + Math.floor(Math.random() * 2); // Slightly shorter blocks to fit more
+      const isVert = Math.random() > 0.5;
+      for (let inner = 0; inner < 30; inner++) {
+        const r = Math.floor(Math.random() * rows);
+        const c = Math.floor(Math.random() * cols);
+        const cells: [number, number][] = [];
+        let ok = true;
+        for (let l = 0; l < len; l++) {
+          const nr = isVert ? r + l : r; const nc = !isVert ? c + l : c;
+          if (nr >= rows || nc >= cols || used[nr][nc]) { ok = false; break; }
+          cells.push([nr, nc]);
+        }
+        if (ok) {
+          cells.forEach(([rr, cc]) => { used[rr][cc] = true; });
+          blocks.push({ id: `b${i}`, color: colors[i % colors.length], cells });
+          break;
+        }
+      }
+    }
+
+    const level: LevelDef = { gridRows: rows, gridCols: cols, ballPos, holePos, blocks };
+    const dist = isSolvable(level);
+    // Significantly increased difficulty targets (8 moves minimum starting point)
+    const minD = 8 + Math.floor(idx * 1.5);
+    if (dist !== null && dist >= minD && !canBallReachWithoutBlockMoves(level)) return level;
+  }
+  return { gridRows: rows, gridCols: cols, ballPos: [0, 0], holePos: [rows - 1, cols - 1], blocks: [] };
+}
+
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────────────────────────── */
+function deepCloneBlocks(blocks: Block[]): Block[] {
+  return blocks.map(b => ({ ...b, cells: b.cells.map(c => [c[0], c[1]] as [number, number]) }));
+}
+
+function buildOccupancyMap(blocks: Block[], rows: number, cols: number): (string | null)[][] {
+  const map: (string | null)[][] = Array.from({ length: rows }, () => Array(cols).fill(null));
+  for (const b of blocks) {
+    for (const [r, c] of b.cells) {
+      if (r >= 0 && r < rows && c >= 0 && c < cols) map[r][c] = b.id;
+    }
+  }
+  return map;
+}
+
+function canSlide(
+  block: Block,
+  dir: 'up' | 'down' | 'left' | 'right',
+  occ: (string | null)[][],
+  rows: number,
+  cols: number,
+  ballPos: [number, number],
+  holePos: [number, number],
+): boolean {
+  const dr = dir === 'up' ? -1 : dir === 'down' ? 1 : 0;
+  const dc = dir === 'left' ? -1 : dir === 'right' ? 1 : 0;
+
+  for (const [r, c] of block.cells) {
+    const nr = r + dr;
+    const nc = c + dc;
+    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) return false;
+    // Check if target cell is occupied by another block
+    if (occ[nr][nc] !== null && occ[nr][nc] !== block.id) return false;
+    // Cannot slide into ball
+    if (nr === ballPos[0] && nc === ballPos[1]) return false;
+    // Cannot slide into hole
+    if (nr === holePos[0] && nc === holePos[1]) return false;
+  }
+  return true;
+}
+
+function slideBlock(block: Block, dir: 'up' | 'down' | 'left' | 'right'): Block {
+  const dr = dir === 'up' ? -1 : dir === 'down' ? 1 : 0;
+  const dc = dir === 'left' ? -1 : dir === 'right' ? 1 : 0;
+  return { ...block, cells: block.cells.map(([r, c]) => [r + dr, c + dc] as [number, number]) };
+}
+
+function canBallMove(
+  dir: 'up' | 'down' | 'left' | 'right',
+  ballPos: [number, number],
+  occ: (string | null)[][],
+  rows: number,
+  cols: number,
+): boolean {
+  const dr = dir === 'up' ? -1 : dir === 'down' ? 1 : 0;
+  const dc = dir === 'left' ? -1 : dir === 'right' ? 1 : 0;
+  const nr = ballPos[0] + dr;
+  const nc = ballPos[1] + dc;
+  if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) return false;
+  if (occ[nr][nc] !== null) return false;
+  return true;
+}
+
+function formatTime(s: number) {
+  return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   COMPONENT
+───────────────────────────────────────────────────────────────────────────── */
 const MotionChallenge = () => {
-  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
+  const { currentStudent, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
   const navigate = useNavigate();
 
-  const [level, setLevel] = useState(1);
-  const [score, setScore] = useState(0);
+  /* ── State ── */
+  const [levelIdx, setLevelIdx] = useState(0);
+  const [generatedLevels, setGeneratedLevels] = useState<{ [key: number]: LevelDef }>({});
+  const [isGenerating, setIsGenerating] = useState(true);
+
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [ballPos, setBallPos] = useState<[number, number]>([0, 0]);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [moves, setMoves] = useState(0);
+  const [totalMoves, setTotalMoves] = useState(0);
+  const [score, setScore] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [playerPos, setPlayerPos] = useState({ row: 2, col: 2 });
-  const [target, setTarget] = useState<Target>(() => randomTarget({ row: 2, col: 2 }));
   const [finished, setFinished] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [flash, setFlash] = useState<'success' | null>(null);
+  const [levelFlash, setLevelFlash] = useState<'success' | null>(null);
+  const [transitioning, setTransitioning] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Current level derived from index
+  const level = generatedLevels[levelIdx];
+
+  /* ── Navigation guards ── */
   useEffect(() => { if (!currentStudent) navigate('/student'); }, [currentStudent, navigate]);
   useEffect(() => { if (currentTest?.status === 'FINISHED') navigate('/'); }, [currentTest?.status, navigate]);
 
+  /* ── Lazy Generation ── */
   useEffect(() => {
-    if (finished || paused) return;
-    timerRef.current = setInterval(() => setElapsed(p => p + 1), 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [finished, paused]);
-
-  const movePlayer = useCallback((dir: Direction) => {
-    if (finished || paused) return;
-    setPlayerPos(prev => {
-      let { row, col } = prev;
-      if (dir === 'up' && row > 0) row--;
-      else if (dir === 'down' && row < GRID_SIZE - 1) row++;
-      else if (dir === 'left' && col > 0) col--;
-      else if (dir === 'right' && col < GRID_SIZE - 1) col++;
-      else return prev;
-      setMoves(m => m + 1);
-      return { row, col };
-    });
-  }, [finished, paused]);
-
-  // Check if player reached target
-  useEffect(() => {
-    if (playerPos.row === target.row && playerPos.col === target.col) {
-      const points = Math.max(4, 10 - Math.floor(moves / 3));
-      setScore(p => p + points);
-      setCorrectCount(p => p + 1);
-      if (currentTest?.showResults !== false) {
-        setFlash('success');
-        setTimeout(() => setFlash(null), 400);
-      }
-
-      if (level >= TOTAL_LEVELS) {
-        handleFinish();
-      } else {
-        setTarget(randomTarget(playerPos));
-        setLevel(p => p + 1);
+    if (finished) return;
+    if (!generatedLevels[levelIdx]) {
+      setIsGenerating(true);
+      const t = setTimeout(() => {
+        const nextLevel = generateSolvableLevel(levelIdx);
+        setGeneratedLevels(prev => ({ ...prev, [levelIdx]: nextLevel }));
+        setBlocks(deepCloneBlocks(nextLevel.blocks));
+        setBallPos(nextLevel.ballPos);
         setMoves(0);
-      }
+        setIsGenerating(false);
+      }, 50);
+      return () => clearTimeout(t);
     }
-  }, [playerPos, target]);
+  }, [levelIdx, finished]);
 
-  // Keyboard controls
+  /* ── Timer (Total Elapsed) ── */
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp') movePlayer('up');
-      else if (e.key === 'ArrowDown') movePlayer('down');
-      else if (e.key === 'ArrowLeft') movePlayer('left');
-      else if (e.key === 'ArrowRight') movePlayer('right');
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [movePlayer]);
+    if (finished || transitioning || isGenerating) return;
+    timerRef.current = setInterval(() => {
+      setElapsed(e => e + 1);
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [finished, transitioning, isGenerating, levelIdx]);
 
-  const handleFinish = useCallback(() => {
-    setFinished(true);
+  /* ── Occupancy map derived from current blocks ── */
+  const occ = level ? buildOccupancyMap(blocks, level.gridRows, level.gridCols) : [];
+
+  /* ── Advance level ── */
+  const advanceLevel = useCallback((won: boolean, movesUsed: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (currentStudent && currentTest) {
-      submitGameResult(currentStudent.username, {
-        gameId: 'motion', score, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: TOTAL_LEVELS, completedAt: Date.now()
-      }).then(() => addCompletedGame('motion'));
+
+    if (won) {
+      setCorrectCount(c => c + 1);
     }
-  }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
+
+    setLevelFlash(won ? 'success' : null);
+    setTransitioning(true);
+    setSelectedBlockId(null);
+
+    setTimeout(() => {
+      setLevelFlash(null);
+      const next = levelIdx + 1;
+      if (next >= TOTAL_LEVELS) {
+        setFinished(true);
+      } else {
+        setLevelIdx(next);
+        setTransitioning(false);
+      }
+    }, 700);
+  }, [levelIdx]);
+
+  /* ── Data submission ── */
+  useEffect(() => {
+    if (finished && currentStudent && currentTest) {
+
+      submitGameResult(currentStudent.username, {
+        gameId: 'motion',
+        score: totalMoves,
+        timeTaken: elapsed,
+        correctAnswers: correctCount,
+        totalQuestions: TOTAL_LEVELS,
+        completedAt: Date.now(),
+      }).then(() => addCompletedGame('motion'));
+
+      setScore(totalMoves);
+    }
+  }, [finished]);
 
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
     if (nextGame) navigate('/select-game');
-    else { if (currentStudent) finishTest(currentStudent.username); navigate('/'); }
+    else {
+      if (currentStudent) finishTest(currentStudent.username);
+      navigate('/');
+    }
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
-  const handleRestart = () => {
-    setLevel(1); setScore(0); setMoves(0); setElapsed(0);
-    setPlayerPos({ row: 2, col: 2 }); setTarget(randomTarget({ row: 2, col: 2 }));
-    setFinished(false); setPaused(false); setCorrectCount(0);
-  };
+  /* ── Interactions ── */
+  const handleBlockArrow = useCallback((dir: 'up' | 'down' | 'left' | 'right') => {
+    if (transitioning || finished || isGenerating || !selectedBlockId || !level) return;
+    const block = blocks.find(b => b.id === selectedBlockId);
+    if (!block) return;
+    if (!canSlide(block, dir, occ, level.gridRows, level.gridCols, ballPos, level.holePos)) return;
 
-  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+    setBlocks(blocks.map(b => b.id === selectedBlockId ? slideBlock(b, dir) : b));
+    setMoves(m => m + 1);
+    setTotalMoves(t => t + 1);
+  }, [transitioning, finished, isGenerating, selectedBlockId, blocks, occ, level, ballPos]);
 
+  const handleBallArrow = useCallback((dir: 'up' | 'down' | 'left' | 'right') => {
+    if (transitioning || finished || isGenerating || !level) return;
+    if (!canBallMove(dir, ballPos, occ, level.gridRows, level.gridCols)) return;
+
+    const dr = dir === 'up' ? -1 : dir === 'down' ? 1 : 0;
+    const dc = dir === 'left' ? -1 : dir === 'right' ? 1 : 0;
+    const newPos: [number, number] = [ballPos[0] + dr, ballPos[1] + dc];
+    const newMoves = moves + 1;
+
+    setMoves(newMoves);
+    setTotalMoves(t => t + 1);
+    setBallPos(newPos);
+
+    if (newPos[0] === level.holePos[0] && newPos[1] === level.holePos[1]) advanceLevel(true, newMoves);
+  }, [transitioning, finished, isGenerating, ballPos, occ, level, moves, advanceLevel]);
+
+  const handleCellClick = useCallback((r: number, c: number) => {
+    if (transitioning || finished || isGenerating) return;
+    if (r === ballPos[0] && c === ballPos[1]) { setSelectedBlockId('__ball__'); return; }
+    const blockId = occ[r]?.[c];
+    if (blockId) setSelectedBlockId(prev => prev === blockId ? null : blockId);
+  }, [transitioning, finished, isGenerating, ballPos, occ]);
+
+  const handleArrow = useCallback((dir: 'up' | 'down' | 'left' | 'right') => {
+    if (selectedBlockId === '__ball__') handleBallArrow(dir);
+    else if (selectedBlockId) handleBlockArrow(dir);
+  }, [selectedBlockId, handleBallArrow, handleBlockArrow]);
+
+
+  /* ─────────── FINISH SCREEN ─────────── */
   if (finished) {
     return (
-      <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
-        </div>
-        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
-        <div className="flex items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
-          <div className="text-center animate-fade-in max-w-md w-full px-4">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40"><Trophy className="w-10 h-10 text-sky-500" /></div>
-            <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">Motion Complete!</h1>
-            <p className="text-[15px] text-[#64748B] mb-10 font-medium">Great work, {currentStudent?.username}!</p>
-            <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
-              <div className="flex items-center justify-center gap-10">
-                <div className="text-center">
-                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
-                  <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
-                </div>
-                <div className="w-px h-14 bg-sky-100" />
-                <div className="text-center">
-                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Time</span>
-                  <span className="font-mono font-black text-3xl sm:text-4xl text-[#1E293B]">{formatTime(elapsed)}</span>
+      <div className="flex flex-col bg-[#FDFDFF] font-sans min-h-screen overflow-hidden relative">
+        <NavBar />
+        <div className="relative flex-1 w-full flex flex-col justify-center items-center">
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
+          </div>
+          <div className="relative z-10 w-full flex items-center justify-center px-4 pt-24 pb-10">
+            <div className="text-center animate-fade-in max-w-md w-full">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
+                <Trophy className="w-10 h-10 text-sky-500" />
+              </div>
+              <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">
+                Motion Complete!
+              </h1>
+              <p className="text-[15px] text-[#64748B] mb-10 font-medium">
+                Excellent work, {currentStudent?.username}!
+              </p>
+              <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
+                <div className="flex items-center justify-center gap-10">
+                  <div className="text-center">
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Total Moves</span>
+                    <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">
+                      {totalMoves}
+                    </span>
+                  </div>
+                  <div className="w-px h-14 bg-sky-100" />
+                  <div className="text-center">
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Levels</span>
+                    <span className="font-mono font-black text-3xl sm:text-4xl text-[#1E293B]">
+                      {correctCount}/{TOTAL_LEVELS}
+                    </span>
+                  </div>
+                  <div className="w-px h-14 bg-sky-100" />
+                  <div className="text-center">
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Time</span>
+                    <span className="font-mono font-black text-3xl sm:text-4xl text-[#1E293B]">
+                      {formatTime(elapsed)}
+                    </span>
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={handlePostFinish}
+                className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95"
+              >
+                {getNextGame() ? 'Next Game →' : 'Finish Session'}
+              </button>
             </div>
-            <button onClick={handlePostFinish} className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95">
-              {getNextGame() ? 'Next Game →' : 'Finish Session'}
-            </button>
           </div>
+          <DecorativeCurve opacity={0.08} height="h-[280px] sm:h-[360px]" className="absolute bottom-0 left-0 w-full pointer-events-none" animate={true} />
         </div>
-        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
       </div>
     );
   }
 
-  const progress = (level / TOTAL_LEVELS) * 100;
+  /* ─────────── GAME LAYOUT ─────────── */
+  const progress = ((levelIdx) / TOTAL_LEVELS) * 100;
+  const CELL_SIZE = !level ? 50 : level.gridCols <= 4 ? 60 : level.gridCols <= 5 ? 52 : 44;
+  const GAP = 4;
+
+  // Compute block bounding box for arrow position
+  const selectedBlock = blocks.find(b => b.id === selectedBlockId);
+  const minRow = selectedBlock ? Math.min(...selectedBlock.cells.map(c => c[0])) : 0;
+  const maxRow = selectedBlock ? Math.max(...selectedBlock.cells.map(c => c[0])) : 0;
+  const minCol = selectedBlock ? Math.min(...selectedBlock.cells.map(c => c[1])) : 0;
+  const maxCol = selectedBlock ? Math.max(...selectedBlock.cells.map(c => c[1])) : 0;
+  const midRow = (minRow + maxRow) / 2;
+  const midCol = (minCol + maxCol) / 2;
+
+  // For ball arrows
+  const [ballR, ballC] = ballPos;
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
-      </div>
-      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
-      <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
-        <div className="w-full max-w-[480px] animate-fade-in relative">
+    <div className="flex flex-col bg-[#FDFDFF] font-sans h-screen overflow-hidden relative">
+      <NavBar />
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col items-center overflow-hidden relative pt-14 sm:pt-16">
+        {/* Background */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
+          <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[#38BDF8] opacity-[0.04] blur-[100px] rounded-full" />
+        </div>
+
+        {/* Page heading */}
+        <div className="relative z-10 text-center pt-4 pb-3 px-4">
+          <h1 className="text-[22px] sm:text-[28px] font-black tracking-tight text-[#0F172A] leading-tight">
+            Motion <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9]">Challenge</span>
+          </h1>
+          <p className="text-[12px] sm:text-[13px] text-[#64748B] font-medium mt-1">
+            Place the ball into the black hole in as few moves as possible
+          </p>
+        </div>
+
+        {/* Game Card */}
+        <div className={`relative z-10 bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.18)] border transition-all duration-300 mx-4 flex flex-col
+          ${levelFlash === 'success' ? 'border-emerald-400 shadow-emerald-200/40' : 'border-sky-100'}`}
+          style={{ maxWidth: 420, width: '100%' }}
+        >
+          {/* Flash bar */}
+          {levelFlash && (
+            <div className={`absolute inset-x-0 top-0 h-1.5 rounded-t-[2rem] z-30 animate-pulse bg-emerald-500`} />
+          )}
+
           {/* Header */}
-          <div className="flex items-center justify-between mb-4 px-2 tracking-tight font-bold">
-            <span className="text-[13px] text-[#64748B]">{currentStudent?.username}</span>
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-sky-100 shadow-sm">
-              <Clock className="w-3.5 h-3.5 text-sky-500" />
-              <span className="text-[#0F172A] font-mono text-[14px]">{formatTime(elapsed)}</span>
+          <div className="px-5 pt-4 pb-3 border-b border-sky-50">
+            <div className="flex items-center justify-between mb-3">
+              {/* Level */}
+              <div className="flex flex-col">
+                <span className="text-[9px] text-[#94A3B8] font-black uppercase tracking-widest">Level</span>
+                <span className="text-[#0F172A] text-lg font-black leading-none">{levelIdx + 1}<span className="text-[#CBD5E1] text-sm font-bold">/{TOTAL_LEVELS}</span></span>
+              </div>
+              {/* Total Time */}
+              <div className="flex flex-col items-center">
+                <span className="text-[9px] text-[#94A3B8] font-black uppercase tracking-widest">Total Time</span>
+                <span className="font-mono font-black text-xl leading-none text-[#0F172A]">{formatTime(elapsed)}</span>
+              </div>
+              {/* Moves */}
+              <div className="flex flex-col items-end">
+                <span className="text-[9px] text-[#94A3B8] font-black uppercase tracking-widest">Moves</span>
+                <span className="font-mono font-black text-lg text-[#64748B] leading-none">{moves}</span>
+              </div>
+              {/* Score */}
+              {currentTest?.showResults !== false && (
+                <div className="flex flex-col items-end">
+                  <span className="text-[9px] text-[#94A3B8] font-black uppercase tracking-widest">Score</span>
+                  <span className="font-mono font-black text-lg text-sky-500 leading-none">{score}</span>
+                </div>
+              )}
             </div>
-            <button onClick={() => handleFinish()} className="text-[11px] text-[#94A3B8] hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest">End</button>
+            {/* Progress bar */}
+            <div className="w-full h-1.5 bg-sky-50 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
 
-          <div className={`bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.10)] border border-sky-100 overflow-hidden transition-all ${flash === 'success' && currentTest?.showResults !== false ? 'border-emerald-300' : ''}`}>
-            {/* Stats bar */}
-            <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 border-b border-sky-50">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Level</span>
-                  <span className="text-[#0F172A] text-2xl font-black">{level} / {TOTAL_LEVELS}</span>
-                </div>
-                <div className="flex flex-col gap-1 items-center">
-                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Moves</span>
-                  <span className="font-mono font-black text-2xl text-[#64748B]">{moves}</span>
-                </div>
-                <div className="text-right flex flex-col gap-1">
-                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Score</span>
-                  <span className="font-mono font-black text-2xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
-                </div>
+          {/* Grid area */}
+          <div className="p-4 flex flex-col items-center justify-center min-h-[300px] relative">
+            {isGenerating || !level ? (
+              <div className="flex flex-col items-center justify-center animate-pulse py-10">
+                <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-sm font-bold text-[#64748B]">Preparing Challenge...</p>
+                <p className="text-[10px] text-[#94A3B8] mt-1">Calculating tricky paths</p>
               </div>
-              <div className="w-full h-2 bg-sky-50 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
-              </div>
-            </div>
+            ) : (
+              <div
+                className="relative select-none"
+                style={{
+                  width: level.gridCols * CELL_SIZE + (level.gridCols - 1) * GAP,
+                  height: level.gridRows * CELL_SIZE + (level.gridRows - 1) * GAP,
+                }}
+              >
+                {/* Background cells */}
+                {Array.from({ length: level.gridRows }).map((_, r) =>
+                  Array.from({ length: level.gridCols }).map((_, c) => (
+                    <div
+                      key={`cell-${r}-${c}`}
+                      className="absolute rounded-lg bg-[#F1F5F9] cursor-pointer hover:bg-[#E2E8F0] transition-colors"
+                      style={{
+                        left: c * (CELL_SIZE + GAP),
+                        top: r * (CELL_SIZE + GAP),
+                        width: CELL_SIZE,
+                        height: CELL_SIZE,
+                      }}
+                      onClick={() => handleCellClick(r, c)}
+                    />
+                  ))
+                )}
 
-            {/* Grid */}
-            <div className="p-6 sm:p-10">
-              <div className="grid gap-2 mb-6" style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}>
-                {Array.from({ length: GRID_SIZE }).map((_, rIdx) =>
-                  Array.from({ length: GRID_SIZE }).map((_, cIdx) => {
-                    const isPlayer = playerPos.row === rIdx && playerPos.col === cIdx;
-                    const isTarget = target.row === rIdx && target.col === cIdx;
+                {/* Hole */}
+                <div
+                  className="absolute rounded-full pointer-events-none flex items-center justify-center"
+                  style={{
+                    left: level.holePos[1] * (CELL_SIZE + GAP) + CELL_SIZE * 0.15,
+                    top: level.holePos[0] * (CELL_SIZE + GAP) + CELL_SIZE * 0.15,
+                    width: CELL_SIZE * 0.7,
+                    height: CELL_SIZE * 0.7,
+                    background: 'radial-gradient(circle at 35% 35%, #334155, #0F172A)',
+                    boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3)',
+                  }}
+                />
+
+                {/* Colored Blocks */}
+                {blocks.map(block => {
+                  const bMinRow = Math.min(...block.cells.map(c => c[0]));
+                  const bMaxRow = Math.max(...block.cells.map(c => c[0]));
+                  const bMinCol = Math.min(...block.cells.map(c => c[1]));
+                  const bMaxCol = Math.max(...block.cells.map(c => c[1]));
+                  const blockW = (bMaxCol - bMinCol + 1) * CELL_SIZE + (bMaxCol - bMinCol) * GAP;
+                  const blockH = (bMaxRow - bMinRow + 1) * CELL_SIZE + (bMaxRow - bMinRow) * GAP;
+                  const isSelected = selectedBlockId === block.id;
+
+                  return (
+                    <div
+                      key={block.id}
+                      className={`absolute rounded-xl cursor-pointer transition-all duration-150 flex items-center justify-center
+                      ${isSelected ? 'ring-2 ring-white ring-offset-2 shadow-xl scale-[1.03] z-20' : 'hover:scale-[1.02] z-10'}`}
+                      style={{
+                        left: bMinCol * (CELL_SIZE + GAP),
+                        top: bMinRow * (CELL_SIZE + GAP),
+                        width: blockW,
+                        height: blockH,
+                        backgroundColor: block.color,
+                        boxShadow: isSelected
+                          ? `0 8px 24px ${block.color}66, 0 0 0 3px ${block.color}44`
+                          : `0 4px 12px ${block.color}44`,
+                        opacity: transitioning ? 0.6 : 1,
+                      }}
+                      onClick={() => {
+                        if (!transitioning && !finished) {
+                          setSelectedBlockId(prev => prev === block.id ? null : block.id);
+                        }
+                      }}
+                    >
+                      {/* Inner grid lines for multi-cell blocks */}
+                      {block.cells.length > 1 && (
+                        <div className="absolute inset-0 rounded-xl overflow-hidden opacity-20">
+                          {blockW > blockH
+                            ? Array.from({ length: block.cells.length - 1 }).map((_, i) => (
+                              <div key={i} className="absolute top-0 bottom-0 w-px bg-white"
+                                style={{ left: (i + 1) * (CELL_SIZE + GAP) - GAP / 2 }} />
+                            ))
+                            : Array.from({ length: block.cells.length - 1 }).map((_, i) => (
+                              <div key={i} className="absolute left-0 right-0 h-px bg-white"
+                                style={{ top: (i + 1) * (CELL_SIZE + GAP) - GAP / 2 }} />
+                            ))
+                          }
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Ball */}
+                <div
+                  className={`absolute cursor-pointer z-30 flex items-center justify-center transition-all duration-200
+                  ${selectedBlockId === '__ball__' ? 'scale-110' : 'hover:scale-105'}`}
+                  style={{
+                    left: ballC * (CELL_SIZE + GAP) + CELL_SIZE * 0.1,
+                    top: ballR * (CELL_SIZE + GAP) + CELL_SIZE * 0.1,
+                    width: CELL_SIZE * 0.8,
+                    height: CELL_SIZE * 0.8,
+                  }}
+                  onClick={() => {
+                    if (!transitioning && !finished) {
+                      setSelectedBlockId(prev => prev === '__ball__' ? null : '__ball__');
+                    }
+                  }}
+                >
+                  <div
+                    className="w-full h-full rounded-full border-2 border-white/30"
+                    style={{
+                      background: 'radial-gradient(circle at 35% 30%, #86EFAC, #22C55E)',
+                      boxShadow: selectedBlockId === '__ball__'
+                        ? '0 0 0 3px #4ADE80, 0 4px 12px rgba(34,197,94,0.4)'
+                        : '0 4px 12px rgba(34,197,94,0.35)',
+                    }}
+                  />
+                </div>
+
+                {/* Directional arrows overlay (block or ball selected) */}
+                {selectedBlockId && !transitioning && (() => {
+                  let centerX: number, centerY: number;
+                  if (selectedBlockId === '__ball__') {
+                    centerX = ballC * (CELL_SIZE + GAP) + CELL_SIZE / 2;
+                    centerY = ballR * (CELL_SIZE + GAP) + CELL_SIZE / 2;
+                  } else {
+                    centerX = midCol * (CELL_SIZE + GAP) + CELL_SIZE / 2;
+                    centerY = midRow * (CELL_SIZE + GAP) + CELL_SIZE / 2;
+                  }
+
+                  const SPREAD = CELL_SIZE * 0.95;
+                  const arrowStyle = "absolute w-7 h-7 rounded-full bg-[#1E293B]/85 backdrop-blur-sm text-white flex items-center justify-center hover:bg-[#0F172A] transition-all active:scale-90 z-40 shadow-lg cursor-pointer";
+
+                  const arrowDirections: Array<{ dir: 'up' | 'down' | 'left' | 'right'; dx: number; dy: number; Icon: typeof ChevronUp }> = [
+                    { dir: 'up', dx: 0, dy: -SPREAD, Icon: ChevronUp },
+                    { dir: 'down', dx: 0, dy: SPREAD, Icon: ChevronDown },
+                    { dir: 'left', dx: -SPREAD, dy: 0, Icon: ChevronLeft },
+                    { dir: 'right', dx: SPREAD, dy: 0, Icon: ChevronRight },
+                  ];
+
+                  return arrowDirections.map(({ dir, dx, dy, Icon }) => {
+                    // Determine if arrow is allowed
+                    let allowed = false;
+
+                    if (selectedBlockId === '__ball__') {
+                      allowed = canBallMove(dir, ballPos, occ, level.gridRows, level.gridCols);
+                    } else {
+                      const blk = blocks.find(b => b.id === selectedBlockId);
+                      if (blk) {
+                        allowed = canSlide(blk, dir, occ, level.gridRows, level.gridCols, ballPos, level.holePos);
+                      }
+                    }
+
                     return (
-                      <div key={`${rIdx}-${cIdx}`}
-                        className={`aspect-square rounded-xl border-2 flex items-center justify-center text-lg font-black transition-all duration-200
-                          ${isPlayer ? 'bg-gradient-to-br from-[#38BDF8] to-[#0EA5E9] border-sky-300 shadow-lg shadow-sky-300/30 scale-105' :
-                            isTarget ? 'bg-amber-50 border-amber-200 animate-pulse' :
-                              'bg-white border-sky-50'}`}
+                      <div
+                        key={dir}
+                        className={`${arrowStyle} ${allowed ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}
+                        style={{
+                          left: centerX + dx - 14,
+                          top: centerY + dy - 14,
+                        }}
+                        onClick={(e) => { e.stopPropagation(); if (allowed) handleArrow(dir); }}
                       >
-                        {isPlayer && <div className="w-4 h-4 rounded-full bg-white" />}
-                        {isTarget && !isPlayer && <div className="w-3 h-3 rounded-full bg-amber-400" />}
+                        <Icon className="w-4 h-4" />
                       </div>
                     );
-                  })
-                )}
+                  });
+                })()}
               </div>
+            )}
 
-              {/* Direction buttons */}
-              <div className="flex flex-col items-center gap-2">
-                <button onClick={() => movePlayer('up')} className="w-14 h-14 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-200 flex items-center justify-center transition-all active:scale-90">
-                  <ArrowUp className="w-6 h-6 text-sky-600" />
-                </button>
-                <div className="flex gap-2">
-                  <button onClick={() => movePlayer('left')} className="w-14 h-14 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-200 flex items-center justify-center transition-all active:scale-90">
-                    <ArrowLeft className="w-6 h-6 text-sky-600" />
-                  </button>
-                  <button onClick={() => movePlayer('down')} className="w-14 h-14 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-200 flex items-center justify-center transition-all active:scale-90">
-                    <ArrowDown className="w-6 h-6 text-sky-600" />
-                  </button>
-                  <button onClick={() => movePlayer('right')} className="w-14 h-14 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-200 flex items-center justify-center transition-all active:scale-90">
-                    <ArrowRight className="w-6 h-6 text-sky-600" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom controls */}
-            <div className="px-6 pb-8 flex gap-3">
-              <button onClick={handleRestart} className="flex-1 py-3 bg-sky-50 hover:bg-sky-100 text-[#475569] rounded-2xl font-bold text-[13px] flex items-center justify-center gap-2 transition-all active:scale-95">
-                <RefreshCcw className="w-4 h-4" /> Restart
-              </button>
-              <button onClick={() => setPaused(p => !p)} className="flex-1 py-3 bg-sky-50 hover:bg-sky-100 text-[#475569] rounded-2xl font-bold text-[13px] flex items-center justify-center gap-2 transition-all active:scale-95">
-                <Pause className="w-4 h-4" /> {paused ? 'Resume' : 'Pause'}
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4 text-center">
-            <p className="text-[13px] text-[#64748B] font-bold">Navigate to the <span className="text-amber-500">●</span> target using arrows or keyboard</p>
+            {/* Instruction hint */}
+            <p className="text-[11px] text-[#94A3B8] font-medium text-center pb-1">
+              {selectedBlockId === '__ball__'
+                ? '⚽ Ball selected — use arrows to move'
+                : selectedBlockId
+                  ? '🟦 Block selected — use arrows to slide'
+                  : 'Tap a block or the ball to select it'}
+            </p>
           </div>
         </div>
+
+        {/* 30px spacer at the bottom */}
+        <div className="h-[30px] shrink-0" />
       </div>
-      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
     </div>
   );
 };

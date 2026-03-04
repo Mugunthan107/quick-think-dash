@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import CountdownOverlay from '@/components/CountdownOverlay';
 import DecorativeCurve from '@/components/DecorativeCurve';
 
@@ -206,13 +206,25 @@ const AshuDashboard = () => {
     { id: 'motion', name: 'Motion' },
   ];
 
+  // Track previous pending count so toast only fires on NEW arrivals (not on re-renders)
+  const prevPendingCount = useRef(0);
   useEffect(() => {
-    if (pendingStudents.length > 0) {
-      toast.info(`${pendingStudents.length} new join request(s)`, {
+    if (pendingStudents.length > prevPendingCount.current) {
+      toast.info(`${pendingStudents.length - prevPendingCount.current} new join request(s)`, {
         action: { label: 'View', onClick: () => setShowRequestsModal(true) }
       });
     }
+    prevPendingCount.current = pendingStudents.length;
   }, [pendingStudents.length]);
+
+  // Polling fallback: re-fetch students every 5s so admin sees new joins even if real-time is missed
+  useEffect(() => {
+    if (!currentTest?.pin) return;
+    const poll = setInterval(() => {
+      fetchStudents(currentTest.pin);
+    }, 5000);
+    return () => clearInterval(poll);
+  }, [currentTest?.pin, fetchStudents]);
 
   const handleCreatePin = async () => {
     if (isCreatingPin) return;
@@ -597,7 +609,7 @@ const AshuDashboard = () => {
         </div>
 
         {/* ── Embedded Podium Leaderboard ───────────────── */}
-        {finished.length > 0 && (() => {
+        {getLeaderboard().length > 0 && (() => {
           const lb = getLeaderboard();
           const top3 = lb.slice(0, 3).map(s => ({
             username: s.username,

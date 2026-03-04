@@ -1,20 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Users, Loader2 } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 import CountdownOverlay from '@/components/CountdownOverlay';
+import supabase from '@/utils/supabase';
 
 const Lobby = () => {
     const { currentTest, currentStudent, students } = useGame();
     const navigate = useNavigate();
     const [showCountdown, setShowCountdown] = useState(false);
+    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+    // React to real-time updates from GameContext
     useEffect(() => {
         if (!currentStudent || !currentTest) { navigate('/'); return; }
         if (currentTest.status === 'FINISHED') { navigate('/'); return; }
         if (currentTest.status === 'STARTED' && !showCountdown) setShowCountdown(true);
     }, [currentTest, currentStudent, navigate, showCountdown]);
+
+    // Polling fallback: re-fetch session status every 3s in case real-time push is missed
+    useEffect(() => {
+        if (!currentTest?.pin || showCountdown) return;
+
+        pollRef.current = setInterval(async () => {
+            try {
+                const { data } = await supabase
+                    .from('test_sessions')
+                    .select('status')
+                    .eq('pin', currentTest.pin)
+                    .single();
+
+                if (data?.status === 'STARTED') {
+                    setShowCountdown(true);
+                } else if (data?.status === 'FINISHED') {
+                    navigate('/');
+                }
+            } catch (_) {
+                // silently ignore network errors during polling
+            }
+        }, 3000);
+
+        return () => {
+            if (pollRef.current) clearInterval(pollRef.current);
+        };
+    }, [currentTest?.pin, showCountdown, navigate]);
 
     if (!currentStudent || !currentTest) return null;
 
