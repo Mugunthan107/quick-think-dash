@@ -53,17 +53,47 @@ const GameSelector = () => {
     .filter(g => numGames > 1 ? !playedGameIds.includes(g.id) : true);
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
+    <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-y-auto overflow-x-hidden">
+
+      {/* Top-right badge: Test PIN + Progress */}
+      <div className="fixed top-4 right-4 z-50 animate-fade-in">
+        <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xl border border-sky-100 rounded-full px-4 py-2 shadow-[0_4px_20px_rgba(56,189,248,0.12)]">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#94A3B8]">PIN</span>
+            <span className="font-mono font-bold text-sky-500 text-[13px] tracking-wider">{currentTest.pin}</span>
+          </div>
+          <span className="w-px h-4 bg-sky-100" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#94A3B8]">Progress</span>
+            <span className="font-bold text-[#0F172A] text-[13px]">{completedGames.length}/{numGames}</span>
+          </div>
+        </div>
+      </div>
+
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
         <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.04] blur-[120px] rounded-full" />
       </div>
 
-      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[80px] sm:-top-[120px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-4" animate={true} />
-      <DecorativeCurve opacity={0.06} height="h-[350px] sm:h-[480px]" className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]" animate={true} />
+      {/* Decorative Waves Wrapper - Fixed to viewport */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Top Decorative Wave - Tertiary (Deepest) */}
+        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[80px] sm:-top-[120px] left-[-10%] w-[120%] rotate-180 scale-x-[1.1] translate-x-4 mix-blend-multiply" animate={true} />
+        {/* Top Decorative Wave - Secondary */}
+        <DecorativeCurve opacity={0.06} height="h-[350px] sm:h-[480px]" className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] rotate-180 scale-x-[1.05]" animate={true} />
+        {/* Top Decorative Wave - Primary */}
+        <DecorativeCurve opacity={0.12} height="h-[250px] sm:h-[360px]" className="absolute top-0 left-0 rotate-180 transition-all duration-700" animate={true} />
 
-      <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-10 sm:-mt-12">
-        <div className="relative w-full max-w-[480px] space-y-6">
+        {/* Bottom Decorative Wave - Tertiary */}
+        <DecorativeCurve opacity={0.05} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[80px] sm:-bottom-[120px] left-[-10%] w-[120%] scale-x-[1.1] -translate-x-4 mix-blend-multiply" animate={true} />
+        {/* Bottom Decorative Wave - Secondary */}
+        <DecorativeCurve opacity={0.07} height="h-[350px] sm:h-[480px]" className="absolute -bottom-[50px] sm:-bottom-[80px] left-[-5%] w-[110%] scale-x-[1.05]" animate={true} />
+        {/* Bottom Decorative Wave - Primary */}
+        <DecorativeCurve opacity={0.12} height="h-[250px] sm:h-[360px]" className="absolute bottom-0 left-0 transition-all duration-700" animate={true} />
+      </div>
+
+      <div className="flex flex-col items-center justify-start p-4 pt-12 sm:pt-16 pb-4 relative z-10 w-full min-h-full">
+        <div className="relative w-full max-w-[480px] space-y-6 flex flex-col items-center">
           <div className="animate-fade-in-up px-2 text-center">
             <div className="flex flex-col items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-2xl bg-sky-100 flex items-center justify-center shrink-0">
@@ -119,23 +149,11 @@ const GameSelector = () => {
             )}
           </div>
 
-          <div className="mt-8 bg-white/80 backdrop-blur-xl border border-sky-100 rounded-[18px] p-4 sm:p-5 animate-fade-in mx-2 shadow-sm">
-            <div className="flex items-center justify-between text-[13px] text-[#64748B] font-bold">
-              <span className="flex items-center gap-2">
-                <span className="text-[#94A3B8] font-medium uppercase tracking-widest text-[11px]">Test PIN</span>
-                <span className="font-mono font-bold text-sky-500 tracking-wider">{currentTest.pin}</span>
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="text-[#94A3B8] font-medium uppercase tracking-widest text-[11px]">Progress</span>
-                <span className="text-[#0F172A]">{completedGames.length} / {numGames}</span>
-              </span>
-            </div>
-          </div>
+          {/* 140px spacer so the page scrolls past the last card */}
+          <div style={{ height: '140px', flexShrink: 0 }} />
         </div>
       </div>
 
-      <DecorativeCurve opacity={0.05} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[80px] sm:-bottom-[120px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-4" animate={true} />
-      <DecorativeCurve opacity={0.12} height="h-[250px] sm:h-[360px]" className="absolute bottom-0 left-0 z-0 pointer-events-none" animate={true} />
     </div>
   );
 };

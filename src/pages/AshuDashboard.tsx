@@ -385,19 +385,70 @@ const AshuDashboard = () => {
             <h2 className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-widest">Test Session</h2>
             <div className="flex items-center gap-4">
               {/* Notification Bell next to Session Picker */}
-              <div className="relative">
+              {/* Notification Bell with Contextual Popover */}
+              <div className="relative group/bell">
                 <Button
                   variant="ghost" size="icon"
-                  onClick={() => setShowRequestsModal(true)}
-                  className={`rounded-full hover:bg-[#F1F5F9] relative ${pendingStudents.length > 0 ? 'text-[#3B82F6]' : 'text-[#94A3B8]'}`}
+                  onClick={() => setShowRequestsModal(!showRequestsModal)}
+                  className={`rounded-full hover:bg-[#F1F5F9] relative transition-all duration-300 ${pendingStudents.length > 0 ? 'text-[#3B82F6]' : 'text-[#94A3B8]'}`}
                 >
                   <Bell className="w-5 h-5" />
                   {pendingStudents.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#EF4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#EF4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse shadow-sm">
                       {pendingStudents.length}
                     </span>
                   )}
                 </Button>
+
+                {/* Contextual Join Requests Popover */}
+                {showRequestsModal && (
+                  <>
+                    {/* Backdrop blur overlay to focus on the card */}
+                    <div className="fixed inset-0 z-[60] backdrop-blur-[2px] bg-black/5 transition-all duration-300" onClick={() => setShowRequestsModal(false)} />
+
+                    <div className="absolute top-12 right-0 w-[320px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-border animate-in slide-in-from-top-2 duration-300 z-[70] overflow-hidden">
+                      <div className="p-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Bell className="w-4 h-4 text-accent" />
+                          <h2 className="text-sm font-bold text-foreground">Join Requests</h2>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{pendingStudents.length} Pending</span>
+                          <Button variant="ghost" size="icon" onClick={() => setShowRequestsModal(false)} className="w-6 h-6 rounded-full hover:bg-slate-200/60 text-muted-foreground transition-colors ml-1">
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="p-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        {pendingStudents.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground text-xs font-medium italic">No pending requests.</div>
+                        ) : (
+                          <div className="space-y-2">
+                            {pendingStudents.map(student => (
+                              <div key={student.username} className="flex items-center justify-between p-3 bg-white hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <User className="w-4 h-4 text-slate-500" />
+                                  </div>
+                                  <span className="font-bold text-sm text-foreground truncate max-w-[120px]">{student.username}</span>
+                                </div>
+                                <div className="flex gap-1.5">
+                                  <Button size="icon" variant="ghost" className="text-destructive hover:bg-destructive/10 rounded-lg w-8 h-8" onClick={() => rejectStudent(student.username)}><X className="w-4 h-4" /></Button>
+                                  <Button size="icon" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg w-8 h-8 shadow-sm shadow-emerald-200" onClick={() => approveStudent(student.username)}><Check className="w-4 h-4" /></Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {pendingStudents.length > 0 && (
+                        <div className="p-2 border-t border-border bg-slate-50/30">
+                          <p className="text-[10px] text-center text-muted-foreground font-medium">Click outside to close</p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               {sessions.length > 0 ? (
@@ -692,39 +743,7 @@ const AshuDashboard = () => {
           );
         })()}
 
-        {/* Join Requests Modal */}
-        {showRequestsModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-border flex flex-col animate-in zoom-in-95 duration-200">
-              <div className="p-4 border-b border-border flex items-center justify-between">
-                <h2 className="text-lg font-bold flex items-center gap-2 text-foreground"><Bell className="w-5 h-5 text-accent" />Join Requests</h2>
-                <Button variant="ghost" size="icon" onClick={() => setShowRequestsModal(false)} className="rounded-full hover:bg-secondary"><X className="w-5 h-5" /></Button>
-              </div>
-              <div className="p-4 max-h-[60vh] overflow-y-auto">
-                {pendingStudents.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground font-medium">No pending requests.</div>
-                ) : (
-                  <div className="space-y-3">
-                    {pendingStudents.map(student => (
-                      <div key={student.username} className="flex items-center justify-between p-3 bg-secondary rounded-xl border border-border">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center">
-                            <Users className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                          <span className="font-semibold text-foreground">{student.username}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="icon" variant="ghost" className="text-destructive hover:bg-destructive/10 rounded-full w-8 h-8" onClick={() => rejectStudent(student.username)}><X className="w-5 h-5" /></Button>
-                          <Button size="icon" className="bg-green-600 hover:bg-green-700 text-white rounded-full w-8 h-8" onClick={() => approveStudent(student.username)}><Check className="w-4 h-4" /></Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Create PIN Dialog */}
         {showCreatePinDialog && (

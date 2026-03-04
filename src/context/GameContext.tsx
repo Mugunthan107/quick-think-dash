@@ -212,7 +212,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
               isActive: data.is_active,
               status: data.status || 'WAITING',
               numGames: data.num_games || 1,
-              selectedGames: data.selected_games || AVAILABLE_GAMES,
+              selectedGames: data.selected_games || (prev?.selectedGames || ['bubble']),
               showResults: data.show_results ?? true,
             } : null);
           }
@@ -501,7 +501,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           isActive: testData.is_active,
           status: testData.status as any || 'WAITING',
           numGames: testData.num_games || 1,
-          selectedGames: testData.selected_games || AVAILABLE_GAMES,
+          selectedGames: testData.selected_games || ['bubble'],
           showResults: testData.show_results ?? true
         });
         setCurrentStudent(student);
@@ -558,7 +558,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         isActive: testData.is_active,
         status: (testData.status as any) || 'WAITING',
         numGames: testData.num_games || 1,
-        selectedGames: testData.selected_games || AVAILABLE_GAMES,
+        selectedGames: testData.selected_games || ['bubble'],
         showResults: testData.show_results ?? true
       });
       setCurrentStudent(newStudent);

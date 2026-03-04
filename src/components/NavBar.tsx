@@ -30,8 +30,8 @@ const NavBar = () => {
 
     return (
         <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col ${inTest || isCrossMath ? 'h-12 sm:h-14' : 'h-14 sm:h-16'}`}>
-            <div className={`h-full flex items-center ${isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || path === '/game' || isCrossMath || isAdmin ? 'bg-[#E0F2FE]/60 backdrop-blur-md shadow-none border-b-0' : 'bg-white/95 backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm'} relative z-10`}>
-                {!(isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || path === '/game' || isAdmin) && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />}
+            <div className={`h-full flex items-center ${isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || path === '/game' || isCrossMath || path === '/numlink' || isAdmin ? 'bg-[#E0F2FE]/80 backdrop-blur-md shadow-none border-b-0' : 'bg-white/95 backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm'} relative z-10`}>
+                {!(isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || path === '/game' || path === '/numlink' || isAdmin) && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />}
                 <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-10 flex items-center justify-between gap-4">
 
                     {/* Left — Logo */}
