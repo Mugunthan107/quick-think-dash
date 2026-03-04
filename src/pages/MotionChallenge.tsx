@@ -136,6 +136,9 @@ function generateSolvableLevel(idx: number): LevelDef {
   const cols = idx < 4 ? 5 : 6;
   const colors = ['#EAB308', '#3B82F6', '#22C55E', '#A855F7', '#EF4444', '#38BDF8', '#F97316', '#14B8A6', '#EC4899', '#6366F1'];
 
+  let bestLevel: LevelDef | null = null;
+  let bestDist = -1;
+
   for (let attempt = 0; attempt < 100; attempt++) {
     const holePos: [number, number] = Math.random() > 0.5
       ? [Math.floor(Math.random() * rows), Math.random() > 0.5 ? 0 : cols - 1]
@@ -174,11 +177,32 @@ function generateSolvableLevel(idx: number): LevelDef {
 
     const level: LevelDef = { gridRows: rows, gridCols: cols, ballPos, holePos, blocks };
     const dist = isSolvable(level);
-    // Significantly increased difficulty targets (8 moves minimum starting point)
-    const minD = 8 + Math.floor(idx * 1.5);
-    if (dist !== null && dist >= minD && !canBallReachWithoutBlockMoves(level)) return level;
+
+    if (dist !== null) {
+      if (dist > bestDist && !canBallReachWithoutBlockMoves(level)) {
+        bestDist = dist;
+        bestLevel = level;
+      }
+
+      // Significantly increased difficulty targets (8 moves minimum starting point)
+      const minD = 8 + Math.floor(idx * 1.5);
+      if (dist >= minD && !canBallReachWithoutBlockMoves(level)) return level;
+    }
   }
-  return { gridRows: rows, gridCols: cols, ballPos: [0, 0], holePos: [rows - 1, cols - 1], blocks: [] };
+
+  // Try to return the best level we found, even if it didn't strictly meet the target distance
+  if (bestLevel) return bestLevel;
+
+  // Final fallback (should rarely drop here, but guarantees blocks)
+  return {
+    gridRows: rows, gridCols: cols,
+    ballPos: [0, 0],
+    holePos: [rows - 1, cols - 1],
+    blocks: [
+      { id: 'b0', color: colors[0], cells: [[1, 1], [1, 2]] },
+      { id: 'b1', color: colors[1], cells: [[3, 2], [3, 3]] }
+    ]
+  };
 }
 
 
@@ -415,35 +439,43 @@ const MotionChallenge = () => {
             <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
           </div>
           <div className="relative z-10 w-full flex items-center justify-center px-4 pt-24 pb-10">
-            <div className="text-center animate-fade-in max-w-md w-full">
+            <div className="text-center animate-fade-in max-w-2xl w-full">
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
                 <Trophy className="w-10 h-10 text-sky-500" />
               </div>
-              <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">
+              <h1 className="text-[32px] sm:text-[42px] font-black text-black tracking-tight leading-none mb-3">
                 Motion Complete!
               </h1>
               <p className="text-[15px] text-[#64748B] mb-10 font-medium">
                 Excellent work, {currentStudent?.username}!
               </p>
-              <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
-                <div className="flex items-center justify-center gap-10">
-                  <div className="text-center">
-                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Total Moves</span>
-                    <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">
-                      {totalMoves}
-                    </span>
-                  </div>
-                  <div className="w-px h-14 bg-sky-100" />
-                  <div className="text-center">
+              <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-6 sm:p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
+                <div className={`grid ${currentTest?.showResults ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2'} gap-8 items-center divide-x divide-sky-100`}>
+                  {currentTest?.showResults && (
+                    <div className="text-center px-4">
+                      <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Total Moves</span>
+                      <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-sky-500">
+                        {totalMoves}
+                      </span>
+                    </div>
+                  )}
+                  <div className={`text-center px-4 ${currentTest?.showResults ? '' : ''}`}>
                     <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Levels</span>
-                    <span className="font-mono font-black text-3xl sm:text-4xl text-[#1E293B]">
+                    <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-black">
                       {correctCount}/{TOTAL_LEVELS}
                     </span>
                   </div>
-                  <div className="w-px h-14 bg-sky-100" />
-                  <div className="text-center">
+                  {currentTest?.showResults && (
+                    <div className="text-center px-4">
+                      <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
+                      <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-emerald-500">
+                        {score}
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-center px-4">
                     <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Time</span>
-                    <span className="font-mono font-black text-3xl sm:text-4xl text-[#1E293B]">
+                    <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl text-black">
                       {formatTime(elapsed)}
                     </span>
                   </div>
@@ -485,7 +517,7 @@ const MotionChallenge = () => {
       <NavBar />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center overflow-hidden relative pt-14 sm:pt-16">
+      <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative pt-6 sm:pt-10">
         {/* Background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
@@ -493,13 +525,27 @@ const MotionChallenge = () => {
         </div>
 
         {/* Page heading */}
-        <div className="relative z-10 text-center pt-4 pb-3 px-4">
-          <h1 className="text-[22px] sm:text-[28px] font-black tracking-tight text-[#0F172A] leading-tight">
-            Motion <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9]">Challenge</span>
+        <div className="relative z-10 text-center pb-6 px-4">
+          <h1 className="text-[28px] sm:text-[42px] font-black tracking-tighter text-black leading-tight">
+            Motion Challenge
           </h1>
           <p className="text-[12px] sm:text-[13px] text-[#64748B] font-medium mt-1">
             Place the ball into the black hole in as few moves as possible
           </p>
+        </div>
+
+        {/* End Test Hyperlink */}
+        <div className="relative z-10 w-full flex justify-end mb-4 px-4" style={{ maxWidth: 420 }}>
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to end the test?')) {
+                setFinished(true);
+              }
+            }}
+            className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"
+          >
+            End Test
+          </button>
         </div>
 
         {/* Game Card */}
@@ -512,30 +558,30 @@ const MotionChallenge = () => {
             <div className={`absolute inset-x-0 top-0 h-1.5 rounded-t-[2rem] z-30 animate-pulse bg-emerald-500`} />
           )}
 
-          {/* Header */}
-          <div className="px-5 pt-4 pb-3 border-b border-sky-50">
-            <div className="flex items-center justify-between mb-3">
-              {/* Level */}
-              <div className="flex flex-col">
-                <span className="text-[9px] text-[#94A3B8] font-black uppercase tracking-widest">Level</span>
-                <span className="text-[#0F172A] text-lg font-black leading-none">{levelIdx + 1}<span className="text-[#CBD5E1] text-sm font-bold">/{TOTAL_LEVELS}</span></span>
+          <div className="bg-white border-b border-sky-100/50 p-6 sm:p-8">
+            <div className={`grid ${currentTest?.showResults ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'} items-center gap-6 mb-6`}>
+              <div className="flex flex-col gap-1.5 text-center">
+                <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest">Level</span>
+                <span className="text-black text-2xl font-black">{levelIdx + 1}<span className="text-[#94A3B8] text-lg font-bold">/{TOTAL_LEVELS}</span></span>
               </div>
-              {/* Total Time */}
-              <div className="flex flex-col items-center">
-                <span className="text-[9px] text-[#94A3B8] font-black uppercase tracking-widest">Total Time</span>
-                <span className="font-mono font-black text-xl leading-none text-[#0F172A]">{formatTime(elapsed)}</span>
+
+              <div className="flex flex-col gap-1.5 text-center">
+                <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest">Total Time</span>
+                <span className="font-mono font-black text-2xl text-black">{formatTime(elapsed)}</span>
               </div>
-              {/* Moves */}
-              <div className="flex flex-col items-end">
-                <span className="text-[9px] text-[#94A3B8] font-black uppercase tracking-widest">Moves</span>
-                <span className="font-mono font-black text-lg text-[#64748B] leading-none">{moves}</span>
-              </div>
-              {/* Score */}
-              {currentTest?.showResults !== false && (
-                <div className="flex flex-col items-end">
-                  <span className="text-[9px] text-[#94A3B8] font-black uppercase tracking-widest">Score</span>
-                  <span className="font-mono font-black text-lg text-sky-500 leading-none">{score}</span>
-                </div>
+
+              {currentTest?.showResults && (
+                <>
+                  <div className="flex flex-col gap-1.5 text-center">
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest">Moves</span>
+                    <span className="font-mono font-black text-2xl text-black">{moves}</span>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 text-center">
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest">Score</span>
+                    <span className="font-mono font-black text-2xl text-sky-500">{score}</span>
+                  </div>
+                </>
               )}
             </div>
             {/* Progress bar */}
@@ -723,14 +769,6 @@ const MotionChallenge = () => {
               </div>
             )}
 
-            {/* Instruction hint */}
-            <p className="text-[11px] text-[#94A3B8] font-medium text-center pb-1">
-              {selectedBlockId === '__ball__'
-                ? '⚽ Ball selected — use arrows to move'
-                : selectedBlockId
-                  ? '🟦 Block selected — use arrows to slide'
-                  : 'Tap a block or the ball to select it'}
-            </p>
           </div>
         </div>
 

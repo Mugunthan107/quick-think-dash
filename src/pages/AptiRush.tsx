@@ -182,7 +182,7 @@ const AptiRush = () => {
         <div className="flex items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
           <div className="text-center animate-fade-in max-w-md w-full px-4">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40"><Trophy className="w-10 h-10 text-sky-500" /></div>
-            <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">AptiRush Complete!</h1>
+            <h1 className="text-[32px] sm:text-[42px] font-black text-black tracking-tight leading-none mb-3">AptiRush Complete!</h1>
             <p className="text-[15px] text-[#64748B] mb-10 font-medium">Outstanding, {currentStudent?.username}!</p>
             <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
               <div className="flex items-center justify-center gap-6">
@@ -237,8 +237,15 @@ const AptiRush = () => {
                 {timeLeft}
               </span>
             </div>
-            <button onClick={() => handleFinish()} className="text-[11px] text-[#94A3B8] hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest flex items-center gap-1">
-              <LogOut className="w-3 h-3" /> Exit
+            <button 
+              onClick={() => {
+                if (window.confirm('Are you sure you want to end the test?')) {
+                  handleFinish();
+                }
+              }} 
+              className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest flex items-center gap-1"
+            >
+              <LogOut className="w-3 h-3" /> End Test
             </button>
           </div>
 
@@ -248,7 +255,7 @@ const AptiRush = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex flex-col gap-1">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Level</span>
-                  <span className="text-[#0F172A] text-2xl font-black">{currentQ + 1} / {TOTAL_LEVELS}</span>
+                  <span className="text-black text-2xl font-black">{currentQ + 1} / {TOTAL_LEVELS}</span>
                 </div>
                 <div className="text-right flex flex-col gap-1">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Score</span>

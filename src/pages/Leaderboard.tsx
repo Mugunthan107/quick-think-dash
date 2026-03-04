@@ -5,7 +5,7 @@ import { ArrowLeft, Trophy, Medal, Clock, ChevronLeft } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 
 const Leaderboard = () => {
-  const { getLeaderboard, currentStudent, adminLoggedIn } = useGame();
+  const { getLeaderboard, currentStudent, adminLoggedIn, currentTest } = useGame();
   const navigate = useNavigate();
 
   useEffect(() => { if (!adminLoggedIn) navigate('/'); }, [adminLoggedIn, navigate]);
@@ -103,22 +103,33 @@ const Leaderboard = () => {
                       </div>
                     </div>
                     {/* Game scores */}
-                    {[bubble, crossmath, numlink, aptirush, motion].map((gd, gi) => (
-                      <div key={gi} className="text-center group-hover:scale-110 transition-transform">
-                        {gd ? (
-                          <div className="flex flex-col">
-                            <span className="font-mono font-black text-[13px] text-[#0F172A] leading-none mb-1">
-                              {gd.score}
-                            </span>
-                            <span className="text-[9px] text-emerald-500 font-black">{gd.correct}/{gd.total}</span>
-                          </div>
-                        ) : <span className="text-[#CBD5E1] text-[13px] font-black">—</span>}
-                      </div>
-                    ))}
+                    {[bubble, crossmath, numlink, aptirush, motion].map((gd, gi) => {
+                      const isMotion = gi === 4;
+                      return (
+                        <div key={gi} className="text-center group-hover:scale-110 transition-transform">
+                          {gd ? (
+                            isMotion && currentTest?.showResults === false ? (
+                              <span className="text-[#CBD5E1] text-[13px] font-black">—</span>
+                            ) : (
+                              <div className="flex flex-col">
+                                <span className="font-mono font-black text-[13px] text-[#0F172A] leading-none mb-1">
+                                  {gd.score}
+                                </span>
+                                <span className="text-[9px] text-emerald-500 font-black">{gd.correct}/{gd.total}</span>
+                              </div>
+                            )
+                          ) : <span className="text-[#CBD5E1] text-[13px] font-black">—</span>}
+                        </div>
+                      );
+                    })}
                     {/* Total */}
                     <div className="text-right">
-                      <span className="font-mono font-black text-[20px] text-[#2563EB] tabular-nums"
-                        style={{ textShadow: '0 0 20px rgba(37,99,235,0.1)' }}>{s.score}</span>
+                      {currentTest?.showResults === false && currentTest?.selectedGames && currentTest.selectedGames.length === 1 && currentTest.selectedGames[0] === 'motion' ? (
+                        <span className="font-mono font-black text-[20px] text-[#CBD5E1] tabular-nums">—</span>
+                      ) : (
+                        <span className="font-mono font-black text-[20px] text-[#2563EB] tabular-nums"
+                          style={{ textShadow: '0 0 20px rgba(37,99,235,0.1)' }}>{s.score}</span>
+                      )}
                     </div>
                     {/* Time */}
                     <div className="text-right flex flex-col items-end">

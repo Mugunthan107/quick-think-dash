@@ -349,10 +349,10 @@ const AshuDashboard = () => {
   const buildPodiumEntry = (s: any) => {
     if (leaderboardTab === 'overall') {
       const totalTime = s.gameHistory?.reduce((acc: number, g: any) => acc + g.timeTaken, 0) || 0;
-      return { username: s.username, score: s.score, correctAnswers: s.correctAnswers || 0, totalQuestions: s.totalQuestions || 30, timeTaken: totalTime };
+      return { username: s.username, score: s.score, correctAnswers: s.correctAnswers || 0, totalQuestions: s.totalQuestions || (s.gameHistory?.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0) || 0), timeTaken: totalTime };
     }
     const h = s.gameHistory?.find((g: any) => g.gameId === leaderboardTab);
-    return { username: s.username, score: h?.score || 0, correctAnswers: h?.correctAnswers || 0, totalQuestions: h?.totalQuestions || 30, timeTaken: h?.timeTaken || 0 };
+    return { username: s.username, score: h?.score || 0, correctAnswers: h?.correctAnswers || 0, totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : 20), timeTaken: h?.timeTaken || 0 };
   };
 
   return (
@@ -611,13 +611,16 @@ const AshuDashboard = () => {
         {/* ── Embedded Podium Leaderboard ───────────────── */}
         {getLeaderboard().length > 0 && (() => {
           const lb = getLeaderboard();
-          const top3 = lb.slice(0, 3).map(s => ({
-            username: s.username,
-            score: s.score,
-            correctAnswers: s.correctAnswers || 0,
-            totalQuestions: s.totalQuestions || 30,
-            timeTaken: s.gameHistory?.reduce((a: number, g: any) => a + g.timeTaken, 0) || 0,
-          }));
+          const top3 = lb.slice(0, 3).map(s => {
+            const isMotionOnly = currentTest?.selectedGames?.length === 1 && currentTest.selectedGames[0] === 'motion';
+            return {
+              username: s.username,
+              score: s.score,
+              correctAnswers: s.correctAnswers || 0,
+              totalQuestions: s.totalQuestions || (s.gameHistory?.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0) || (isMotionOnly ? 10 : 30)),
+              timeTaken: s.gameHistory?.reduce((a: number, g: any) => a + g.timeTaken, 0) || 0,
+            };
+          });
           const rest = lb.slice(3);
 
           return (

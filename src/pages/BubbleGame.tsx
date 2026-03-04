@@ -312,6 +312,20 @@ function BubbleGame() {
               </p>
             </div>
 
+            {/* End Test Hyperlink */}
+            <div className="w-full flex justify-end mb-4 px-2">
+              <button
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to end the test?')) {
+                    handleFinish();
+                  }
+                }}
+                className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"
+              >
+                End Test
+              </button>
+            </div>
+
             <div className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border border-sky-100 transition-all duration-300 overflow-hidden relative min-h-[350px] flex flex-col">
               {feedback && currentTest?.showResults !== false && (
                 <div
@@ -435,7 +449,7 @@ function BubbleGame() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

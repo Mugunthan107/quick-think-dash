@@ -632,6 +632,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       .update({
         score: totalScore,
         correct_answers: totalCorrect,
+        total_questions: totalQuestions,
         game_history: newHistory
       })
       .eq('test_pin', currentStudent.testPin)

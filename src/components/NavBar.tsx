@@ -4,7 +4,7 @@ import { useGame } from '@/context/GameContext';
 import { ShieldCheck, Users, Activity, Trophy, Zap, BookOpen, Shield, X, Info, FileText, LogOut } from 'lucide-react';
 import DecorativeCurve from './DecorativeCurve';
 
-const IN_TEST_ROUTES = ['/game', '/crossmath', '/numlink', '/select-game', '/lobby', '/waiting-approval'];
+const IN_TEST_ROUTES = ['/game', '/crossmath', '/numlink', '/motion-challenge', '/aptirush', '/select-game', '/lobby', '/waiting-approval'];
 const HIDE_CTA_ROUTES = ['/student', '/leaderboard'];
 
 const NavBar = () => {
@@ -18,6 +18,7 @@ const NavBar = () => {
     const hideCta = HIDE_CTA_ROUTES.includes(path);
     const isAdmin = path === '/ashu';
     const isCrossMath = path === '/crossmath';
+    const isMotionOrApti = path === '/motion-challenge' || path === '/aptirush';
 
     const isHome = path === '/';
 
@@ -30,8 +31,8 @@ const NavBar = () => {
 
     return (
         <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col ${inTest || isCrossMath ? 'h-12 sm:h-14' : 'h-14 sm:h-16'}`}>
-            <div className={`h-full flex items-center ${isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || path === '/game' || isCrossMath || path === '/numlink' || isAdmin ? 'bg-[#E0F2FE]/80 backdrop-blur-md shadow-none border-b-0' : 'bg-white/95 backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm'} relative z-10`}>
-                {!(isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || path === '/game' || path === '/numlink' || isAdmin) && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />}
+            <div className={`h-full flex items-center ${isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || path === '/game' || isCrossMath || path === '/numlink' || isMotionOrApti || isAdmin ? 'bg-[#E0F2FE]/80 backdrop-blur-md shadow-none border-b-0' : 'bg-white/95 backdrop-blur-md border-b border-[#E6E1FF]/40 shadow-sm'} relative z-10`}>
+                {!(isHome || path === '/about' || path === '/student' || path === '/lobby' || path === '/select-game' || path === '/game' || path === '/numlink' || isMotionOrApti || isAdmin) && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/5 to-transparent" />}
                 <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-10 flex items-center justify-between gap-4">
 
                     {/* Left — Logo */}
@@ -49,49 +50,51 @@ const NavBar = () => {
                     </button>
 
                     {/* Right */}
-                    <div className="flex items-center gap-6">
-                        {!hideCta && !inTest && !isCrossMath && !isAdmin && (
-                            <button
-                                onClick={() => navigate(path === '/about' ? '/' : '/about')}
-                                className="hidden sm:block text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-colors"
-                            >
-                                {path === '/about' ? 'Home' : 'About'}
-                            </button>
-                        )}
-
-                        {isAdmin && adminLoggedIn ? (
-                            <button
-                                onClick={() => { adminLogout(); navigate('/'); }}
-                                className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all bg-transparent p-0 flex items-center gap-1.5 no-underline"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span>Logout</span>
-                            </button>
-                        ) : isAdmin ? null : inTest && currentStudent ? (
-                            <button
-                                onClick={() => navigate('/')}
-                                className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all bg-transparent p-0 no-underline"
-                            >
-                                Exit Test
-                            </button>
-                        ) : isCrossMath && currentStudent ? (
-                            <button
-                                onClick={() => navigate('/')}
-                                className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all bg-transparent p-0 no-underline"
-                            >
-                                Exit Test
-                            </button>
-                        ) : (
-                            !hideCta && !isCrossMath && (
+                    {!isMotionOrApti && (
+                        <div className="flex items-center gap-6">
+                            {!hideCta && !inTest && !isCrossMath && !isAdmin && (
                                 <button
-                                    onClick={() => setShowInstructions(true)}
-                                    className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all"
+                                    onClick={() => navigate(path === '/about' ? '/' : '/about')}
+                                    className="hidden sm:block text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-colors"
                                 >
-                                    Instructions
+                                    {path === '/about' ? 'Home' : 'About'}
                                 </button>
-                            )
-                        )}
-                    </div>
+                            )}
+
+                            {isAdmin && adminLoggedIn ? (
+                                <button
+                                    onClick={() => { adminLogout(); navigate('/'); }}
+                                    className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all bg-transparent p-0 flex items-center gap-1.5 no-underline"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Logout</span>
+                                </button>
+                            ) : isAdmin ? null : inTest && currentStudent ? (
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all bg-transparent p-0 no-underline"
+                                >
+                                    Exit Test
+                                </button>
+                            ) : isCrossMath && currentStudent ? (
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all bg-transparent p-0 no-underline"
+                                >
+                                    Exit Test
+                                </button>
+                            ) : (
+                                !hideCta && !isCrossMath && (
+                                    <button
+                                        onClick={() => setShowInstructions(true)}
+                                        className="text-[14px] font-bold text-[#0F172A] hover:text-[#2563EB] transition-all"
+                                    >
+                                        Instructions
+                                    </button>
+                                )
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
