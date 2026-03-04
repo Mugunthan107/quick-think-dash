@@ -70,8 +70,10 @@ const MotionChallenge = () => {
       const points = Math.max(4, 10 - Math.floor(moves / 3));
       setScore(p => p + points);
       setCorrectCount(p => p + 1);
-      setFlash('success');
-      setTimeout(() => setFlash(null), 400);
+      if (currentTest?.showResults !== false) {
+        setFlash('success');
+        setTimeout(() => setFlash(null), 400);
+      }
 
       if (level >= TOTAL_LEVELS) {
         handleFinish();
@@ -136,7 +138,7 @@ const MotionChallenge = () => {
               <div className="flex items-center justify-center gap-10">
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
-                  <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{score}</span>
+                  <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
                 </div>
                 <div className="w-px h-14 bg-sky-100" />
                 <div className="text-center">
@@ -176,7 +178,7 @@ const MotionChallenge = () => {
             <button onClick={() => handleFinish()} className="text-[11px] text-[#94A3B8] hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest">End</button>
           </div>
 
-          <div className={`bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.10)] border border-sky-100 overflow-hidden transition-all ${flash === 'success' ? 'border-emerald-300' : ''}`}>
+          <div className={`bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.10)] border border-sky-100 overflow-hidden transition-all ${flash === 'success' && currentTest?.showResults !== false ? 'border-emerald-300' : ''}`}>
             {/* Stats bar */}
             <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 border-b border-sky-50">
               <div className="flex items-center justify-between mb-4">
@@ -190,7 +192,7 @@ const MotionChallenge = () => {
                 </div>
                 <div className="text-right flex flex-col gap-1">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Score</span>
-                  <span className="font-mono font-black text-2xl text-sky-500">{score}</span>
+                  <span className="font-mono font-black text-2xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
                 </div>
               </div>
               <div className="w-full h-2 bg-sky-50 rounded-full overflow-hidden">

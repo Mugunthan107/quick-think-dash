@@ -60,7 +60,7 @@ const AshuLogin = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => { setPassword(e.target.value); setError(''); }}
-                    placeholder="Password"
+                    placeholder="Enter Password"
                     className="bg-white border-2 border-[#2563EB] text-[#0F172A] placeholder:text-[#94A3B8]/40 h-16 rounded-2xl pr-12 text-center text-[16px] font-mono tracking-widest shadow-sm transition-all focus-visible:ring-2 focus-visible:ring-[#2563EB]/20"
                     autoFocus
                   />

@@ -98,12 +98,11 @@ const StudentEntry = () => {
                 <form onSubmit={handlePinSubmit} className="space-y-4 sm:space-y-5" key="pin">
                   <div className="space-y-6">
                     <div>
-                      <label className="text-[12px] font-bold text-[#94A3B8] mb-3 block uppercase tracking-widest">Test PIN</label>
                       <div className="relative">
                         <Input
                           type="text" value={pin}
                           onChange={e => { setPin(e.target.value.replace(/\D/g, '')); setError(''); }}
-                          placeholder="0 0 0 | 0 0 0" maxLength={6}
+                          placeholder="Enter Pin" maxLength={6}
                           className="bg-white border-2 border-[#2563EB] text-[#0F172A] placeholder:text-[#94A3B8]/40 font-mono text-xl sm:text-2xl tracking-[0.3em] text-center h-16 rounded-2xl outline-none ring-0 focus-visible:ring-2 focus-visible:ring-[#2563EB]/20 transition-all shadow-sm"
                           autoFocus
                         />

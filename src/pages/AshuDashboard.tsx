@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Download, Trash2, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square, Trophy, Medal, Filter, Eye, Crown, User } from 'lucide-react';
+import { Copy, Download, Trash2, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square, Trophy, Medal, Filter, Eye, EyeOff, Crown, User } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -185,6 +185,7 @@ const AshuDashboard = () => {
     fetchStudents,
     fetchSessions,
     stopTest,
+    toggleShowResults,
   } = useGame();
   const navigate = useNavigate();
 
@@ -425,7 +426,7 @@ const AshuDashboard = () => {
 
           {currentTest ? (
             <div className="space-y-4 sm:space-y-5">
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 items-stretch">
                 {/* PIN Display */}
                 <div className="bg-accent/5 rounded-xl px-4 sm:px-6 py-4 flex-1 min-w-0 border border-accent/20 relative overflow-hidden"
                   style={{ boxShadow: '0 0 20px hsl(258 80% 58% / 0.10)' }}>
@@ -439,6 +440,31 @@ const AshuDashboard = () => {
                     <span>•</span>
                     <span>{students.length} Joined</span>
                   </div>
+                </div>
+
+                {/* Show Results Toggle Card */}
+                <div className="bg-white/90 backdrop-blur-md rounded-xl px-4 sm:px-6 py-4 border border-border/50 flex flex-col justify-center min-w-[140px] shadow-sm">
+                  <span className="text-[10px] text-muted-foreground font-bold block mb-2 uppercase tracking-wider">Results Visibility</span>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleShowResults(currentTest.pin, !currentTest.showResults)}
+                      className={`h-10 px-4 rounded-xl font-bold text-xs transition-all flex items-center gap-2 ${currentTest.showResults
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                        }`}
+                    >
+                      {currentTest.showResults ? (
+                        <><Eye className="w-4 h-4" /> Shown</>
+                      ) : (
+                        <><EyeOff className="w-4 h-4" /> Hidden</>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-[9px] text-muted-foreground mt-2 font-medium leading-tight">
+                    {currentTest.showResults ? 'Students see score & feedback' : 'Students see no score/feedback'}
+                  </p>
                 </div>
 
                 {/* Controls */}
@@ -738,7 +764,7 @@ const AshuDashboard = () => {
         )}
 
       </div>
-    </div>
+    </div >
   );
 };
 

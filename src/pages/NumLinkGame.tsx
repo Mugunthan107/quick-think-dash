@@ -166,7 +166,10 @@ function generateSnakePuzzle(gridSize: number, maxNumber: number): Cell[][] {
 
 // ——— Component ——————————————————————————————————————————————————————————————————————
 const NumLinkGame = () => {
-  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
+  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest,
+    addCompletedGame,
+    getNextGame,
+  } = useGame();
   const navigate = useNavigate();
 
   const [currentLevel, setCurrentLevel] = useState(0);
@@ -463,7 +466,7 @@ const NumLinkGame = () => {
               <div className="flex items-center justify-center gap-10">
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
-                  <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{score}</span>
+                  <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
                 </div>
                 <div className="w-px h-14 bg-sky-100" />
                 <div className="text-center">
@@ -523,7 +526,7 @@ const NumLinkGame = () => {
             }} className="text-[11px] text-[#94A3B8] hover:text-[#2563EB] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest">End Test</button>
           </div>
 
-          <div className={`bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 transition-all duration-300 overflow-hidden relative ${showFlash === 'wrong' ? 'border-red-200' : showFlash === 'correct' ? 'border-emerald-200' : 'border-sky-100'}`}>
+          <div className={`bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 transition-all duration-300 overflow-hidden relative ${showFlash === 'wrong' && currentTest?.showResults !== false ? 'border-red-200' : showFlash === 'correct' && currentTest?.showResults !== false ? 'border-emerald-200' : 'border-sky-100'}`}>
             <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-4 border-b border-sky-50">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -532,7 +535,7 @@ const NumLinkGame = () => {
                 </div>
                 <div className="text-right flex flex-col gap-1">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">SCORE</span>
-                  <span className="font-mono font-black text-2xl text-sky-500">{score}</span>
+                  <span className="font-mono font-black text-2xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
                 </div>
               </div>
               <div className="w-full h-2 bg-sky-50 rounded-full overflow-hidden mb-4">
@@ -605,14 +608,14 @@ const NumLinkGame = () => {
                 )}
               </div>
 
-              {(roundComplete || roundFailed) && (
+              {(roundComplete || roundFailed) && currentTest?.showResults !== false && (
                 <div className={`text-center text-[13px] font-black uppercase tracking-widest ${roundComplete ? 'text-emerald-500' : 'text-red-500'}`}>
                   {roundComplete ? `✓ Solved! +${getMarksForRound(globalRound + 1)} pts` : timeLeft <= 0 ? "⌛ Time's up!" : "✕ Failed!"}
                 </div>
               )}
             </div>
 
-            {showFlash && (
+            {showFlash && currentTest?.showResults !== false && (
               <div className={`absolute inset-0 pointer-events-none animate-fade-in ${showFlash === 'wrong' ? 'bg-red-500/5' : 'bg-emerald-500/5'}`} />
             )}
           </div>

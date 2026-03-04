@@ -188,12 +188,12 @@ const AptiRush = () => {
               <div className="flex items-center justify-center gap-6">
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
-                  <span className="font-mono font-black text-2xl sm:text-3xl text-sky-500">{score}</span>
+                  <span className="font-mono font-black text-2xl sm:text-3xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
                 </div>
                 <div className="w-px h-12 bg-sky-100" />
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Correct</span>
-                  <span className="font-mono font-black text-2xl sm:text-3xl text-emerald-500">{correctCount}/{TOTAL_LEVELS}</span>
+                  <span className="font-mono font-black text-2xl sm:text-3xl text-emerald-500">{currentTest?.showResults !== false ? `${correctCount}/${TOTAL_LEVELS}` : '---'}</span>
                 </div>
                 <div className="w-px h-12 bg-sky-100" />
                 <div className="text-center">
@@ -252,7 +252,7 @@ const AptiRush = () => {
                 </div>
                 <div className="text-right flex flex-col gap-1">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Score</span>
-                  <span className="font-mono font-black text-2xl text-sky-500">{score}</span>
+                  <span className="font-mono font-black text-2xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
                 </div>
               </div>
               <div className="w-full h-2 bg-sky-50 rounded-full overflow-hidden">
@@ -275,10 +275,11 @@ const AptiRush = () => {
                   return (
                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={!!showResult}
                       className={`py-4 px-4 rounded-2xl font-bold text-[15px] transition-all duration-300 border-2
-                        ${isCorrect ? 'bg-emerald-500 text-white border-emerald-400 scale-105 shadow-lg shadow-emerald-500/20' :
-                          isWrong ? 'bg-red-500 text-white border-red-400 animate-shake' :
-                            !showResult ? 'bg-white border-sky-100 text-[#0F172A] hover:border-sky-300 hover:shadow-[0_4px_16px_rgba(56,189,248,0.15)] active:scale-95' :
-                              'bg-white/50 border-sky-50 text-[#94A3B8]'}`}
+                        ${isCorrect && currentTest?.showResults !== false ? 'bg-emerald-500 text-white border-emerald-400 scale-105 shadow-lg shadow-emerald-500/20' :
+                          isWrong && currentTest?.showResults !== false ? 'bg-red-500 text-white border-red-400 animate-shake' :
+                            (isSelected && currentTest?.showResults === false) ? 'bg-sky-100 border-sky-300 text-sky-700' :
+                              !showResult ? 'bg-white border-sky-100 text-[#0F172A] hover:border-sky-300 hover:shadow-[0_4px_16px_rgba(56,189,248,0.15)] active:scale-95' :
+                                'bg-white/50 border-sky-50 text-[#94A3B8]'}`}
                     >
                       {opt}
                     </button>
@@ -286,7 +287,7 @@ const AptiRush = () => {
                 })}
               </div>
 
-              {showResult === 'timeout' && (
+              {showResult === 'timeout' && currentTest?.showResults !== false && (
                 <div className="mt-4 text-center">
                   <span className="text-[13px] font-bold text-amber-500">⏰ Time's up!</span>
                 </div>
@@ -296,8 +297,8 @@ const AptiRush = () => {
             {/* Progress footer */}
             <div className="px-6 pb-8">
               <div className="flex items-center justify-between text-[12px] text-[#94A3B8] font-bold">
-                <span>Correct: <span className="text-emerald-500">{correctCount}</span></span>
-                <span>Score: <span className="text-sky-500">{score}</span></span>
+                <span>Correct: <span className="text-emerald-500">{currentTest?.showResults !== false ? correctCount : '---'}</span></span>
+                <span>Score: <span className="text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span></span>
               </div>
             </div>
           </div>

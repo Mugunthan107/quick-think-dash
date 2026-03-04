@@ -34,6 +34,7 @@ export interface TestSession {
   status: 'WAITING' | 'STARTED' | 'FINISHED';
   numGames: number;
   selectedGames: string[];
+  showResults: boolean;
 }
 
 interface GameState {
@@ -70,6 +71,7 @@ interface GameContextType extends GameState {
   resetCompletedGames: () => void;
   getGameLeaderboard: (gameId: string) => Student[];
   fetchStudents: (pin: string) => Promise<void>;
+  toggleShowResults: (pin: string, show: boolean) => Promise<void>;
 }
 
 const ADMIN_PASSWORD = 'admin123';
@@ -126,6 +128,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           status: row.status || 'WAITING',
           numGames: row.num_games || 1,
           selectedGames: row.selected_games || ['bubble'],
+          showResults: row.show_results ?? true,
         }));
         setSessions(mappedSessions);
       }
@@ -210,6 +213,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
               status: data.status || 'WAITING',
               numGames: data.num_games || 1,
               selectedGames: data.selected_games || AVAILABLE_GAMES,
+              showResults: data.show_results ?? true,
             } : null);
           }
         }
@@ -335,7 +339,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           is_active: true,
           status: 'WAITING',
           num_games: numGames,
-          selected_games: selectedGames
+          selected_games: selectedGames,
+          show_results: true
         }]);
 
       if (error) {
@@ -357,7 +362,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         isActive: true,
         status: 'WAITING',
         numGames,
-        selectedGames
+        selectedGames,
+        showResults: true
       };
 
       setCurrentTest(newTest);
@@ -445,7 +451,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     // Step 1: Verify test pin and status in one go
     const { data: testData, error: testError } = await supabase
       .from('test_sessions')
-      .select('pin, is_active, status, created_at, num_games, selected_games')
+      .select('pin, is_active, status, created_at, num_games, selected_games, show_results')
       .eq('pin', pin)
       .single();
 
@@ -495,7 +501,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           isActive: testData.is_active,
           status: testData.status as any || 'WAITING',
           numGames: testData.num_games || 1,
-          selectedGames: testData.selected_games || AVAILABLE_GAMES
+          selectedGames: testData.selected_games || AVAILABLE_GAMES,
+          showResults: testData.show_results ?? true
         });
         setCurrentStudent(student);
         setCompletedGames(student.gameHistory.map(g => g.gameId));
@@ -551,7 +558,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         isActive: testData.is_active,
         status: (testData.status as any) || 'WAITING',
         numGames: testData.num_games || 1,
-        selectedGames: testData.selected_games || AVAILABLE_GAMES
+        selectedGames: testData.selected_games || AVAILABLE_GAMES,
+        showResults: testData.show_results ?? true
       });
       setCurrentStudent(newStudent);
       setCompletedGames([]);
@@ -768,6 +776,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         resetCompletedGames,
         getGameLeaderboard,
         fetchStudents,
+        toggleShowResults: async (pin, show) => {
+          const { error } = await supabase
+            .from('test_sessions')
+            .update({ show_results: show })
+            .eq('pin', pin);
+          if (error) {
+            toast.error('Failed to update result visibility');
+            throw error;
+          }
+          setCurrentTest(prev => prev ? { ...prev, showResults: show } : null);
+        }
       }}
     >
       {children}
