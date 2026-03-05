@@ -373,18 +373,27 @@ const MotionChallenge = () => {
   /* ── Data submission ── */
   useEffect(() => {
     if (finished && currentStudent && currentTest) {
-
+      const isEndTest = (window as any).__motionEndTest;
+      const questionsAttempted = isEndTest ? levelIdx : TOTAL_LEVELS;
+      
       submitGameResult(currentStudent.username, {
         gameId: 'motion',
-        score: correctCount * 20, // Points based score (20 per level)
-        moves: totalMoves,       // Real moves tracking
+        score: correctCount * 20,
+        moves: totalMoves,
         timeTaken: elapsed,
         correctAnswers: correctCount,
-        totalQuestions: TOTAL_LEVELS,
+        totalQuestions: questionsAttempted,
         completedAt: Date.now(),
-      }).then(() => addCompletedGame('motion'));
+      }).then(() => {
+        addCompletedGame('motion');
+        if (isEndTest) {
+          finishTest(currentStudent.username);
+          navigate('/');
+        }
+      });
 
       setScore(correctCount * 20);
+      delete (window as any).__motionEndTest;
     }
   }, [finished]);
 
@@ -547,7 +556,8 @@ const MotionChallenge = () => {
         <div className="relative z-10 w-full flex justify-end mb-4 px-4" style={{ maxWidth: 420 }}>
           <button
             onClick={() => {
-              if (window.confirm('Are you sure you want to end the test?')) {
+              if (window.confirm('Are you sure you want to end the test? Your current score will be saved.')) {
+                (window as any).__motionEndTest = true;
                 setFinished(true);
               }
             }}

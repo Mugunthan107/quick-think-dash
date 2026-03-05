@@ -154,18 +154,25 @@ const AptiRush = () => {
     setTimeout(() => advanceQuestion(), 1200);
   };
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback((isEndTest = false) => {
     setFinished(true);
     if (timerRef.current) clearInterval(timerRef.current);
-    const completionBonus = correctCount >= 15 ? 50 : 0;
+    const completionBonus = !isEndTest && correctCount >= 15 ? 50 : 0;
     const finalScore = score + completionBonus;
     setScore(finalScore);
     if (currentStudent && currentTest) {
+      const questionsAttempted = isEndTest ? currentQ : TOTAL_LEVELS;
       submitGameResult(currentStudent.username, {
-        gameId: 'aptirush', score: finalScore, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: TOTAL_LEVELS, completedAt: Date.now()
-      }).then(() => addCompletedGame('aptirush'));
+        gameId: 'aptirush', score: finalScore, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: questionsAttempted, completedAt: Date.now()
+      }).then(() => {
+        addCompletedGame('aptirush');
+        if (isEndTest) {
+          finishTest(currentStudent.username);
+          navigate('/');
+        }
+      });
     }
-  }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
+  }, [score, correctCount, currentQ, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed, finishTest, navigate]);
 
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
@@ -249,8 +256,8 @@ const AptiRush = () => {
             </div>
             <button
               onClick={() => {
-                if (window.confirm('Are you sure you want to end the test?')) {
-                  handleFinish();
+                if (window.confirm('Are you sure you want to end the test? Your current score will be saved.')) {
+                  handleFinish(true);
                 }
               }}
               className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest flex items-center gap-1"

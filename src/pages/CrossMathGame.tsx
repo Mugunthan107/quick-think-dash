@@ -234,22 +234,27 @@ const CrossMathGame = () => {
     if (currentTest?.status === 'FINISHED') navigate('/');
   }, [currentTest?.status, navigate]);
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback((isEndTest = false) => {
     setFinished(true);
     if (timerRef.current) clearInterval(timerRef.current);
     if (currentStudent && currentTest) {
+      const questionsAttempted = isEndTest ? currentQ : TOTAL_QUESTIONS;
       submitGameResult(currentStudent.username, {
         gameId: 'crossmath',
         score: scoreRef.current,
         timeTaken: elapsedRef.current,
         correctAnswers: correctCountRef.current,
-        totalQuestions: TOTAL_QUESTIONS,
+        totalQuestions: questionsAttempted,
         completedAt: Date.now()
       }).then(() => {
         addCompletedGame('crossmath');
+        if (isEndTest) {
+          finishTest(currentStudent.username);
+          navigate('/');
+        }
       });
     }
-  }, [currentStudent, currentTest, submitGameResult, addCompletedGame]);
+  }, [currentStudent, currentTest, currentQ, submitGameResult, addCompletedGame, finishTest, navigate]);
 
   // Reset per-question timer when moving to a new puzzle
   useEffect(() => {
@@ -561,8 +566,8 @@ const CrossMathGame = () => {
           <div className="w-full flex justify-end mb-4 px-2">
             <button
               onClick={() => {
-                if (window.confirm('Are you sure you want to end the test?')) {
-                  handleFinish();
+                if (window.confirm('Are you sure you want to end the test? Your current score will be saved.')) {
+                  handleFinish(true);
                 }
               }}
               className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"

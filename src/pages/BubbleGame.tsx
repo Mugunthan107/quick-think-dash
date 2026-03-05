@@ -131,22 +131,29 @@ function BubbleGame() {
     startRound(level);
   }, [level, startRound]);
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback((isEndTest = false) => {
     setFinished(true);
     setGameActive(false);
     if (timerRef.current) clearInterval(timerRef.current);
 
     if (currentStudent && currentTest) {
+      const questionsAttempted = isEndTest ? Math.max(level - 1, 0) : TOTAL_LEVELS;
       submitGameResult(currentStudent.username, {
         gameId: 'bubble',
         score,
         timeTaken: elapsed,
         correctAnswers: totalCorrect,
-        totalQuestions: TOTAL_LEVELS,
+        totalQuestions: questionsAttempted,
         completedAt: Date.now(),
-      }).then(() => addCompletedGame('bubble'));
+      }).then(() => {
+        addCompletedGame('bubble');
+        if (isEndTest) {
+          finishTest(currentStudent.username);
+          navigate('/');
+        }
+      });
     }
-  }, [score, elapsed, totalCorrect, currentStudent, currentTest, submitGameResult, addCompletedGame]);
+  }, [score, elapsed, totalCorrect, level, currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, navigate]);
 
   const handlePostFinish = useCallback(() => {
     const next = getNextGame();
@@ -318,8 +325,8 @@ function BubbleGame() {
             <div className="w-full flex justify-end mb-4 px-2">
               <button
                 onClick={() => {
-                  if (window.confirm('Are you sure you want to end the test?')) {
-                    handleFinish();
+                  if (window.confirm('Are you sure you want to end the test? Your current score will be saved.')) {
+                    handleFinish(true);
                   }
                 }}
                 className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"
