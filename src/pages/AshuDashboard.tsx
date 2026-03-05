@@ -295,7 +295,7 @@ const AshuDashboard = () => {
     doc.setTextColor(100, 100, 120);
     doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}   |   Total Students: ${students.length}`, 14, 30);
 
-    const tableColumn = ["#", "Name", ...selectedGames.map(g => GAME_LABELS[g] || g), "Total Score", "Total Time"];
+    const tableColumn = ["#", "Name", ...selectedGames.map(g => GAME_LABELS[g] || g), "Total", "Score %", "Total Time"];
 
     const tableRows = leaderboard.map((student, index) => {
       const totalTime = student.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || 0;
@@ -304,11 +304,14 @@ const AshuDashboard = () => {
         if (!g) return '—';
         return `${g.score}`;
       };
+      const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+      const percentage = totalPossible > 0 ? `${((student.score / totalPossible) * 100).toFixed(0)}%` : '0%';
       return [
         index + 1,
         student.username,
         ...selectedGames.map(gId => getGameCell(gId)),
         student.score,
+        percentage,
         formatTime(totalTime),
       ];
     });
@@ -351,7 +354,7 @@ const AshuDashboard = () => {
     if (leaderboard.length === 0) { toast.error('No completed results to download'); return; }
 
     const selectedGames = currentTest?.selectedGames || ['bubble'];
-    const headers = ["Rank", "Name", ...selectedGames.map(g => GAME_LABELS[g] || g), "Total Score", "Total Time"];
+    const headers = ["Rank", "Name", ...selectedGames.map(g => GAME_LABELS[g] || g), "Total", "Score %", "Total Time"];
 
     const tableRows = leaderboard.map((student, index) => {
       const totalTime = student.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || 0;
@@ -360,11 +363,14 @@ const AshuDashboard = () => {
         if (!g) return '—';
         return `${g.score}`;
       };
+      const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+      const percentage = totalPossible > 0 ? `${((student.score / totalPossible) * 100).toFixed(0)}%` : '0%';
       return [
         index + 1,
         student.username,
         ...selectedGames.map(gId => getGameCell(gId)),
         student.score,
+        percentage,
         formatTime(totalTime),
       ];
     });
@@ -447,7 +453,6 @@ const AshuDashboard = () => {
             <h2 className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-widest">Test Session</h2>
             <div className="flex items-center gap-4">
               {/* Notification Bell next to Session Picker */}
-              {/* Notification Bell with Contextual Popover */}
               <div className="relative group/bell">
                 <Button
                   variant="ghost" size="icon"
@@ -465,9 +470,7 @@ const AshuDashboard = () => {
                 {/* Contextual Join Requests Popover */}
                 {showRequestsModal && (
                   <>
-                    {/* Backdrop blur overlay to focus on the card */}
                     <div className="fixed inset-0 z-[60] backdrop-blur-[2px] bg-black/5 transition-all duration-300" onClick={() => setShowRequestsModal(false)} />
-
                     <div className="absolute top-12 right-0 w-[320px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-border animate-in slide-in-from-top-2 duration-300 z-[70] overflow-hidden">
                       <div className="p-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -503,11 +506,6 @@ const AshuDashboard = () => {
                           </div>
                         )}
                       </div>
-                      {pendingStudents.length > 0 && (
-                        <div className="p-2 border-t border-border bg-slate-50/30">
-                          <p className="text-[10px] text-center text-muted-foreground font-medium">Click outside to close</p>
-                        </div>
-                      )}
                     </div>
                   </>
                 )}
@@ -540,7 +538,6 @@ const AshuDashboard = () => {
           {currentTest ? (
             <div className="space-y-4 sm:space-y-5">
               <div className="flex flex-col sm:flex-row gap-4 items-stretch">
-                {/* PIN Display */}
                 <div className="bg-accent/5 rounded-xl px-4 sm:px-6 py-4 flex-1 min-w-0 border border-accent/20 relative overflow-hidden"
                   style={{ boxShadow: '0 0 20px hsl(258 80% 58% / 0.10)' }}>
                   <div className="absolute top-0 right-0 p-4 opacity-5">
@@ -555,7 +552,6 @@ const AshuDashboard = () => {
                   </div>
                 </div>
 
-                {/* Show Results Toggle Card */}
                 <div className="bg-white/90 backdrop-blur-md rounded-xl px-4 sm:px-6 py-4 border border-border/50 flex flex-col justify-center min-w-[140px] shadow-sm">
                   <span className="text-[10px] text-muted-foreground font-bold block mb-2 uppercase tracking-wider">Results Visibility</span>
                   <div className="flex items-center gap-3">
@@ -577,7 +573,6 @@ const AshuDashboard = () => {
                   </div>
                 </div>
 
-                {/* Controls */}
                 <div className="flex flex-col gap-2 shrink-0">
                   <div className="flex gap-2">
                     <Button variant="outline" size="icon" onClick={handleCopyPin} className="border-border h-12 w-12 rounded-xl"><Copy className="w-5 h-5" /></Button>
@@ -613,7 +608,6 @@ const AshuDashboard = () => {
                 </div>
               </div>
 
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {[
                   { icon: <Users className="w-3.5 h-3.5 text-accent" />, value: students.length, label: 'Joined', bg: 'icon-bg-purple', glow: '0 0 14px hsl(258 76% 55% / 0.12)' },
@@ -701,11 +695,6 @@ const AshuDashboard = () => {
                 <h2 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-amber-500" /> Live Leaderboard
                 </h2>
-                <button
-                  onClick={() => setShowLeaderboardModal(true)}
-                  className="text-[11px] font-black text-accent hover:text-accent/80 transition-colors uppercase tracking-widest"
-                >
-                </button>
               </div>
 
               {/* Podium display for Top 3 */}
@@ -723,7 +712,8 @@ const AshuDashboard = () => {
                         <th key={gId} className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center">{GAME_LABELS[gId] || gId}</th>
                       ))}
                       <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right block-total">Correct</th>
-                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right block-total">Total</th>
+                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right block-total w-16">Total</th>
+                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right block-total w-16">%</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -764,14 +754,19 @@ const AshuDashboard = () => {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <span className="font-mono font-black text-foreground text-base tracking-tighter block leading-none">
+                              {s.score}
+                            </span>
+                            <span className="font-mono font-bold text-[#94A3B8] text-[10px] block mt-1">
+                              {totalTime.toFixed(1)}s
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="font-mono font-black text-sky-500 text-base tracking-tighter block leading-none">
                               {(() => {
                                 const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
                                 if (totalPossible === 0) return '0%';
                                 return `${((s.score / totalPossible) * 100).toFixed(0)}%`;
                               })()}
-                            </span>
-                            <span className="font-mono font-bold text-[#94A3B8] text-[10px] block mt-1">
-                              {totalTime.toFixed(1)}s
                             </span>
                           </td>
                         </tr>
@@ -826,7 +821,8 @@ const AshuDashboard = () => {
                           {selectedGames.map(gId => (
                             <th key={gId} className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center">{GAME_LABELS[gId] || gId}</th>
                           ))}
-                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right sticky right-0 bg-secondary z-20">Total Score</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right w-24">Total</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right sticky right-0 bg-secondary z-20 w-20">%</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -870,8 +866,17 @@ const AshuDashboard = () => {
                                   </td>
                                 );
                               })}
+                              <td className="px-6 py-5 text-right font-mono font-black text-foreground text-xl tracking-tighter">
+                                {s.score}
+                              </td>
                               <td className="px-6 py-5 text-right sticky right-0 bg-inherit z-10 shadow-[-10px_0_15px_-10px_rgba(0,0,0,0.05)]">
-                                <span className="font-mono font-black text-sky-600 text-xl tracking-tighter">{s.score}</span>
+                                <span className="font-mono font-black text-sky-600 text-xl tracking-tighter">
+                                  {(() => {
+                                    const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+                                    if (totalPossible === 0) return '0%';
+                                    return `${((s.score / totalPossible) * 100).toFixed(0)}%`;
+                                  })()}
+                                </span>
                               </td>
                             </tr>
                           );
@@ -884,8 +889,6 @@ const AshuDashboard = () => {
             </div>
           );
         })()}
-
-
 
         {/* Create PIN Dialog */}
         {showCreatePinDialog && (
@@ -923,9 +926,8 @@ const AshuDashboard = () => {
             </div>
           </div>
         )}
-
       </div>
-    </div >
+    </div>
   );
 };
 

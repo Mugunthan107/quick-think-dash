@@ -132,8 +132,8 @@ const Leaderboard = () => {
     doc.setFont('helvetica', 'normal');
     doc.text(`Test PIN: ${currentTest?.pin || '—'}   |   Candidates: ${leaderboard.length}   |   Generated: ${new Date().toLocaleString()}`, margin, 25);
 
-    const colHeaders = ['#', 'Name', ...selectedGames.map(g => GAME_LABELS[g] || g), 'Total Score', 'Total Time'];
-    const colWidths: number[] = [10, 50, ...selectedGames.map(() => 28), 28, 28];
+    const colHeaders = ['#', 'Name', ...selectedGames.map(g => GAME_LABELS[g] || g), 'Total', '%', 'Total Time'];
+    const colWidths: number[] = [10, 50, ...selectedGames.map(() => 28), 24, 24, 28];
 
     const tableTop = 32;
     const rowH = 10;
@@ -158,6 +158,8 @@ const Leaderboard = () => {
       const totalTime = s.gameHistory?.reduce((acc, g) => acc + (g.timeTaken || 0), 0) || 0;
       const getGame = (id: string) => s.gameHistory?.find(h => h.gameId === id);
       let cx = margin;
+      const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+      const percentage = totalPossible > 0 ? `${((s.score / totalPossible) * 100).toFixed(0)}%` : '0%';
       const cells = [
         String(i + 1),
         s.username,
@@ -166,6 +168,7 @@ const Leaderboard = () => {
           return g ? String(g.score) : '—';
         }),
         String(s.score),
+        percentage,
         formatTime(totalTime),
       ];
       cells.forEach((cell, ci) => {
@@ -180,15 +183,18 @@ const Leaderboard = () => {
 
   // ─── Excel Export ─────────────────────────────────────────────────────────────
   const exportExcel = () => {
-    const headers = ['Rank', 'Name', ...selectedGames.map(g => `${GAME_LABELS[g] || g} Score`), 'Total Score', 'Total Time (s)'];
+    const headers = ['Rank', 'Name', ...selectedGames.map(g => `${GAME_LABELS[g] || g} Score`), 'Total', '%', 'Total Time (s)'];
     const rows = leaderboard.map((s, i) => {
       const totalTime = s.gameHistory?.reduce((acc, g) => acc + (g.timeTaken || 0), 0) || 0;
       const getGame = (id: string) => s.gameHistory?.find(h => h.gameId === id);
+      const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+      const percentage = totalPossible > 0 ? `${((s.score / totalPossible) * 100).toFixed(0)}%` : '0%';
       return [
         i + 1,
         s.username,
         ...selectedGames.map(gId => getGame(gId)?.score ?? 0),
         s.score,
+        percentage,
         Math.round(totalTime),
       ];
     });
@@ -331,7 +337,8 @@ const Leaderboard = () => {
                       {selectedGames.map(gId => (
                         <th key={gId} className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-center min-w-[120px]">{GAME_LABELS[gId] || gId}</th>
                       ))}
-                      <th className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-right min-w-[110px]">Total Score</th>
+                      <th className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-right min-w-[80px]">Total</th>
+                      <th className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-right min-w-[80px]">%</th>
                       <th className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-right min-w-[100px]">Total Time</th>
                     </tr>
                   </thead>
@@ -369,6 +376,11 @@ const Leaderboard = () => {
                             );
                           })}
                           <td className="text-right px-3 sm:px-4 py-4">
+                            <span className="font-mono font-black text-[18px] sm:text-[20px] text-foreground tabular-nums block leading-none">
+                              {s.score}
+                            </span>
+                          </td>
+                          <td className="text-right px-3 sm:px-4 py-4">
                             <span className="font-mono font-black text-[18px] sm:text-[20px] text-sky-500 tabular-nums block leading-none" style={{ textShadow: '0 0 20px rgba(56,189,248,0.1)' }}>
                               {(() => {
                                 const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
@@ -376,7 +388,6 @@ const Leaderboard = () => {
                                 return `${((s.score / totalPossible) * 100).toFixed(0)}%`;
                               })()}
                             </span>
-                            <span className="font-mono font-bold text-[#94A3B8] text-[11px] block mt-1">{totalTime.toFixed(1)}s</span>
                           </td>
                           <td className="text-right px-3 sm:px-4 py-4">
                             <div className="flex items-center gap-1.5 justify-end">
