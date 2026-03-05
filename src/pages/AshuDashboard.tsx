@@ -2,10 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Download, Trash2, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square, Trophy, Medal, Filter, Eye, EyeOff, Crown, User } from 'lucide-react';
+import { Copy, Download, Trash2, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square, Trophy, Medal, Filter, Eye, EyeOff, Crown, User, FileText, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 import {
   Select,
@@ -211,6 +212,7 @@ const AshuDashboard = () => {
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
   const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink' | 'aptirush' | 'motion'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [selectedGames, setSelectedGames] = useState<string[]>(['bubble']);
   const [isCreatingPin, setIsCreatingPin] = useState(false);
 
@@ -268,7 +270,7 @@ const AshuDashboard = () => {
     }
   };
 
-  const handleDownload = () => {
+  const exportPDF = () => {
     const leaderboard = getLeaderboard();
     if (leaderboard.length === 0) { toast.error('No completed results to download'); return; }
 
@@ -333,6 +335,38 @@ const AshuDashboard = () => {
 
     doc.save(`results-pin-${currentTest?.pin}.pdf`);
     toast.success('Results downloaded as PDF');
+    setShowExportModal(false);
+  };
+
+  const exportExcel = () => {
+    const leaderboard = getLeaderboard();
+    if (leaderboard.length === 0) { toast.error('No completed results to download'); return; }
+
+    const selectedGames = currentTest?.selectedGames || ['bubble'];
+    const headers = ["Rank", "Name", ...selectedGames.map(g => GAME_LABELS[g] || g), "Total Score", "Total Time"];
+
+    const tableRows = leaderboard.map((student, index) => {
+      const totalTime = student.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || 0;
+      const getGameCell = (gameId: string) => {
+        const g = student.gameHistory?.find(h => h.gameId === gameId);
+        if (!g) return '—';
+        return `${g.score}`;
+      };
+      return [
+        index + 1,
+        student.username,
+        ...selectedGames.map(gId => getGameCell(gId)),
+        student.score,
+        formatTime(totalTime),
+      ];
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...tableRows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Results");
+    XLSX.writeFile(wb, `results-pin-${currentTest?.pin}.xlsx`);
+    toast.success('Results downloaded as Excel');
+    setShowExportModal(false);
   };
 
   const handleDelete = async () => {
@@ -608,9 +642,44 @@ const AshuDashboard = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-4 mb-8 sm:mb-12 flex-wrap pb-4">
-          <Button onClick={handleDownload} className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-[14px] h-[40px] px-6 text-[14px] font-bold shadow-md shadow-blue-500/20 hover:-translate-y-0.5 hover:shadow-blue-500/40 transition-all duration-300">
-            <Download className="w-4 h-4 mr-2" />Download PDF
-          </Button>
+          <div className="relative">
+            <Button onClick={() => setShowExportModal(!showExportModal)} className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-[14px] h-[40px] px-6 text-[14px] font-bold shadow-md shadow-blue-500/20 hover:-translate-y-0.5 hover:shadow-blue-500/40 transition-all duration-300">
+              <Download className="w-4 h-4 mr-2" />Download
+            </Button>
+
+            {showExportModal && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowExportModal(false)} />
+                <div className="absolute top-full left-0 mt-2 z-50 w-[240px] bg-white rounded-2xl shadow-2xl border border-border p-2 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-2 mb-1">
+                    <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest px-2">Export results</h3>
+                  </div>
+                  <button
+                    onClick={exportPDF}
+                    className="flex items-center gap-3 w-full p-2 hover:bg-red-50 rounded-xl transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                      <FileText className="w-4 h-4 text-red-500" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-bold text-[#0F172A] text-xs">PDF Document</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={exportExcel}
+                    className="flex items-center gap-3 w-full p-2 hover:bg-emerald-50 rounded-xl transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-bold text-[#0F172A] text-xs">Excel Sheet</span>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <Button onClick={handleDelete} variant="outline" className="border-[#FECACA] text-[#EF4444] bg-white hover:bg-[#FEF2F2] hover:text-[#DC2626] rounded-[14px] h-[40px] px-6 text-[14px] font-bold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm">
             <Trash2 className="w-4 h-4 mr-2" />Delete All
           </Button>
@@ -631,8 +700,12 @@ const AshuDashboard = () => {
                   onClick={() => setShowLeaderboardModal(true)}
                   className="text-[11px] font-black text-accent hover:text-accent/80 transition-colors uppercase tracking-widest"
                 >
-                  View All Details
                 </button>
+              </div>
+
+              {/* Podium display for Top 3 */}
+              <div className="bg-slate-50/30 border-b border-border">
+                <PodiumRow top3={lb.slice(0, 3).map(s => buildPodiumEntry(s))} />
               </div>
 
               <div className="overflow-x-auto">
@@ -651,7 +724,7 @@ const AshuDashboard = () => {
                     {lb.map((s, idx) => {
                       const totalTime = s.gameHistory?.reduce((a, g) => a + g.timeTaken, 0) || 0;
                       return (
-                        <tr key={s.username} className={`hover:bg-slate-50/50 transition-colors ${idx < 3 ? 'bg-amber-50/5' : ''}`}>
+                        <tr key={s.username} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-4 py-3 text-center sticky left-0 bg-inherit z-10">
                             <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black
                               ${idx === 0 ? 'bg-amber-100 text-amber-600 border border-amber-200 shadow-sm' :
