@@ -9,75 +9,104 @@ const TIME_PER_QUESTION = 12; // seconds
 
 interface Question {
   id: string;
+  topic: string;
   text: string;
   options: string[];
   correctIndex: number;
   difficulty: number;
 }
 
+const ALL_QUESTIONS: Question[] = [
+  { id: "q1", topic: "divisibility", text: "What least digit replaces # so that 279#4423 is divisible by 9?", options: ["7", "3", "1", "5"], correctIndex: 3, difficulty: 1 },
+  { id: "q2", topic: "divisibility", text: "2185 is a multiple of which number?", options: ["23", "21", "17", "25"], correctIndex: 0, difficulty: 1 },
+  { id: "q3", topic: "subtraction", text: "892.7 minus 573.07 minus 95.007 equals?", options: ["233.523", "224.623", "224.777", "414.637"], correctIndex: 1, difficulty: 1 },
+  { id: "q4", topic: "fraction", text: "4.004 written as a fraction in lowest form equals?", options: ["1001/250", "1001/200", "4004/1000", "2001/500"], correctIndex: 0, difficulty: 1 },
+  { id: "q5", topic: "fraction", text: "0.55 repeating written as a fraction equals?", options: ["5/9", "1/11", "11/20", "1/2"], correctIndex: 0, difficulty: 1 },
+  { id: "q6", topic: "addition", text: "A boy has 15 marbles and finds 10 more. How many marbles does he have now?", options: ["20", "25", "30", "35"], correctIndex: 1, difficulty: 1 },
+  { id: "q7", topic: "subtraction", text: "A boy had 40 candies and gave 15 away. How many remain?", options: ["20", "25", "30", "35"], correctIndex: 1, difficulty: 1 },
+  { id: "q8", topic: "multiplication", text: "A farmer has 7 rows of plants and each row has 6 plants. Total plants?", options: ["36", "40", "42", "48"], correctIndex: 2, difficulty: 1 },
+  { id: "q9", topic: "division", text: "A teacher distributes 24 chocolates equally among 6 students. Each student gets?", options: ["3", "4", "5", "6"], correctIndex: 1, difficulty: 1 },
+  { id: "q10", topic: "division", text: "40 apples packed equally into 5 baskets. Apples per basket?", options: ["6", "7", "8", "9"], correctIndex: 2, difficulty: 1 },
+  { id: "q11", topic: "square", text: "What is the square of 20?", options: ["400", "380", "420", "440"], correctIndex: 0, difficulty: 1 },
+  { id: "q12", topic: "square", text: "What is the square of 22?", options: ["462", "484", "474", "494"], correctIndex: 1, difficulty: 1 },
+  { id: "q13", topic: "square", text: "What is the square of 25?", options: ["575", "625", "650", "600"], correctIndex: 1, difficulty: 1 },
+  { id: "q14", topic: "square", text: "What is the square of 27?", options: ["719", "729", "739", "749"], correctIndex: 1, difficulty: 1 },
+  { id: "q15", topic: "square", text: "What is the square of 30?", options: ["800", "900", "1000", "950"], correctIndex: 1, difficulty: 1 },
+  { id: "q16", topic: "square_root", text: "What is the square root of 144?", options: ["10", "11", "12", "13"], correctIndex: 2, difficulty: 1 },
+  { id: "q17", topic: "square_root", text: "What is the square root of 169?", options: ["12", "13", "14", "15"], correctIndex: 1, difficulty: 1 },
+  { id: "q18", topic: "square_root", text: "What is the square root of 225?", options: ["13", "14", "15", "16"], correctIndex: 2, difficulty: 1 },
+  { id: "q19", topic: "square_root", text: "What is the square root of 256?", options: ["14", "15", "16", "18"], correctIndex: 2, difficulty: 1 },
+  { id: "q20", topic: "cube_root", text: "What is the cube root of 27?", options: ["2", "3", "4", "5"], correctIndex: 1, difficulty: 1 },
+  { id: "q21", topic: "cube_root", text: "What is the cube root of 64?", options: ["3", "4", "5", "6"], correctIndex: 1, difficulty: 1 },
+  { id: "q22", topic: "cube_root", text: "What is the cube root of 125?", options: ["4", "5", "6", "7"], correctIndex: 1, difficulty: 1 },
+  { id: "q23", topic: "cube_root", text: "What is the cube root of 216?", options: ["4", "5", "6", "7"], correctIndex: 2, difficulty: 1 },
+  { id: "q24", topic: "cube_root", text: "What is the cube root of 343?", options: ["5", "6", "7", "8"], correctIndex: 2, difficulty: 1 },
+  { id: "q25", topic: "fraction", text: "A cake has 8 pieces. If a boy eats half, how many pieces did he eat?", options: ["3", "4", "5", "6"], correctIndex: 1, difficulty: 1 },
+  { id: "q26", topic: "fraction", text: "A pizza has 6 slices. If you eat one third, how many slices?", options: ["1", "2", "3", "4"], correctIndex: 1, difficulty: 1 },
+  { id: "q27", topic: "fraction", text: "A chocolate has 10 pieces. If you eat one fifth, how many pieces?", options: ["1", "2", "3", "4"], correctIndex: 1, difficulty: 1 },
+  { id: "q28", topic: "unit_digit", text: "What is the unit digit of 9 multiplied by 9?", options: ["1", "9", "8", "7"], correctIndex: 0, difficulty: 1 },
+  { id: "q29", topic: "unit_digit", text: "What is the unit digit of 12 multiplied by 12?", options: ["4", "2", "6", "8"], correctIndex: 0, difficulty: 1 },
+  { id: "q30", topic: "unit_digit", text: "What is the unit digit of 8 multiplied by 8?", options: ["2", "4", "6", "8"], correctIndex: 1, difficulty: 1 },
+  { id: "q31", topic: "addition", text: "A library has 30 books on one shelf and 20 on another. Total books?", options: ["40", "45", "50", "55"], correctIndex: 2, difficulty: 1 },
+  { id: "q32", topic: "addition", text: "A shop sells 18 apples in the morning and 12 in the evening. How many apples were sold?", options: ["25", "30", "35", "40"], correctIndex: 1, difficulty: 1 },
+  { id: "q33", topic: "multiplication", text: "A classroom has 4 rows each with 8 students. Total students?", options: ["24", "28", "32", "36"], correctIndex: 2, difficulty: 1 },
+  { id: "q34", topic: "multiplication", text: "A shopkeeper has 5 boxes each containing 10 chocolates. Total chocolates?", options: ["40", "50", "60", "70"], correctIndex: 1, difficulty: 1 },
+  { id: "q35", topic: "division", text: "If 3 pencils cost 15 rupees, what is the cost of one pencil?", options: ["3", "4", "5", "6"], correctIndex: 2, difficulty: 1 },
+  { id: "q36", topic: "division", text: "If 5 friends share 20 chocolates equally, how many chocolates does each get?", options: ["3", "4", "5", "6"], correctIndex: 1, difficulty: 1 },
+  { id: "q37", topic: "subtraction", text: "A boy has 30 rupees and spends 10 rupees. Money left?", options: ["15", "20", "25", "30"], correctIndex: 1, difficulty: 1 },
+  { id: "q38", topic: "multiplication", text: "A farmer plants 4 rows of trees and each row has 7 trees. Total trees?", options: ["24", "26", "28", "30"], correctIndex: 2, difficulty: 1 },
+  { id: "q39", topic: "multiplication", text: "A train travels 60 km in one hour. Distance in 2 hours?", options: ["100", "110", "120", "130"], correctIndex: 2, difficulty: 1 },
+  { id: "q40", topic: "multiplication", text: "A shop sells 10 chocolates each day for 5 days. Total chocolates sold?", options: ["40", "45", "50", "60"], correctIndex: 2, difficulty: 1 },
+  { id: "q41", topic: "division", text: "A basket contains 36 apples divided into 6 baskets. Apples per basket?", options: ["5", "6", "7", "8"], correctIndex: 1, difficulty: 1 },
+  { id: "q42", topic: "addition", text: "A boy saves 10 rupees every day for 5 days. Total savings?", options: ["40", "50", "60", "70"], correctIndex: 1, difficulty: 1 },
+  { id: "q43", topic: "multiplication", text: "A pack contains 8 chocolates and you buy 3 packs. Total chocolates?", options: ["18", "24", "30", "32"], correctIndex: 1, difficulty: 1 },
+  { id: "q44", topic: "division", text: "24 students are divided equally into 6 groups. Students per group?", options: ["3", "4", "5", "6"], correctIndex: 1, difficulty: 1 },
+  { id: "q45", topic: "subtraction", text: "A shop had 90 pencils and sold 40. How many remain?", options: ["40", "50", "60", "70"], correctIndex: 1, difficulty: 1 },
+  { id: "q46", topic: "addition", text: "A boy scored 40 marks in math and 35 in science. Total marks?", options: ["70", "75", "80", "85"], correctIndex: 1, difficulty: 1 },
+  { id: "q47", topic: "multiplication", text: "5 packets contain 6 biscuits each. Total biscuits?", options: ["25", "30", "35", "40"], correctIndex: 1, difficulty: 1 },
+  { id: "q48", topic: "division", text: "60 candies shared equally among 10 children. Each child gets?", options: ["5", "6", "7", "8"], correctIndex: 1, difficulty: 1 },
+  { id: "q49", topic: "square_root", text: "What is the square root of 100?", options: ["8", "9", "10", "11"], correctIndex: 2, difficulty: 1 },
+  { id: "q50", topic: "cube_root", text: "What is the cube root of 8?", options: ["1", "2", "3", "4"], correctIndex: 1, difficulty: 1 }
+];
+
 function generateQuestions(): Question[] {
-  const questions: Question[] = [];
-  const usedQuestions = new Set<string>();
+  // Group by topic
+  const byTopic: Record<string, Question[]> = {};
+  ALL_QUESTIONS.forEach(q => {
+    if (!byTopic[q.topic]) byTopic[q.topic] = [];
+    byTopic[q.topic].push(q);
+  });
 
-  const templates = [
-    (d: number) => {
-      const a = Math.floor(Math.random() * (10 * d)) + 5;
-      const b = Math.floor(Math.random() * (8 * d)) + 3;
-      const correct = a + b;
-      return { text: `What is ${a} + ${b}?`, correct: correct.toString(), wrongs: [correct + 2, correct - 3, correct + 5].map(String) };
-    },
-    (d: number) => {
-      const a = Math.floor(Math.random() * (5 * d)) + 2;
-      const b = Math.floor(Math.random() * (4 * d)) + 2;
-      const correct = a * b;
-      return { text: `What is ${a} × ${b}?`, correct: correct.toString(), wrongs: [correct + a, correct - b, correct + b + 1].map(String) };
-    },
-    (d: number) => {
-      const base = Math.floor(Math.random() * (3 * d)) + 2;
-      const seq = [base, base * 2, base * 3, base * 4];
-      return { text: `What comes next: ${seq.join(', ')}, ?`, correct: (base * 5).toString(), wrongs: [(base * 5 + 1), (base * 6), (base * 4 + base - 1)].map(String) };
-    },
-    (d: number) => {
-      const total = Math.floor(Math.random() * (20 * d)) + 20;
-      const part = Math.floor(total * (0.3 + Math.random() * 0.4));
-      const diff = total - part;
-      return { text: `If you have ${total} items and remove ${part}, how many remain?`, correct: diff.toString(), wrongs: [diff + 2, diff - 1, diff + 4].map(String) };
-    },
-    (d: number) => {
-      const n = Math.floor(Math.random() * (4 * d)) + 3;
-      const sq = n * n;
-      return { text: `What is ${n}²?`, correct: sq.toString(), wrongs: [sq + n, sq - 1, n * (n + 1)].map(String) };
-    },
-  ];
+  const selected: Question[] = [];
+  const usedIds = new Set<string>();
 
-  for (let lvl = 1; lvl <= TOTAL_LEVELS; lvl++) {
-    const difficulty = Math.ceil(lvl / 4);
-    let q: Question | null = null;
-    let attempts = 0;
-    while (!q && attempts < 50) {
-      const tmpl = templates[Math.floor(Math.random() * templates.length)];
-      const generated = tmpl(difficulty);
-      if (!usedQuestions.has(generated.text)) {
-        usedQuestions.add(generated.text);
-        const allOptions = [generated.correct, ...generated.wrongs];
-        // Shuffle
-        for (let i = allOptions.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
-        }
-        q = {
-          id: `q${lvl}`,
-          text: generated.text,
-          options: allOptions,
-          correctIndex: allOptions.indexOf(generated.correct),
-          difficulty,
-        };
-      }
-      attempts++;
-    }
-    if (q) questions.push(q);
+  // 1. Pick one from each topic (guarantees at least one from each)
+  Object.keys(byTopic).forEach(topic => {
+    const list = byTopic[topic];
+    const picked = list[Math.floor(Math.random() * list.length)];
+    selected.push(picked);
+    usedIds.add(picked.id);
+  });
+
+  // 2. Pick remaining from the rest of the pool
+  const remainingPool = ALL_QUESTIONS.filter(q => !usedIds.has(q.id));
+  const shuffledPool = remainingPool.sort(() => Math.random() - 0.5);
+
+  const needed = TOTAL_LEVELS - selected.length;
+  for (let i = 0; i < needed && i < shuffledPool.length; i++) {
+    selected.push(shuffledPool[i]);
   }
-  return questions;
+
+  // Shuffle the final 20 and their options
+  return selected.sort(() => Math.random() - 0.5).map(q => {
+    const correctVal = q.options[q.correctIndex];
+    const shuffledOpts = [...q.options].sort(() => Math.random() - 0.5);
+    return {
+      ...q,
+      options: shuffledOpts,
+      correctIndex: shuffledOpts.indexOf(correctVal)
+    };
+  });
 }
 
 const AptiRush = () => {
@@ -137,8 +166,7 @@ const AptiRush = () => {
     let newCorrect = correctCount;
 
     if (idx === question.correctIndex) {
-      const speedBonus = timeLeft >= 8 ? 5 : 0;
-      newScore = score + 10 + speedBonus;
+      newScore = score + 10;
       newCorrect = correctCount + 1;
       setScore(newScore);
       setCorrectCount(newCorrect);
@@ -157,9 +185,7 @@ const AptiRush = () => {
   const handleFinish = useCallback((isEndTest = false) => {
     setFinished(true);
     if (timerRef.current) clearInterval(timerRef.current);
-    const completionBonus = !isEndTest && correctCount >= 15 ? 50 : 0;
-    const finalScore = score + completionBonus;
-    setScore(finalScore);
+    const finalScore = score;
     if (currentStudent && currentTest) {
       const questionsAttempted = isEndTest ? currentQ : TOTAL_LEVELS;
       submitGameResult(currentStudent.username, {
@@ -183,7 +209,7 @@ const AptiRush = () => {
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   // Circular timer
-  const timerRadius = 28;
+  const timerRadius = 24;
   const timerCircumference = 2 * Math.PI * timerRadius;
   const timerOffset = timerCircumference * (1 - timeLeft / TIME_PER_QUESTION);
   const timerColor = timeLeft <= 3 ? '#EF4444' : timeLeft <= 5 ? '#F59E0B' : '#38BDF8';
@@ -205,7 +231,7 @@ const AptiRush = () => {
               <div className="flex items-center justify-center gap-6">
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
-                  <span className="font-mono font-black text-2xl sm:text-3xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
+                  <span className="font-mono font-black text-2xl sm:text-3xl text-sky-500">{currentTest?.showResults !== false ? `${score}/200` : '---'}</span>
                 </div>
                 <div className="w-px h-12 bg-sky-100" />
                 <div className="text-center">
@@ -237,20 +263,20 @@ const AptiRush = () => {
         <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
       </div>
       <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
-      <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
+      <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-screen">
         <div className="w-full max-w-lg animate-fade-in relative">
           {/* Header */}
           <div className="flex items-center justify-between mb-4 px-2 tracking-tight font-bold">
             <span className="text-[13px] text-[#64748B]">{currentStudent?.username}</span>
             {/* Circular Timer */}
-            <div className="relative w-16 h-16">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
-                <circle cx="32" cy="32" r={timerRadius} fill="none" stroke="#E0F2FE" strokeWidth="4" />
-                <circle cx="32" cy="32" r={timerRadius} fill="none" stroke={timerColor} strokeWidth="4"
+            <div className="relative w-12 h-12 flex items-center justify-center">
+              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r={timerRadius} fill="none" stroke="#E0F2FE" strokeWidth="3" />
+                <circle cx="32" cy="32" r={timerRadius} fill="none" stroke={timerColor} strokeWidth="3.5"
                   strokeDasharray={timerCircumference} strokeDashoffset={timerOffset}
-                  strokeLinecap="round" className="transition-all duration-1000 ease-linear" />
+                  strokeLinecap="round" className="transition-all duration-1000 linear" />
               </svg>
-              <span className={`absolute inset-0 flex items-center justify-center font-mono font-black text-[14px] ${timeLeft <= 3 ? 'text-red-500' : timeLeft <= 5 ? 'text-amber-500' : 'text-[#0F172A]'}`}>
+              <span className={`text-[15px] font-black font-mono transition-colors duration-300 ${timeLeft <= 3 ? 'text-red-500' : 'text-sky-500'}`}>
                 {timeLeft}
               </span>
             </div>
@@ -322,7 +348,7 @@ const AptiRush = () => {
             <div className="px-6 pb-8">
               <div className="flex items-center justify-between text-[12px] text-[#94A3B8] font-bold">
                 <span>Correct: <span className="text-emerald-500">{currentTest?.showResults !== false ? correctCount : '---'}</span></span>
-                <span>Score: <span className="text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span></span>
+                <span>Score: <span className="text-sky-500">{currentTest?.showResults !== false ? `${score}/200` : '---'}</span></span>
               </div>
             </div>
           </div>
