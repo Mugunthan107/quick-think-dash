@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, Grid3X3, Layers3, BarChart2, Zap, Clock } from 'lucide-react';
+import { Brain, Grid3X3, Layers3, BarChart2, Zap, Clock, Activity } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    GAME DATA
@@ -41,6 +41,30 @@ const GAMES = [
         iconColor: '#F59E0B',
         iconBg: 'rgba(245,158,11,0.08)',
         desc: 'Connect numbers in sequence grids. Boosts pattern recognition.',
+    },
+    {
+        id: 'aptirush',
+        name: 'AptiRush',
+        tag: 'SPEED',
+        tagColor: '#10B981',
+        tagBg: 'rgba(16,185,129,0.08)',
+        borderAccent: 'rgba(16,185,129,0.25)',
+        icon: Zap,
+        iconColor: '#10B981',
+        iconBg: 'rgba(16,185,129,0.08)',
+        desc: 'Rapid fire aptitude questions. Sharpens mental reflexes.',
+    },
+    {
+        id: 'motion',
+        name: 'Motion',
+        tag: 'PRECISION',
+        tagColor: '#EC4899',
+        tagBg: 'rgba(236,72,153,0.08)',
+        borderAccent: 'rgba(236,72,153,0.25)',
+        icon: Activity,
+        iconColor: '#EC4899',
+        iconBg: 'rgba(236,72,153,0.08)',
+        desc: 'Coordinate moves with maximum efficiency. Tests spatial awareness.',
     },
 ] as const;
 

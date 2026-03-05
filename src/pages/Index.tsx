@@ -60,22 +60,33 @@ const AnimatedNumbers = () => {
 
   const layer1 = [
     { char: '×', color: 'text-sky-400', bg: 'bg-sky-400', angle: 0 },
-    { char: '−', color: 'text-sky-500', bg: 'bg-sky-500', angle: 90 },
-    { char: '÷', color: 'text-sky-300', bg: 'bg-sky-300', angle: 180 },
-    { char: '+', color: 'text-sky-600', bg: 'bg-sky-600', angle: 270 },
+    { char: '−', color: 'text-rose-400', bg: 'bg-rose-400', angle: 90 },
+    { char: '÷', color: 'text-emerald-400', bg: 'bg-emerald-400', angle: 180 },
+    { char: '+', color: 'text-amber-400', bg: 'bg-amber-400', angle: 270 },
   ];
 
-  const layer2 = [8, 5, 3, 9, 0, 7, 2, 4, 1, 6, 9, 2].map((n, i) => ({
-    num: n,
-    angle: i * 30 + 15,
-    color: ['text-sky-500', 'text-sky-400', 'text-sky-600'][i % 3],
-    bg: ['bg-sky-500', 'bg-sky-400', 'bg-sky-600'][i % 3],
-    size: i % 2 === 0 ? `${isMobile ? 'w-7 h-7 text-[14px]' : 'w-10 h-10 text-[20px]'}` : `${isMobile ? 'w-6 h-6 text-[12px]' : 'w-8 h-8 text-[16px]'}`
-  }));
+  const layer2 = [8, 5, 3, 9, 0, 7, 2, 4, 1, 6, 9, 2].map((n, i) => {
+    const colors = [
+      { text: 'text-sky-400', bg: 'bg-sky-400' },
+      { text: 'text-rose-400', bg: 'bg-rose-400' },
+      { text: 'text-emerald-400', bg: 'bg-emerald-400' },
+      { text: 'text-amber-400', bg: 'bg-amber-400' },
+      { text: 'text-purple-400', bg: 'bg-purple-400' },
+      { text: 'text-indigo-400', bg: 'bg-indigo-400' },
+    ];
+    const color = colors[i % colors.length];
+    return {
+      num: n,
+      angle: i * 30 + 15,
+      color: color.text,
+      bg: color.bg,
+      size: i % 2 === 0 ? `${isMobile ? 'w-7 h-7 text-[14px]' : 'w-10 h-10 text-[20px]'}` : `${isMobile ? 'w-6 h-6 text-[12px]' : 'w-8 h-8 text-[16px]'}`
+    };
+  });
 
   const layer3 = [
-    { char: <Brain className="w-5 h-5" />, color: 'text-sky-500', bg: 'bg-sky-500', angle: -45 },
-    { char: <Zap className="w-5 h-5" />, color: 'text-sky-400', bg: 'bg-sky-400', angle: 135 },
+    { char: <Brain className="w-5 h-5" />, color: 'text-purple-500', bg: 'bg-purple-500', angle: -45 },
+    { char: <Zap className="w-5 h-5" />, color: 'text-amber-500', bg: 'bg-amber-500', angle: 135 },
   ];
 
   return (
@@ -84,7 +95,7 @@ const AnimatedNumbers = () => {
         const angleRad = item.angle * (Math.PI / 180);
         return (
           <AnimatedNumber key={`l1-${i}`} char={item.char} delay={`${i * 0.4}s`}
-            size={isMobile ? "w-8 h-8" : "w-11 h-11"} color={item.color} bg={item.bg}
+            size={isMobile ? "w-8 h-8" : "w-11 h-11"} color={item.color} bg={item.bg} isPulse={true}
             style={{ left: `calc(50% + ${Math.cos(angleRad) * r1}px)`, top: `calc(50% + ${Math.sin(angleRad) * r1}px)`, transform: 'translate(-50%, -50%)' }}
           />
         );
@@ -103,7 +114,7 @@ const AnimatedNumbers = () => {
         return (
           <div key={`l3-${i}`} className="absolute animate-float"
             style={{ left: `calc(50% + ${Math.cos(angleRad) * r3}px)`, top: `calc(50% + ${Math.sin(angleRad) * r3}px)`, transform: 'translate(-50%, -50%)', animationDelay: `${i * 1.5}s` }}>
-            <div className={`flex items-center justify-center ${isMobile ? 'w-7 h-7' : 'w-10 h-10'} bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-white/50 relative animate-pulse`}>
+            <div className={`flex items-center justify-center ${isMobile ? 'w-7 h-7' : 'w-10 h-10'} bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-white/50 relative animate-pulse-scale`}>
               <div className={`absolute inset-0 rounded-full ${item.bg} opacity-[0.1] blur-sm`} />
               <div className={item.color}>{item.char}</div>
             </div>
