@@ -357,7 +357,7 @@ const NumLinkGame = () => {
         setTimeout(() => setShowFlash(null), 600);
 
         if (currentStudent) {
-          updateStudentProgress(currentStudent.username, newScore, globalRound + 1, newCorrect, TOTAL_ROUNDS);
+          updateStudentProgress(currentStudent.username, newScore, globalRound + 1, newCorrect, TOTAL_ROUNDS, 'numlink');
         }
 
         // Auto advance after brief delay

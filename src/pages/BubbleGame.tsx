@@ -61,7 +61,6 @@ function formatTime(seconds: number) {
 function BubbleGame() {
   const {
     currentStudent,
-    updateStudentScore,
     submitGameResult,
     finishTest,
     currentTest,
@@ -217,7 +216,7 @@ function BubbleGame() {
         setScore(newScore);
         setTotalCorrect(newTotalCorrect);
         if (currentStudent) {
-          updateStudentProgress(currentStudent.username, newScore, level, newTotalCorrect, TOTAL_LEVELS);
+          updateStudentProgress(currentStudent.username, newScore, level, newTotalCorrect, TOTAL_LEVELS, 'bubble');
         }
       } else {
         if (currentTest?.showResults !== false) {

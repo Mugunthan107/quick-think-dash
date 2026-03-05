@@ -358,7 +358,7 @@ const MotionChallenge = () => {
       if (currentStudent) {
         const currentMotionScore = (won ? correctCount + 1 : correctCount) * 20;
         const currentMotionCorrect = won ? correctCount + 1 : correctCount;
-        updateStudentProgress(currentStudent.username, currentMotionScore, next, currentMotionCorrect, TOTAL_LEVELS);
+        updateStudentProgress(currentStudent.username, currentMotionScore, next, currentMotionCorrect, TOTAL_LEVELS, 'motion');
       }
 
       if (next >= TOTAL_LEVELS) {
@@ -375,7 +375,7 @@ const MotionChallenge = () => {
     if (finished && currentStudent && currentTest) {
       const isEndTest = (window as any).__motionEndTest;
       const questionsAttempted = isEndTest ? levelIdx : TOTAL_LEVELS;
-      
+
       submitGameResult(currentStudent.username, {
         gameId: 'motion',
         score: correctCount * 20,

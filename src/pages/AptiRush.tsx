@@ -66,7 +66,17 @@ const ALL_QUESTIONS: Question[] = [
   { id: "q47", topic: "multiplication", text: "5 packets contain 6 biscuits each. Total biscuits?", options: ["25", "30", "35", "40"], correctIndex: 1, difficulty: 1 },
   { id: "q48", topic: "division", text: "60 candies shared equally among 10 children. Each child gets?", options: ["5", "6", "7", "8"], correctIndex: 1, difficulty: 1 },
   { id: "q49", topic: "square_root", text: "What is the square root of 100?", options: ["8", "9", "10", "11"], correctIndex: 2, difficulty: 1 },
-  { id: "q50", topic: "cube_root", text: "What is the cube root of 8?", options: ["1", "2", "3", "4"], correctIndex: 1, difficulty: 1 }
+  { id: "q50", topic: "cube_root", text: "What is the cube root of 8?", options: ["1", "2", "3", "4"], correctIndex: 1, difficulty: 1 },
+  { id: "q51", topic: "average", text: "The average of 3 numbers is 17 and that of the first two is 16. Find the third number.", options: ["17", "18", "19", "20"], correctIndex: 2, difficulty: 1 },
+  { id: "q52", topic: "average", text: "The average of 4 numbers is 20. What is their total sum?", options: ["60", "70", "80", "90"], correctIndex: 2, difficulty: 1 },
+  { id: "q53", topic: "average", text: "The average of two numbers is 15. If one number is 12, what is the other number?", options: ["15", "16", "17", "18"], correctIndex: 3, difficulty: 1 },
+  { id: "q54", topic: "average", text: "The average of 5 numbers is 10. If four numbers are 8, 9, 11 and 12, find the fifth number.", options: ["8", "9", "10", "11"], correctIndex: 2, difficulty: 1 },
+  { id: "q55", topic: "logic", text: "A father is 40 years old and his son is 10 years old. After how many years will the father be twice the age of the son?", options: ["10", "15", "20", "25"], correctIndex: 2, difficulty: 1 },
+  { id: "q56", topic: "fraction", text: "Half of a number is 25. What is the number?", options: ["40", "45", "50", "55"], correctIndex: 2, difficulty: 1 },
+  { id: "q57", topic: "percentage", text: "10 percent of a number is 20. What is the number?", options: ["100", "150", "200", "250"], correctIndex: 2, difficulty: 1 },
+  { id: "q58", topic: "multiplication", text: "A shop sells 12 notebooks per day. How many notebooks are sold in 5 days?", options: ["50", "60", "70", "80"], correctIndex: 1, difficulty: 1 },
+  { id: "q59", topic: "division", text: "48 chocolates are shared equally among 8 children. How many chocolates does each child get?", options: ["5", "6", "7", "8"], correctIndex: 1, difficulty: 1 },
+  { id: "q60", topic: "logic", text: "If one book costs 20 rupees, how much will 6 books cost?", options: ["100", "110", "120", "130"], correctIndex: 2, difficulty: 1 }
 ];
 
 function generateQuestions(): Question[] {
@@ -176,7 +186,7 @@ const AptiRush = () => {
     }
 
     if (currentStudent) {
-      updateStudentProgress(currentStudent.username, newScore, currentQ + 1, newCorrect, TOTAL_LEVELS);
+      updateStudentProgress(currentStudent.username, newScore, currentQ + 1, newCorrect, TOTAL_LEVELS, 'aptirush');
     }
 
     setTimeout(() => advanceQuestion(), 1200);

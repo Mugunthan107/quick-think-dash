@@ -56,8 +56,7 @@ interface GameContextType extends GameState {
   joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string; pending?: boolean }>;
   startTest: () => Promise<void>;
   stopTest: () => Promise<void>;
-  updateStudentScore: (username: string, score: number, level: number, correctAnswers: number) => Promise<void>;
-  submitGameResult: (username: string, result: GameResult) => Promise<void>;
+  submitGameResult: (username: string, result: GameResult & { level?: number }) => Promise<void>;
   finishTest: (username: string) => Promise<void>;
   getLeaderboard: () => Student[];
   deleteAllUsers: () => Promise<void>;
@@ -73,7 +72,7 @@ interface GameContextType extends GameState {
   getGameLeaderboard: (gameId: string) => Student[];
   fetchStudents: (pin: string) => Promise<void>;
   toggleShowResults: (pin: string, show: boolean) => Promise<void>;
-  updateStudentProgress: (username: string, score: number, level: number, correctAnswers: number, totalQuestions: number) => Promise<void>;
+  updateStudentProgress: (username: string, score: number, level: number, correctAnswers: number, totalQuestions: number, gameId: string) => Promise<void>;
 }
 
 const ADMIN_PASSWORD = 'admin123';
@@ -584,51 +583,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     // Real-time listener will handle the actual state sync for everyone
   }, [currentTest]);
 
-  // Real-time progress update for admin dashboard.
-  // currentGameScore/currentGameCorrect should be the TOTALS for the current game so far.
-  const updateStudentProgress = useCallback(async (username: string, currentGameScore: number, level: number, currentGameCorrect: number, totalQuestionsInGame: number) => {
-    if (!currentStudent) return;
-
-    // Sum up previous games + current game progress
-    const prevHistory = currentStudent.gameHistory || [];
-    const prevScore = prevHistory.reduce((acc, g) => acc + g.score, 0);
-    const prevCorrect = prevHistory.reduce((acc, g) => acc + g.correctAnswers, 0);
-    const prevQuestions = prevHistory.reduce((acc, g) => acc + (g.totalQuestions || 0), 0);
-
-    const totalScore = prevScore + currentGameScore;
-    const totalCorrect = prevCorrect + currentGameCorrect;
-    const totalQ = prevQuestions + totalQuestionsInGame;
-
-    setCurrentStudent(prev => prev ? {
-      ...prev,
-      score: totalScore,
-      level,
-      correctAnswers: totalCorrect,
-      totalQuestions: totalQ
-    } : null);
-
-    await supabase
-      .from('exam_results')
-      .update({
-        score: totalScore,
-        level,
-        correct_answers: totalCorrect,
-        total_questions: totalQ
-      })
-      .eq('test_pin', currentStudent.testPin)
-      .eq('student_name', username);
-  }, [currentStudent]);
-
-  // Deprecated/Legacy: keeping for backward compatibility
-  const updateStudentScore = useCallback(async (username: string, score: number, level: number, correctAnswers: number) => {
-    await updateStudentProgress(username, score, level, correctAnswers, 0);
-  }, [updateStudentProgress]);
-
-  const submitGameResult = useCallback(async (username: string, result: GameResult) => {
+  const submitGameResult = useCallback(async (username: string, result: GameResult & { level?: number }) => {
     if (!currentStudent) return;
 
     // Helper to calculate total score and total time
-    const newHistory = [...(currentStudent.gameHistory || []), result];
+    // Filter out previous result for the SAME game if it exists (allows updates during a game)
+    const otherGames = (currentStudent.gameHistory || []).filter(g => g.gameId !== result.gameId);
+    const newHistory = [...otherGames, result];
+
     const totalScore = newHistory.reduce((acc, curr) => acc + curr.score, 0);
     const totalCorrect = newHistory.reduce((acc, curr) => acc + curr.correctAnswers, 0);
     const totalQuestions = newHistory.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
@@ -637,6 +599,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setCurrentStudent(prev => prev ? {
       ...prev,
       score: totalScore,
+      level: result.level || prev.level,
       correctAnswers: totalCorrect,
       totalQuestions: totalQuestions,
       gameHistory: newHistory,
@@ -648,6 +611,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       .from('exam_results')
       .update({
         score: totalScore,
+        level: result.level || currentStudent.level,
         correct_answers: totalCorrect,
         total_questions: totalQuestions,
         game_history: newHistory
@@ -656,6 +620,19 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       .eq('student_name', username);
 
   }, [currentStudent]);
+
+  // Unified progress update
+  const updateStudentProgress = useCallback(async (username: string, score: number, level: number, correctAnswers: number, totalQuestions: number, gameId: string) => {
+    await submitGameResult(username, {
+      gameId,
+      score,
+      correctAnswers,
+      totalQuestions,
+      level,
+      timeTaken: 0, // Interim updates don't need final time
+      completedAt: Date.now()
+    });
+  }, [submitGameResult]);
 
   const finishTest = useCallback(async (username: string) => {
     if (!currentStudent) return;
@@ -789,7 +766,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         joinTest,
         startTest,
         stopTest,
-        updateStudentScore,
         submitGameResult,
         finishTest,
         getLeaderboard,

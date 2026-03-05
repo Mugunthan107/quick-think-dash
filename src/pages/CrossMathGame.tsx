@@ -367,7 +367,7 @@ const CrossMathGame = () => {
     }
 
     if (currentStudent) {
-      updateStudentProgress(currentStudent.username, newScore, currentQ + 1, newCorrect, TOTAL_QUESTIONS);
+      updateStudentProgress(currentStudent.username, newScore, currentQ + 1, newCorrect, TOTAL_QUESTIONS, 'crossmath');
     }
 
     setQuestionActive(false);

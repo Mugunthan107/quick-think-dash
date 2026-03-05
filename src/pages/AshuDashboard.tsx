@@ -20,6 +20,22 @@ import DecorativeCurve from '@/components/DecorativeCurve';
 
 import AshuLogin from './AshuLogin';
 
+const GAME_LABELS: Record<string, string> = {
+  bubble: 'Bubble',
+  crossmath: 'Math',
+  numlink: 'Link',
+  aptirush: 'Apti',
+  motion: 'Motion',
+};
+
+const formatTime = (s: number) => {
+  if (!s || s <= 0) return '—';
+  const m = Math.floor(s / 60);
+  const sec = Math.round(s % 60);
+  if (m > 0) return `${m}m ${sec}s`;
+  return `${sec}s`;
+};
+
 // ─── Medal colors ────────────────────────────────────────
 const MEDAL = {
   1: {
@@ -256,40 +272,34 @@ const AshuDashboard = () => {
     const leaderboard = getLeaderboard();
     if (leaderboard.length === 0) { toast.error('No completed results to download'); return; }
 
-    const doc = new jsPDF();
+    const selectedGames = currentTest?.selectedGames || ['bubble'];
+    const doc = new jsPDF({ orientation: 'landscape' });
 
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(60, 20, 120);
-    doc.text(`Bubble Results — PIN: ${currentTest?.pin}`, 14, 22);
+    doc.text(`Test Results — PIN: ${currentTest?.pin}`, 14, 22);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 100, 120);
     doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}   |   Total Students: ${students.length}`, 14, 30);
 
-    const tableColumn = ["#", "Name", "Bubble", "Math", "Link", "Apti", "Motion", "Total", "Time"];
+    const tableColumn = ["#", "Name", ...selectedGames.map(g => GAME_LABELS[g] || g), "Total Score", "Total Time"];
 
     const tableRows = leaderboard.map((student, index) => {
       const totalTime = student.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || 0;
       const getGameCell = (gameId: string) => {
         const g = student.gameHistory?.find(h => h.gameId === gameId);
         if (!g) return '—';
-        if (gameId === 'motion') {
-          return `${g.correctAnswers}/${g.totalQuestions} (${g.moves ?? g.score} moves)`;
-        }
-        return `${g.correctAnswers}/${g.totalQuestions} (${g.score})`;
+        return `${g.score}`;
       };
       return [
         index + 1,
         student.username,
-        getGameCell('bubble'),
-        getGameCell('crossmath'),
-        getGameCell('numlink'),
-        getGameCell('aptirush'),
-        getGameCell('motion'),
+        ...selectedGames.map(gId => getGameCell(gId)),
         student.score,
-        totalTime.toFixed(1),
+        formatTime(totalTime),
       ];
     });
 
@@ -301,22 +311,11 @@ const AshuDashboard = () => {
       styles: {
         fontSize: 9,
         cellPadding: 4,
-        overflow: 'linebreak',
+        overflow: 'visible',
         lineColor: [220, 215, 240],
-        lineWidth: 0.3,
+        lineWidth: 0.1,
         textColor: [30, 20, 60],
         font: 'helvetica',
-      },
-      columnStyles: {
-        0: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
-        1: { cellWidth: 35, halign: 'left' },
-        2: { cellWidth: 22, halign: 'center' },
-        3: { cellWidth: 22, halign: 'center' },
-        4: { cellWidth: 22, halign: 'center' },
-        5: { cellWidth: 22, halign: 'center' },
-        6: { cellWidth: 22, halign: 'center' },
-        7: { cellWidth: 18, halign: 'right', fontStyle: 'bold' },
-        8: { cellWidth: 16, halign: 'right' },
       },
       headStyles: {
         fillColor: [120, 60, 220],
@@ -325,11 +324,14 @@ const AshuDashboard = () => {
         fontSize: 9,
         halign: 'center',
       },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 'auto', minCellWidth: 40 },
+      },
       alternateRowStyles: { fillColor: [248, 246, 255] },
-      rowPageBreak: 'avoid',
     });
 
-    doc.save(`bubble-results-${currentTest?.pin}.pdf`);
+    doc.save(`results-pin-${currentTest?.pin}.pdf`);
     toast.success('Results downloaded as PDF');
   };
 
@@ -617,59 +619,74 @@ const AshuDashboard = () => {
         {/* ── Embedded Podium Leaderboard ───────────────── */}
         {getLeaderboard().length > 0 && (() => {
           const lb = getLeaderboard();
-          const top3 = lb.slice(0, 3).map(s => {
-            const isMotionOnly = currentTest?.selectedGames?.length === 1 && currentTest.selectedGames[0] === 'motion';
-            return {
-              username: s.username,
-              score: s.score,
-              correctAnswers: s.correctAnswers || 0,
-              totalQuestions: s.totalQuestions || (s.gameHistory?.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0) || (isMotionOnly ? 10 : 30)),
-              timeTaken: s.gameHistory?.reduce((a: number, g: any) => a + g.timeTaken, 0) || 0,
-            };
-          });
-          const rest = lb.slice(3);
+          const selectedGames = currentTest?.selectedGames || ['bubble'];
 
           return (
             <div className="bg-white rounded-2xl border border-border shadow-[0_4px_16px_hsl(260_40%_90%/0.5)] overflow-hidden">
-              {/* Section Header */}
-              <div className="px-4 sm:px-6 pt-5 pb-2">
-                <h2 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">🏆 Leaderboard</h2>
+              <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between bg-white/50">
+                <h2 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-amber-500" /> Live Leaderboard
+                </h2>
+                <button
+                  onClick={() => setShowLeaderboardModal(true)}
+                  className="text-[11px] font-black text-accent hover:text-accent/80 transition-colors uppercase tracking-widest"
+                >
+                  View All Details
+                </button>
               </div>
 
-              {/* Podium */}
-              {top3.length > 0 && (
-                <div className="px-4 sm:px-6 pb-2">
-                  <PodiumRow top3={top3} />
-                </div>
-              )}
-
-              {/* Remaining players table */}
-              {rest.length > 0 && (
-                <div className="border-t border-border">
-                  {/* Table header */}
-                  <div className="grid grid-cols-[2rem_1fr_4.5rem_4.5rem_4.5rem] gap-2 px-4 py-2 bg-secondary/60">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase text-center">#</span>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Name</span>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase text-right">Score</span>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase text-right">Correct</span>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase text-right">Time</span>
-                  </div>
-                  <div className="divide-y divide-border">
-                    {rest.map((s, idx) => {
-                      const totalTime = s.gameHistory?.reduce((a: number, g: any) => a + g.timeTaken, 0) || 0;
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse" style={{ minWidth: `${400 + selectedGames.length * 100}px` }}>
+                  <thead>
+                    <tr className="bg-slate-50/50 border-b border-border">
+                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center w-12 sticky left-0 bg-slate-50 z-10">#</th>
+                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-left min-w-[140px] sticky left-12 bg-slate-50 z-10">Name</th>
+                      {selectedGames.map(gId => (
+                        <th key={gId} className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center">{GAME_LABELS[gId] || gId}</th>
+                      ))}
+                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right block-total">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {lb.map((s, idx) => {
+                      const totalTime = s.gameHistory?.reduce((a, g) => a + g.timeTaken, 0) || 0;
                       return (
-                        <div key={s.username} className={`grid grid-cols-[2rem_1fr_4.5rem_4.5rem_4.5rem] gap-2 px-4 py-2.5 items-center ${idx % 2 === 0 ? 'bg-white' : 'bg-secondary/30'}`}>
-                          <span className="w-7 h-7 bg-secondary rounded-lg flex items-center justify-center text-xs font-bold text-muted-foreground mx-auto">{idx + 4}</span>
-                          <span className="font-semibold text-sm text-foreground truncate">{s.username}</span>
-                          <span className="font-mono font-bold text-sm text-foreground text-right">{s.score}</span>
-                          <span className="font-mono text-xs text-success font-semibold text-right">{s.correctAnswers}/{s.totalQuestions}</span>
-                          <span className="font-mono text-xs text-muted-foreground text-right">{totalTime.toFixed(1)}s</span>
-                        </div>
+                        <tr key={s.username} className={`hover:bg-slate-50/50 transition-colors ${idx < 3 ? 'bg-amber-50/5' : ''}`}>
+                          <td className="px-4 py-3 text-center sticky left-0 bg-inherit z-10">
+                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black
+                              ${idx === 0 ? 'bg-amber-100 text-amber-600 border border-amber-200 shadow-sm' :
+                                idx === 1 ? 'bg-slate-100 text-slate-600 border border-slate-200 shadow-sm' :
+                                  idx === 2 ? 'bg-orange-100 text-orange-600 border border-orange-200 shadow-sm' :
+                                    'bg-secondary text-muted-foreground'}`}>
+                              {idx + 1}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 sticky left-12 bg-inherit z-10">
+                            <span className="font-bold text-foreground block truncate max-w-[120px]">{s.username}</span>
+                            <span className="text-[10px] text-muted-foreground font-semibold">{formatTime(totalTime)}</span>
+                          </td>
+                          {selectedGames.map(gId => {
+                            const gd = s.gameHistory?.find(h => h.gameId === gId);
+                            return (
+                              <td key={gId} className="px-4 py-3 text-center">
+                                {gd ? (
+                                  <div className="flex flex-col items-center">
+                                    <span className="font-mono font-bold text-foreground">{gd.score}</span>
+                                    <span className="text-[9px] text-muted-foreground tabular-nums font-semibold">{formatTime(gd.timeTaken)}</span>
+                                  </div>
+                                ) : <span className="text-muted-foreground/30 font-black">—</span>}
+                              </td>
+                            );
+                          })}
+                          <td className="px-4 py-3 text-right">
+                            <span className="font-mono font-black text-foreground text-base tracking-tighter">{s.score}</span>
+                          </td>
+                        </tr>
                       );
                     })}
-                  </div>
-                </div>
-              )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           );
         })()}
@@ -677,86 +694,97 @@ const AshuDashboard = () => {
         {/* ── Leaderboard Modal ─────────────────────────── */}
         {showLeaderboardModal && (() => {
           const displayList = getDisplayLeaderboard();
-          const top3 = displayList.slice(0, 3).map(buildPodiumEntry);
-          const rest = displayList.slice(3);
+          const selectedGames = currentTest?.selectedGames || ['bubble'];
 
           return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
-              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-border flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+              <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-border flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 overflow-hidden">
 
                 {/* Modal Header */}
-                <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between shrink-0">
-                  <h2 className="text-lg sm:text-xl font-bold text-foreground">🏆 Leaderboard</h2>
+                <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between shrink-0 bg-white">
+                  <h2 className="text-lg sm:text-xl font-bold text-foreground">Detailed Scoreboard</h2>
                   <Button variant="ghost" size="icon" onClick={() => setShowLeaderboardModal(false)} className="rounded-full hover:bg-secondary"><X className="w-5 h-5" /></Button>
                 </div>
 
-                {/* Tabs + Search */}
-                <div className="p-4 border-b border-border bg-secondary/40 shrink-0 space-y-3">
-                  <div className="flex gap-1 p-1 bg-white rounded-xl border border-border flex-wrap">
-                    {(['overall', 'bubble', 'crossmath', 'numlink', 'aptirush', 'motion'] as const).map(tab => (
-                      <button key={tab} onClick={() => setLeaderboardTab(tab)}
-                        className={`flex-1 py-1.5 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all min-w-[60px]
-                          ${leaderboardTab === tab ? 'bg-accent text-accent-foreground shadow-sm' : 'hover:bg-secondary text-muted-foreground'}`}>
-                        {tab === 'overall' ? 'Overall' : tab === 'bubble' ? 'Bubble' : tab === 'crossmath' ? 'Cross Math' : tab === 'numlink' ? 'NumLink' : tab === 'aptirush' ? 'AptiRush' : 'Motion'}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="relative">
+                <div className="p-4 bg-secondary/20 flex flex-col sm:flex-row gap-4 items-center">
+                  <div className="relative flex-1 w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input placeholder="Search student..." value={leaderboardSearch} onChange={e => setLeaderboardSearch(e.target.value)} className="pl-9 bg-white border-border" />
                   </div>
+                  <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 no-scrollbar">
+                    {leaderboardTab !== 'overall' ? (
+                      <Button variant="outline" size="sm" onClick={() => setLeaderboardTab('overall')} className="rounded-lg h-9 text-xs font-bold shrink-0">Show Overall</Button>
+                    ) : (
+                      <div className="bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-lg text-xs font-bold text-accent shrink-0">Overall View Enabled</div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Scrollable content */}
-                <div className="overflow-y-auto flex-1">
+                {/* Table container with horizontal scroll */}
+                <div className="overflow-auto flex-1 custom-scrollbar pb-10">
                   {displayList.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground font-medium">No completed results yet.</div>
+                    <div className="text-center py-20 text-muted-foreground font-medium italic">No results found matching your search.</div>
                   ) : (
-                    <>
-                      {/* Podium (only when no search filter active or top3 passes filter) */}
-                      {top3.length > 0 && (
-                        <div className="px-4 sm:px-6 py-4 border-b border-border bg-gradient-to-b from-secondary/30 to-transparent">
-                          <PodiumRow top3={top3} />
-                        </div>
-                      )}
-
-                      {/* Remaining rows */}
-                      {rest.length > 0 && (
-                        <div>
-                          {/* Table Header */}
-                          <div className="grid grid-cols-[2.5rem_1fr_5rem_5rem_5rem] gap-2 px-4 py-2.5 bg-secondary/50 border-b border-border sticky top-0">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">#</span>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Name</span>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Score</span>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Correct</span>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Time</span>
-                          </div>
-
-                          <div className="divide-y divide-border">
-                            {rest.map((s, idx) => {
-                              const entry = buildPodiumEntry(s);
-                              const totalTime = leaderboardTab === 'overall'
-                                ? (s.gameHistory?.reduce((a: number, g: any) => a + g.timeTaken, 0) || 0)
-                                : entry.timeTaken;
-
-                              return (
-                                <div key={s.username} className={`grid grid-cols-[2.5rem_1fr_5rem_5rem_5rem] gap-2 px-4 py-3 items-center ${idx % 2 === 0 ? 'bg-white' : 'bg-secondary/20'}`}>
-                                  <span className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center text-xs font-bold text-muted-foreground mx-auto">
-                                    {idx + 4}
-                                  </span>
-                                  <span className="font-semibold text-sm text-foreground truncate">{s.username}</span>
-                                  <span className="font-mono font-bold text-sm text-foreground text-right">{entry.score}</span>
-                                  <span className="font-mono text-sm text-success font-semibold text-right">{entry.correctAnswers}/{entry.totalQuestions}</span>
-                                  <span className="font-mono text-xs text-muted-foreground text-right flex items-center justify-end gap-1">
-                                    <Clock className="w-3 h-3 opacity-40" />{totalTime.toFixed(1)}s
-                                  </span>
+                    <table className="w-full text-sm border-collapse" style={{ minWidth: `${500 + selectedGames.length * 100}px` }}>
+                      <thead>
+                        <tr className="bg-secondary/40 border-b border-border sticky top-0 z-20">
+                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center w-16 sticky left-0 bg-secondary z-30">Rank</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-left min-w-[180px] sticky left-16 bg-secondary z-30">Student Name</th>
+                          {selectedGames.map(gId => (
+                            <th key={gId} className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center">{GAME_LABELS[gId] || gId}</th>
+                          ))}
+                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right sticky right-0 bg-secondary z-20">Total Score</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {displayList.map((s, idx) => {
+                          const totalTime = s.gameHistory?.reduce((a, g) => a + (g.timeTaken || 0), 0) || 0;
+                          return (
+                            <tr key={s.username} className={`hover:bg-slate-50 transition-colors group ${idx < 3 ? 'bg-amber-50/10' : ''}`}>
+                              <td className="px-6 py-5 text-center sticky left-0 bg-inherit z-10">
+                                <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-sm mx-auto
+                                  ${idx === 0 ? 'bg-amber-400 text-white' :
+                                    idx === 1 ? 'bg-slate-400 text-white' :
+                                      idx === 2 ? 'bg-orange-400 text-white' :
+                                        'bg-secondary text-muted-foreground'}`}>
+                                  {idx + 1}
+                                </span>
+                              </td>
+                              <td className="px-6 py-5 sticky left-16 bg-inherit z-10 border-r border-border/50">
+                                <span className="font-black text-foreground text-[15px]">{s.username}</span>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Clock className="w-3 h-3 text-muted-foreground" />
+                                  <span className="text-[11px] text-muted-foreground font-bold">{formatTime(totalTime)}</span>
+                                  <span className="text-[11px] text-muted-foreground">•</span>
+                                  <span className="text-[11px] text-muted-foreground font-bold">{s.gamesPlayed || 0} Games</span>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </>
+                              </td>
+                              {selectedGames.map(gId => {
+                                const gd = s.gameHistory?.find(h => h.gameId === gId);
+                                return (
+                                  <td key={gId} className="px-6 py-5 text-center">
+                                    {gd ? (
+                                      <div className="flex flex-col items-center">
+                                        <div className="flex items-center gap-1.5 justify-center mb-1">
+                                          <span className="font-mono font-black text-foreground text-[14px]">{gd.score}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 justify-center">
+                                          <span className="text-[10px] text-success font-black">{gd.correctAnswers}/{gd.totalQuestions}</span>
+                                          <span className="text-[10px] text-muted-foreground font-semibold tabular-nums">{formatTime(gd.timeTaken)}</span>
+                                        </div>
+                                      </div>
+                                    ) : <span className="text-muted-foreground/30 font-black">—</span>}
+                                  </td>
+                                );
+                              })}
+                              <td className="px-6 py-5 text-right sticky right-0 bg-inherit z-10 shadow-[-10px_0_15px_-10px_rgba(0,0,0,0.05)]">
+                                <span className="font-mono font-black text-sky-600 text-xl tracking-tighter">{s.score}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   )}
                 </div>
               </div>
