@@ -21,8 +21,11 @@ const WaitingApproval = () => {
                 (payload) => {
                     const data = payload.new as any;
                     if (!data || data.test_pin !== pin) return;
-                    if (data.status === 'APPROVED') joinTest(pin, username).then(r => { if (r.success) navigate('/lobby'); });
-                    else if (data.status === 'REJECTED') setIsRejected(true);
+                    if (data.status === 'APPROVED') {
+                        joinTest(pin, username).then(r => { if (r.success) navigate('/lobby'); });
+                    } else if (data.status === 'REJECTED') {
+                        setIsRejected(true);
+                    }
                 })
             .subscribe();
         return () => { supabase.removeChannel(channel); };

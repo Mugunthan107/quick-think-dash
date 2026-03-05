@@ -280,7 +280,7 @@ function formatTime(s: number) {
    COMPONENT
 ───────────────────────────────────────────────────────────────────────────── */
 const MotionChallenge = () => {
-  const { currentStudent, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
+  const { currentStudent, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame, updateStudentProgress } = useGame();
   const navigate = useNavigate();
 
   /* ── State ── */
@@ -353,6 +353,14 @@ const MotionChallenge = () => {
     setTimeout(() => {
       setLevelFlash(null);
       const next = levelIdx + 1;
+
+      // Real-time progress update for admin
+      if (currentStudent) {
+        const currentMotionScore = (won ? correctCount + 1 : correctCount) * 20;
+        const currentMotionCorrect = won ? correctCount + 1 : correctCount;
+        updateStudentProgress(currentStudent.username, currentMotionScore, next, currentMotionCorrect, TOTAL_LEVELS);
+      }
+
       if (next >= TOTAL_LEVELS) {
         setFinished(true);
       } else {
@@ -368,14 +376,15 @@ const MotionChallenge = () => {
 
       submitGameResult(currentStudent.username, {
         gameId: 'motion',
-        score: totalMoves,
+        score: correctCount * 20, // Points based score (20 per level)
+        moves: totalMoves,       // Real moves tracking
         timeTaken: elapsed,
         correctAnswers: correctCount,
         totalQuestions: TOTAL_LEVELS,
         completedAt: Date.now(),
       }).then(() => addCompletedGame('motion'));
 
-      setScore(totalMoves);
+      setScore(correctCount * 20);
     }
   }, [finished]);
 

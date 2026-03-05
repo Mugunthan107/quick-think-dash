@@ -184,7 +184,7 @@ function generateDistractors(correctValues: number[], count: number): number[] {
 
 // ——— Component ——————————————————————————————————————————————————————————————————————
 const CrossMathGame = () => {
-  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
+  const { currentStudent, updateStudentProgress, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
   const navigate = useNavigate();
 
   const [puzzles] = useState<CrossMathPuzzle[]>(() =>
@@ -362,7 +362,7 @@ const CrossMathGame = () => {
     }
 
     if (currentStudent) {
-      updateStudentScore(currentStudent.username, newScore, currentQ + 1, newCorrect);
+      updateStudentProgress(currentStudent.username, newScore, currentQ + 1, newCorrect, TOTAL_QUESTIONS);
     }
 
     setQuestionActive(false);
@@ -372,7 +372,7 @@ const CrossMathGame = () => {
     } else {
       setCurrentQ(prev => prev + 1);
     }
-  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentScore, handleFinish]);
+  }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentProgress, handleFinish]);
 
   // Auto-submit when all blanks are filled
   useEffect(() => {

@@ -183,7 +183,7 @@ function generateSnakePuzzlePath(gridSize: number): { row: number; col: number }
 
 // ——— Component ——————————————————————————————————————————————————————————————————————
 const NumLinkGame = () => {
-  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest,
+  const { currentStudent, updateStudentProgress, submitGameResult, finishTest, currentTest,
     addCompletedGame,
     getNextGame,
   } = useGame();
@@ -357,7 +357,7 @@ const NumLinkGame = () => {
         setTimeout(() => setShowFlash(null), 600);
 
         if (currentStudent) {
-          updateStudentScore(currentStudent.username, newScore, globalRound + 1, newCorrect);
+          updateStudentProgress(currentStudent.username, newScore, globalRound + 1, newCorrect, TOTAL_ROUNDS);
         }
 
         // Auto advance after brief delay
@@ -376,7 +376,7 @@ const NumLinkGame = () => {
       gridStateRef.current = newGrid;
       setGrid(newGrid);
     }
-  }, [currentLevel, globalRound, score, correctCount, currentStudent, updateStudentScore, roundComplete, roundFailed]);
+  }, [currentLevel, globalRound, score, correctCount, currentStudent, updateStudentProgress, roundComplete, roundFailed]);
 
   const handleMouseUp = useCallback(() => {
     isDrawingRef.current = false;

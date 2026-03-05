@@ -81,7 +81,7 @@ function generateQuestions(): Question[] {
 }
 
 const AptiRush = () => {
-  const { currentStudent, updateStudentScore, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
+  const { currentStudent, updateStudentProgress, submitGameResult, finishTest, currentTest, addCompletedGame, getNextGame } = useGame();
   const navigate = useNavigate();
 
   const questions = useMemo(() => generateQuestions(), []);
@@ -133,14 +133,24 @@ const AptiRush = () => {
     setSelected(idx);
 
     const question = questions[currentQ];
+    let newScore = score;
+    let newCorrect = correctCount;
+
     if (idx === question.correctIndex) {
       const speedBonus = timeLeft >= 8 ? 5 : 0;
-      setScore(p => p + 10 + speedBonus);
-      setCorrectCount(p => p + 1);
+      newScore = score + 10 + speedBonus;
+      newCorrect = correctCount + 1;
+      setScore(newScore);
+      setCorrectCount(newCorrect);
       setShowResult('correct');
     } else {
       setShowResult('wrong');
     }
+
+    if (currentStudent) {
+      updateStudentProgress(currentStudent.username, newScore, currentQ + 1, newCorrect, TOTAL_LEVELS);
+    }
+
     setTimeout(() => advanceQuestion(), 1200);
   };
 
@@ -237,12 +247,12 @@ const AptiRush = () => {
                 {timeLeft}
               </span>
             </div>
-            <button 
+            <button
               onClick={() => {
                 if (window.confirm('Are you sure you want to end the test?')) {
                   handleFinish();
                 }
-              }} 
+              }}
               className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest flex items-center gap-1"
             >
               <LogOut className="w-3 h-3" /> End Test

@@ -211,7 +211,9 @@ const AshuDashboard = () => {
   useEffect(() => {
     if (pendingStudents.length > prevPendingCount.current) {
       toast.info(`${pendingStudents.length - prevPendingCount.current} new join request(s)`, {
-        action: { label: 'View', onClick: () => setShowRequestsModal(true) }
+        description: 'A student is waiting for approval to join the active test.',
+        duration: 8000,
+        action: { label: 'Review', onClick: () => setShowRequestsModal(true) }
       });
     }
     prevPendingCount.current = pendingStudents.length;
@@ -273,6 +275,9 @@ const AshuDashboard = () => {
       const getGameCell = (gameId: string) => {
         const g = student.gameHistory?.find(h => h.gameId === gameId);
         if (!g) return '—';
+        if (gameId === 'motion') {
+          return `${g.correctAnswers}/${g.totalQuestions} (${g.moves ?? g.score} moves)`;
+        }
         return `${g.correctAnswers}/${g.totalQuestions} (${g.score})`;
       };
       return [
@@ -349,10 +354,11 @@ const AshuDashboard = () => {
   const buildPodiumEntry = (s: any) => {
     if (leaderboardTab === 'overall') {
       const totalTime = s.gameHistory?.reduce((acc: number, g: any) => acc + g.timeTaken, 0) || 0;
-      return { username: s.username, score: s.score, correctAnswers: s.correctAnswers || 0, totalQuestions: s.totalQuestions || (s.gameHistory?.reduce((acc: number, g: any) => acc + (g.totalQuestions || 0), 0) || 0), timeTaken: totalTime };
+      return { username: s.username, score: s.score, correctAnswers: s.correctAnswers || 0, totalQuestions: s.totalQuestions || 0, timeTaken: totalTime };
     }
     const h = s.gameHistory?.find((g: any) => g.gameId === leaderboardTab);
-    return { username: s.username, score: h?.score || 0, correctAnswers: h?.correctAnswers || 0, totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : 20), timeTaken: h?.timeTaken || 0 };
+    const displayScore = leaderboardTab === 'motion' ? (h?.moves ?? h?.score ?? 0) : (h?.score ?? 0);
+    return { username: s.username, score: displayScore, correctAnswers: h?.correctAnswers || 0, totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : 20), timeTaken: h?.timeTaken || 0 };
   };
 
   return (

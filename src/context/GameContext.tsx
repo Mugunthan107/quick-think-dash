@@ -9,6 +9,7 @@ export interface GameResult {
   correctAnswers: number;
   totalQuestions: number;
   completedAt: number;
+  moves?: number;
 }
 
 export interface Student {
@@ -72,6 +73,7 @@ interface GameContextType extends GameState {
   getGameLeaderboard: (gameId: string) => Student[];
   fetchStudents: (pin: string) => Promise<void>;
   toggleShowResults: (pin: string, show: boolean) => Promise<void>;
+  updateStudentProgress: (username: string, score: number, level: number, correctAnswers: number, totalQuestions: number) => Promise<void>;
 }
 
 const ADMIN_PASSWORD = 'admin123';
@@ -577,35 +579,50 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const rejectStudent = useCallback(async (username: string) => {
     if (!currentTest) return;
-    await supabase.from('exam_results').delete().eq('test_pin', currentTest.pin).eq('student_name', username);
+    await supabase.from('exam_results').update({ status: 'REJECTED' }).eq('test_pin', currentTest.pin).eq('student_name', username);
     setPendingStudents(prev => prev.filter(s => s.username !== username));
     // Real-time listener will handle the actual state sync for everyone
   }, [currentTest]);
 
-  // Deprecated/Legacy: keeping for backward compatibility but simpler apps should use submitGameResult
-  const updateStudentScore = useCallback(async (username: string, score: number, level: number, correctAnswers: number) => {
+  // Real-time progress update for admin dashboard.
+  // currentGameScore/currentGameCorrect should be the TOTALS for the current game so far.
+  const updateStudentProgress = useCallback(async (username: string, currentGameScore: number, level: number, currentGameCorrect: number, totalQuestionsInGame: number) => {
     if (!currentStudent) return;
 
     // Sum up previous games + current game progress
     const prevHistory = currentStudent.gameHistory || [];
     const prevScore = prevHistory.reduce((acc, g) => acc + g.score, 0);
     const prevCorrect = prevHistory.reduce((acc, g) => acc + g.correctAnswers, 0);
+    const prevQuestions = prevHistory.reduce((acc, g) => acc + (g.totalQuestions || 0), 0);
 
-    const totalScore = prevScore + score;
-    const totalCorrect = prevCorrect + correctAnswers;
+    const totalScore = prevScore + currentGameScore;
+    const totalCorrect = prevCorrect + currentGameCorrect;
+    const totalQ = prevQuestions + totalQuestionsInGame;
 
-    setCurrentStudent(prev => prev ? { ...prev, score: totalScore, level, correctAnswers: totalCorrect } : null);
+    setCurrentStudent(prev => prev ? {
+      ...prev,
+      score: totalScore,
+      level,
+      correctAnswers: totalCorrect,
+      totalQuestions: totalQ
+    } : null);
 
     await supabase
       .from('exam_results')
       .update({
         score: totalScore,
         level,
-        correct_answers: totalCorrect
+        correct_answers: totalCorrect,
+        total_questions: totalQ
       })
       .eq('test_pin', currentStudent.testPin)
       .eq('student_name', username);
   }, [currentStudent]);
+
+  // Deprecated/Legacy: keeping for backward compatibility
+  const updateStudentScore = useCallback(async (username: string, score: number, level: number, correctAnswers: number) => {
+    await updateStudentProgress(username, score, level, correctAnswers, 0);
+  }, [updateStudentProgress]);
 
   const submitGameResult = useCallback(async (username: string, result: GameResult) => {
     if (!currentStudent) return;
@@ -654,22 +671,18 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }, [currentStudent]);
 
   const getLeaderboard = useCallback(() => {
-    const isMotionOnly = currentTest?.selectedGames && currentTest.selectedGames.length === 1 && currentTest.selectedGames[0] === 'motion';
-
     return [...students]
       .filter(s => s.isFinished)
       .sort((a, b) => {
-        if (isMotionOnly) {
-          if (a.score !== b.score) return a.score - b.score; // Lower moves better
-        } else {
-          if (b.score !== a.score) return b.score - a.score; // Higher points better
-        }
+        // Overall is ALWAYS sorted by Score Descending (Higher points = better)
+        if (b.score !== a.score) return b.score - a.score;
+
         // Secondary: Total Time (Ascending - lower is better)
         const timeA = a.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || (a.completedAt! - a.startedAt) / 1000;
         const timeB = b.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || (b.completedAt! - b.startedAt) / 1000;
         return timeA - timeB;
       });
-  }, [students, currentTest]);
+  }, [students]);
 
   const deleteAllUsers = useCallback(async () => {
     if (!currentTest) return;
@@ -734,8 +747,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       .sort((a, b) => {
         const resA = a.gameHistory.find(g => g.gameId === gameId)!;
         const resB = b.gameHistory.find(g => g.gameId === gameId)!;
-        if (resB.score !== resA.score) {
-          return gameId === 'motion' ? resA.score - resB.score : resB.score - resA.score;
+
+        if (gameId === 'motion') {
+          // Motion sorts by moves ASC (Lower moves = better)
+          const movesA = resA.moves ?? resA.score;
+          const movesB = resB.moves ?? resB.score;
+          if (movesA !== movesB) return movesA - movesB;
+        } else {
+          // Others sort by score DESC (Higher score = better)
+          if (resB.score !== resA.score) return resB.score - resA.score;
         }
         return resA.timeTaken - resB.timeTaken;
       });
@@ -785,6 +805,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         resetCompletedGames,
         getGameLeaderboard,
         fetchStudents,
+        updateStudentProgress,
         toggleShowResults: async (pin, show) => {
           const { error } = await supabase
             .from('test_sessions')

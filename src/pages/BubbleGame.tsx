@@ -67,6 +67,7 @@ function BubbleGame() {
     currentTest,
     addCompletedGame,
     getNextGame,
+    updateStudentProgress,
   } = useGame();
   const navigate = useNavigate();
 
@@ -208,6 +209,9 @@ function BubbleGame() {
         }
         setScore(newScore);
         setTotalCorrect(newTotalCorrect);
+        if (currentStudent) {
+          updateStudentProgress(currentStudent.username, newScore, level, newTotalCorrect, TOTAL_LEVELS);
+        }
       } else {
         if (currentTest?.showResults !== false) {
           setFeedback('error');
@@ -217,9 +221,7 @@ function BubbleGame() {
       setGameActive(false);
       if (timerRef.current) clearInterval(timerRef.current);
 
-      if (currentStudent) {
-        updateStudentScore(currentStudent.username, newScore, level, newTotalCorrect);
-      }
+      // Removed updateStudentScore as updateStudentProgress handles it correctly now
 
       setTimeout(() => {
         setFeedback(null); // Clear feedback after a delay
