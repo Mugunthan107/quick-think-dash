@@ -584,22 +584,48 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }, [currentTest]);
 
   const submitGameResult = useCallback(async (username: string, result: GameResult & { level?: number }) => {
-    if (!currentStudent) return;
+    // CRITICAL: Use currentStudentRef to ensure we have the absolute latest state
+    // avoid closures on state that might be stale during rapid updates
+    const activeStudent = currentStudentRef.current;
+    if (!activeStudent) {
+      console.warn('[GameContext] No active student found during result submission');
+      return;
+    }
 
     // Helper to calculate total score and total time
-    // Filter out previous result for the SAME game if it exists (allows updates during a game)
-    const otherGames = (currentStudent.gameHistory || []).filter(g => g.gameId !== result.gameId);
-    const newHistory = [...otherGames, result];
+    // Filter out previous result for THE SAME game if it exists (allows updates during a game)
+    const history = activeStudent.gameHistory || [];
+    const otherGames = history.filter(g => g.gameId !== result.gameId);
 
-    const totalScore = newHistory.reduce((acc, curr) => acc + curr.score, 0);
-    const totalCorrect = newHistory.reduce((acc, curr) => acc + curr.correctAnswers, 0);
-    const totalQuestions = newHistory.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
+    // Ensure all values are valid numbers
+    const safeResult = {
+      ...result,
+      score: Number(result.score) || 0,
+      correctAnswers: Number(result.correctAnswers) || 0,
+      totalQuestions: Number(result.totalQuestions) || 0,
+      timeTaken: Number(result.timeTaken) || 0
+    };
+
+    const newHistory = [...otherGames, safeResult];
+
+    const totalScore = newHistory.reduce((acc, curr) => acc + (Number(curr.score) || 0), 0);
+    const totalCorrect = newHistory.reduce((acc, curr) => acc + (Number(curr.correctAnswers) || 0), 0);
+    const totalQuestions = newHistory.reduce((acc, curr) => acc + (Number(curr.totalQuestions) || 0), 0);
+
+    const level = result.level || activeStudent.level;
+
+    console.log(`[GameContext] Submitting result for ${username}:`, {
+      gameId: result.gameId,
+      newScore: safeResult.score,
+      totalScore,
+      historyLength: newHistory.length
+    });
 
     // Optimistic update
     setCurrentStudent(prev => prev ? {
       ...prev,
       score: totalScore,
-      level: result.level || prev.level,
+      level: level,
       correctAnswers: totalCorrect,
       totalQuestions: totalQuestions,
       gameHistory: newHistory,
@@ -607,19 +633,25 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     } : null);
 
     // DB Update
-    await supabase
+    const { error } = await supabase
       .from('exam_results')
       .update({
         score: totalScore,
-        level: result.level || currentStudent.level,
+        level: level,
         correct_answers: totalCorrect,
         total_questions: totalQuestions,
         game_history: newHistory
       })
-      .eq('test_pin', currentStudent.testPin)
+      .eq('test_pin', activeStudent.testPin)
       .eq('student_name', username);
 
-  }, [currentStudent]);
+    if (error) {
+      console.error('[GameContext] Database update failed:', error);
+      toast.error('Progress sync failed: ' + error.message);
+    } else {
+      console.log('[GameContext] Database updated successfully');
+    }
+  }, []);
 
   // Unified progress update
   const updateStudentProgress = useCallback(async (username: string, score: number, level: number, correctAnswers: number, totalQuestions: number, gameId: string) => {
