@@ -342,8 +342,11 @@ const MotionChallenge = () => {
   const advanceLevel = useCallback((won: boolean, movesUsed: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
 
+    let roundPoints = 0;
     if (won) {
       setCorrectCount(c => c + 1);
+      roundPoints = movesUsed < 12 ? 10 : 5;
+      setScore(s => s + roundPoints);
     }
 
     setLevelFlash(won ? 'success' : null);
@@ -356,9 +359,11 @@ const MotionChallenge = () => {
 
       // Real-time progress update for admin
       if (currentStudent) {
-        const currentMotionScore = (won ? correctCount + 1 : correctCount) * 20;
-        const currentMotionCorrect = won ? correctCount + 1 : correctCount;
-        updateStudentProgress(currentStudent.username, currentMotionScore, next, currentMotionCorrect, TOTAL_LEVELS, 'motion');
+        // Use functional state updates or local variables to avoid closure issues with score
+        setScore(currentScore => {
+          updateStudentProgress(currentStudent.username, currentScore, next, won ? correctCount + 1 : correctCount, TOTAL_LEVELS, 'motion');
+          return currentScore;
+        });
       }
 
       if (next >= TOTAL_LEVELS) {
@@ -368,7 +373,7 @@ const MotionChallenge = () => {
         setTransitioning(false);
       }
     }, 700);
-  }, [levelIdx]);
+  }, [levelIdx, correctCount, currentStudent, updateStudentProgress]);
 
   /* ── Data submission ── */
   useEffect(() => {
@@ -378,7 +383,7 @@ const MotionChallenge = () => {
 
       submitGameResult(currentStudent.username, {
         gameId: 'motion',
-        score: correctCount * 20,
+        score,
         moves: totalMoves,
         timeTaken: elapsed,
         correctAnswers: correctCount,
@@ -392,7 +397,6 @@ const MotionChallenge = () => {
         }
       });
 
-      setScore(correctCount * 20);
       delete (window as any).__motionEndTest;
     }
   }, [finished]);

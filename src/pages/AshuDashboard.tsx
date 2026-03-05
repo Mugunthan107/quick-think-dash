@@ -717,6 +717,7 @@ const AshuDashboard = () => {
                       {selectedGames.map(gId => (
                         <th key={gId} className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center">{GAME_LABELS[gId] || gId}</th>
                       ))}
+                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right block-total">Correct</th>
                       <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-right block-total">Total</th>
                     </tr>
                   </thead>
@@ -752,7 +753,17 @@ const AshuDashboard = () => {
                             );
                           })}
                           <td className="px-4 py-3 text-right">
-                            <span className="font-mono font-black text-foreground text-base tracking-tighter">{s.score}</span>
+                            <span className="font-mono font-bold text-emerald-500 text-sm leading-none">
+                              {s.correctAnswers}/{s.totalQuestions}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="font-mono font-black text-foreground text-base tracking-tighter block leading-none">
+                              {s.score}
+                            </span>
+                            <span className="font-mono font-bold text-[#94A3B8] text-[10px] block mt-1">
+                              {totalTime.toFixed(1)}s
+                            </span>
                           </td>
                         </tr>
                       );

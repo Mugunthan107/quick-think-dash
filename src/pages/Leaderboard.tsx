@@ -365,8 +365,7 @@ const Leaderboard = () => {
                           </td>
                           <td className="text-right px-3 sm:px-4 py-4">
                             <div className="flex items-center gap-1.5 justify-end">
-                              <Clock className="w-3.5 h-3.5 text-[#94A3B8]" />
-                              <span className="font-mono text-[13px] sm:text-[14px] font-black text-[#0F172A]">{formatTime(totalTime)}</span>
+                              <span className="font-mono text-[13px] sm:text-[14px] font-black text-[#0F172A]">{totalTime.toFixed(1)}s</span>
                             </div>
                           </td>
                         </tr>
