@@ -29,6 +29,14 @@ const GAME_LABELS: Record<string, string> = {
   motion: 'Motion',
 };
 
+const GAME_MAX_SCORES: Record<string, number> = {
+  bubble: 600,
+  numlink: 250,
+  motion: 100,
+  aptirush: 200,
+  crossmath: 350,
+};
+
 const formatTime = (s: number) => {
   if (!s || s <= 0) return '—';
   const m = Math.floor(s / 60);
@@ -567,9 +575,6 @@ const AshuDashboard = () => {
                       )}
                     </Button>
                   </div>
-                  <p className="text-[9px] text-muted-foreground mt-2 font-medium leading-tight">
-                    {currentTest.showResults ? 'Students see score & feedback' : 'Students see no score/feedback'}
-                  </p>
                 </div>
 
                 {/* Controls */}
@@ -759,7 +764,11 @@ const AshuDashboard = () => {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <span className="font-mono font-black text-foreground text-base tracking-tighter block leading-none">
-                              {s.score}
+                              {(() => {
+                                const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+                                if (totalPossible === 0) return '0%';
+                                return `${((s.score / totalPossible) * 100).toFixed(0)}%`;
+                              })()}
                             </span>
                             <span className="font-mono font-bold text-[#94A3B8] text-[10px] block mt-1">
                               {totalTime.toFixed(1)}s

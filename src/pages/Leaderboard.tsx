@@ -14,6 +14,14 @@ const GAME_LABELS: Record<string, string> = {
   motion: 'Motion',
 };
 
+const GAME_MAX_SCORES: Record<string, number> = {
+  bubble: 600,
+  numlink: 250,
+  motion: 100,
+  aptirush: 200,
+  crossmath: 350,
+};
+
 const formatTime = (s: number) => {
   if (!s || s <= 0) return '—';
   const m = Math.floor(s / 60);
@@ -361,7 +369,14 @@ const Leaderboard = () => {
                             );
                           })}
                           <td className="text-right px-3 sm:px-4 py-4">
-                            <span className="font-mono font-black text-[18px] sm:text-[20px] text-sky-500 tabular-nums" style={{ textShadow: '0 0 20px rgba(56,189,248,0.1)' }}>{s.score}</span>
+                            <span className="font-mono font-black text-[18px] sm:text-[20px] text-sky-500 tabular-nums block leading-none" style={{ textShadow: '0 0 20px rgba(56,189,248,0.1)' }}>
+                              {(() => {
+                                const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+                                if (totalPossible === 0) return '0%';
+                                return `${((s.score / totalPossible) * 100).toFixed(0)}%`;
+                              })()}
+                            </span>
+                            <span className="font-mono font-bold text-[#94A3B8] text-[11px] block mt-1">{totalTime.toFixed(1)}s</span>
                           </td>
                           <td className="text-right px-3 sm:px-4 py-4">
                             <div className="flex items-center gap-1.5 justify-end">
