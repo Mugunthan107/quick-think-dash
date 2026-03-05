@@ -48,87 +48,62 @@ const AnimatedNumber = ({ initialNum, char, delay, size, color, bg, style, isPul
 };
 
 const AnimatedNumbers = () => {
-  // Layer 1: Symbols (Radius 180) - Symmetrical 4 Sides
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  const scale = isMobile ? 0.55 : 1;
+  const r1 = 180 * scale, r2 = 230 * scale, r3 = 280 * scale;
+
   const layer1 = [
-    { char: '×', color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]', angle: 0 },
-    { char: '−', color: 'text-[#22D3EE]', bg: 'bg-[#22D3EE]', angle: 90 },
-    { char: '÷', color: 'text-[#22C55E]', bg: 'bg-[#22C55E]', angle: 180 },
-    { char: '+', color: 'text-[#6C63FF]', bg: 'bg-[#6C63FF]', angle: 270 },
+    { char: '×', color: 'text-sky-400', bg: 'bg-sky-400', angle: 0 },
+    { char: '−', color: 'text-sky-500', bg: 'bg-sky-500', angle: 90 },
+    { char: '÷', color: 'text-sky-300', bg: 'bg-sky-300', angle: 180 },
+    { char: '+', color: 'text-sky-600', bg: 'bg-sky-600', angle: 270 },
   ];
 
-  // Layer 2: Numbers (Radius 230) - 12 Items for balanced visual richness
   const layer2 = [8, 5, 3, 9, 0, 7, 2, 4, 1, 6, 9, 2].map((n, i) => ({
     num: n,
-    angle: i * 30 + 15, // Uniform 30° intervals
-    color: ['text-[#6C63FF]', 'text-[#22D3EE]', 'text-[#F59E0B]'][i % 3],
-    bg: ['bg-[#6C63FF]', 'bg-[#22D3EE]', 'bg-[#F59E0B]'][i % 3],
-    size: i % 2 === 0 ? "w-10 h-10 text-[20px]" : "w-8 h-8 text-[16px]"
+    angle: i * 30 + 15,
+    color: ['text-sky-500', 'text-sky-400', 'text-sky-600'][i % 3],
+    bg: ['bg-sky-500', 'bg-sky-400', 'bg-sky-600'][i % 3],
+    size: i % 2 === 0 ? `${isMobile ? 'w-7 h-7 text-[14px]' : 'w-10 h-10 text-[20px]'}` : `${isMobile ? 'w-6 h-6 text-[12px]' : 'w-8 h-8 text-[16px]'}`
   }));
 
-  // Layer 3: Anchors (Radius 280) - Slightly larger as requested
   const layer3 = [
-    { char: <Brain className="w-5 h-5" />, color: 'text-[#6C63FF]', bg: 'bg-[#6C63FF]', angle: -45 }, // Top Right
-    { char: <Zap className="w-5 h-5" />, color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]', angle: 135 }, // Bottom Left
+    { char: <Brain className="w-5 h-5" />, color: 'text-sky-500', bg: 'bg-sky-500', angle: -45 },
+    { char: <Zap className="w-5 h-5" />, color: 'text-sky-400', bg: 'bg-sky-400', angle: 135 },
   ];
 
   return (
     <div className="absolute inset-0 flex items-center justify-center">
-      {/* Layer 1: Inner Symbols */}
       {layer1.map((item, i) => {
         const angleRad = item.angle * (Math.PI / 180);
         return (
-          <AnimatedNumber
-            key={`l1-${i}`}
-            char={item.char}
-            delay={`${i * 0.4}s`}
-            size="w-11 h-11"
-            color={item.color}
-            bg={item.bg}
-            style={{
-              left: `calc(50% + ${Math.cos(angleRad) * 180}px)`,
-              top: `calc(50% + ${Math.sin(angleRad) * 180}px)`,
-              transform: 'translate(-50%, -50%)'
-            }}
+          <AnimatedNumber key={`l1-${i}`} char={item.char} delay={`${i * 0.4}s`}
+            size={isMobile ? "w-8 h-8" : "w-11 h-11"} color={item.color} bg={item.bg}
+            style={{ left: `calc(50% + ${Math.cos(angleRad) * r1}px)`, top: `calc(50% + ${Math.sin(angleRad) * r1}px)`, transform: 'translate(-50%, -50%)' }}
           />
         );
       })}
-
-      {/* Layer 2: Middle Numbers */}
       {layer2.map((item, i) => {
         const angleRad = item.angle * (Math.PI / 180);
         return (
-          <AnimatedNumber
-            key={`l2-${i}`}
-            initialNum={item.num}
-            delay={`${i * 0.2}s`}
-            size={item.size}
-            color={item.color}
-            bg={item.bg}
-            isPulse={true}
-            style={{
-              left: `calc(50% + ${Math.cos(angleRad) * 230}px)`,
-              top: `calc(50% + ${Math.sin(angleRad) * 230}px)`,
-              transform: 'translate(-50%, -50%)'
-            }}
+          <AnimatedNumber key={`l2-${i}`} initialNum={item.num} delay={`${i * 0.2}s`}
+            size={item.size} color={item.color} bg={item.bg} isPulse={true}
+            style={{ left: `calc(50% + ${Math.cos(angleRad) * r2}px)`, top: `calc(50% + ${Math.sin(angleRad) * r2}px)`, transform: 'translate(-50%, -50%)' }}
           />
         );
       })}
-
-      {/* Layer 3: Outer Anchors */}
       {layer3.map((item, i) => {
         const angleRad = item.angle * (Math.PI / 180);
         return (
-          <div
-            key={`l3-${i}`}
-            className="absolute animate-float"
-            style={{
-              left: `calc(50% + ${Math.cos(angleRad) * 280}px)`,
-              top: `calc(50% + ${Math.sin(angleRad) * 280}px)`,
-              transform: 'translate(-50%, -50%)',
-              animationDelay: `${i * 1.5}s`
-            }}
-          >
-            <div className="flex items-center justify-center w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-white/50 relative animate-pulse">
+          <div key={`l3-${i}`} className="absolute animate-float"
+            style={{ left: `calc(50% + ${Math.cos(angleRad) * r3}px)`, top: `calc(50% + ${Math.sin(angleRad) * r3}px)`, transform: 'translate(-50%, -50%)', animationDelay: `${i * 1.5}s` }}>
+            <div className={`flex items-center justify-center ${isMobile ? 'w-7 h-7' : 'w-10 h-10'} bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-white/50 relative animate-pulse`}>
               <div className={`absolute inset-0 rounded-full ${item.bg} opacity-[0.1] blur-sm`} />
               <div className={item.color}>{item.char}</div>
             </div>
@@ -145,7 +120,7 @@ export default function Index() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col bg-[#FDFDFF] flex-1 overflow-hidden font-sans selection:bg-indigo-100 relative">
+    <div className="flex flex-col bg-[#F0F7FF] flex-1 overflow-hidden font-sans selection:bg-sky-100 relative">
       <div className="w-full flex-1 flex flex-col">
         {/* ─────────────────────────────────────────────────────────
                                 HERO SECTION
@@ -154,15 +129,12 @@ export default function Index() {
 
           {/* Layer 1: Premium Background Depth */}
           <div className="absolute inset-0 z-0 pointer-events-none">
-            {/* Soft Multi-Gradient Base */}
-            <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
-
-            {/* Very Faint Radial Glow behind Hero */}
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+            <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
+            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.04] blur-[120px] rounded-full" />
           </div>
 
           {/* Master Container */}
-          <div className="relative z-10 w-full max-w-[1240px] mx-auto px-6 sm:px-12 flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-12">
+          <div className="relative z-10 w-full max-w-[1240px] mx-auto px-4 sm:px-12 flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-16 lg:gap-12">
 
             {/* Layer 2: Content Grid (Left Side) */}
             <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-[580px]">
@@ -170,25 +142,25 @@ export default function Index() {
               {/* Pill Badge - Premium Tint (Removed) */}
 
               {/* Main Heading - Smooth Elegant Gradient */}
-              <h1 className="text-[clamp(40px,5.5vw,56px)] font-black tracking-tight text-[#0F172A] leading-[1.05] mb-6">
+              <h1 className="text-[clamp(32px,5.5vw,56px)] font-black tracking-tight text-[#0F172A] leading-[1.05] mb-4 sm:mb-6">
                 MindSprint{' '}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C63FF] to-[#22D3EE] drop-shadow-sm">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-sky-500 to-sky-300 drop-shadow-sm">
                   Challenge
                 </span>
               </h1>
 
               {/* Value Paragraph - Slate 500 equivalent */}
-              <p className="text-[18px] text-[#64748B] font-medium leading-relaxed mb-10 max-w-[480px]">
-                A high-precision environment designed for mathematical logic and cognitive speed. Benchmarking mental agility with real-time analytics.
+              <p className="text-[15px] sm:text-[18px] text-[#64748B] font-medium leading-relaxed mb-8 sm:mb-10 max-w-[480px]">
+                A high-precision environment designed for mathematical logic and cognitive speed.
               </p>
 
               {/* Primary CTA - Styled as 'START' - Compact Balanced Scale */}
               <button
                 onClick={() => navigate('/student')}
-                className="group relative inline-flex items-center justify-center gap-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-black rounded-lg transition-all duration-300 shadow-md shadow-blue-500/20 hover:shadow-blue-600/30 hover:-translate-y-0.5 px-8 py-3"
+                className="group relative inline-flex items-center justify-center gap-2.5 bg-sky-500 hover:bg-sky-600 text-white font-black rounded-lg transition-all duration-300 shadow-md shadow-sky-500/20 hover:shadow-sky-600/30 hover:-translate-y-0.5 px-8 py-3"
               >
                 <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-0.5" />
-                <span className="text-[17px] font-bold tracking-tight uppercase">START</span>
+                <span className="text-[15px] sm:text-[17px] font-bold tracking-tight uppercase">START</span>
               </button>
 
               {/* Supporting Stats Row (Removed) */}
@@ -199,14 +171,14 @@ export default function Index() {
             <div className="flex-1 w-full max-w-[500px] lg:max-w-none flex justify-center lg:justify-end">
 
               {/* Abstract Orbital Visual Container */}
-              <div className="relative w-[340px] h-[340px] sm:w-[500px] sm:h-[500px] flex items-center justify-center">
+              <div className="relative w-[260px] h-[260px] sm:w-[340px] sm:h-[340px] md:w-[500px] md:h-[500px] flex items-center justify-center">
 
                 {/* Soft Radial Backing Background - Extremely faint glow */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#6C63FF05_0%,_transparent_70%)] animate-pulse" style={{ animationDuration: '6s' }} />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#38BDF805_0%,_transparent_70%)] animate-pulse" style={{ animationDuration: '6s' }} />
 
                 {/* Central Element: Rotating Game Card */}
                 <div className="relative z-20 w-full max-w-[400px] flex items-center justify-center">
-                  <div className="p-4 rounded-[40px] bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl shadow-indigo-100/30">
+                  <div className="p-3 sm:p-4 rounded-[40px] bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl shadow-sky-100/30">
                     <RotatingGameCard />
                   </div>
                 </div>
