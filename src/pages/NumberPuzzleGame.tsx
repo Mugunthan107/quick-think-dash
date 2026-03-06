@@ -65,7 +65,7 @@ function generatePuzzle(): PuzzleQ {
 
 export default function NumberPuzzleGame() {
   const navigate = useNavigate();
-  const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest } = useGame();
+  const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, getNextGame } = useGame();
 
   const questions = useMemo(() => Array.from({ length: TOTAL_LEVELS }, generatePuzzle), []);
 
@@ -132,6 +132,16 @@ export default function NumberPuzzleGame() {
     addCompletedGame('numpuzzle');
   };
 
+  const handlePostFinish = useCallback(() => {
+    const next = getNextGame();
+    if (next) {
+      navigate('/select-game');
+    } else {
+      if (currentStudent) finishTest(currentStudent.username);
+      navigate('/');
+    }
+  }, [getNextGame, navigate, currentStudent, finishTest]);
+
   const handleEndTest = async () => {
     await finishGame(score, correct, level);
     if (currentStudent) await finishTest(currentStudent.username);
@@ -164,7 +174,12 @@ export default function NumberPuzzleGame() {
             <Trophy className="w-12 h-12 text-sky-500 mx-auto mb-4" />
             <h2 className="text-2xl font-black text-[#0F172A] mb-2">Game Over!</h2>
             <p className="text-lg font-bold text-sky-500 mb-1">Score: {score}/{TOTAL_LEVELS}</p>
-            <button onClick={() => navigate('/')} className="w-full py-3 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors mt-4">Home</button>
+            <button
+              onClick={handlePostFinish}
+              className="w-full py-3 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors mt-4"
+            >
+              {getNextGame() ? 'Next Game →' : 'Finish Session'}
+            </button>
           </div>
         </div>
       ) : q && (
@@ -200,7 +215,7 @@ export default function NumberPuzzleGame() {
                 className={`py-4 rounded-2xl border-2 font-bold text-xl transition-all duration-200
                   ${selected === i && feedback === 'correct' ? 'bg-emerald-50 border-emerald-400 text-emerald-600' :
                     selected === i && feedback === 'wrong' ? 'bg-red-50 border-red-400 text-red-600' :
-                    'bg-white border-sky-200 text-[#0F172A] hover:border-sky-400 hover:shadow-md'}`}
+                      'bg-white border-sky-200 text-[#0F172A] hover:border-sky-400 hover:shadow-md'}`}
               >
                 {opt}
               </button>

@@ -62,7 +62,7 @@ function generateLevel(difficulty: number): SortLevel {
 
 export default function WaterColorSortGame() {
   const navigate = useNavigate();
-  const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest } = useGame();
+  const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, getNextGame } = useGame();
 
   const levels = useMemo(() => Array.from({ length: TOTAL_LEVELS }, (_, i) => generateLevel(i)), []);
 
@@ -195,6 +195,16 @@ export default function WaterColorSortGame() {
     addCompletedGame('colorsort');
   };
 
+  const handlePostFinish = useCallback(() => {
+    const next = getNextGame();
+    if (next) {
+      navigate('/select-game');
+    } else {
+      if (currentStudent) finishTest(currentStudent.username);
+      navigate('/');
+    }
+  }, [getNextGame, navigate, currentStudent, finishTest]);
+
   const handleEndTest = async () => {
     await finishGame(score, score, level);
     if (currentStudent) await finishTest(currentStudent.username);
@@ -226,7 +236,12 @@ export default function WaterColorSortGame() {
             <Trophy className="w-12 h-12 text-sky-500 mx-auto mb-4" />
             <h2 className="text-2xl font-black text-[#0F172A] mb-2">Game Over!</h2>
             <p className="text-lg font-bold text-sky-500 mb-1">Score: {score}/{TOTAL_LEVELS}</p>
-            <button onClick={() => navigate('/')} className="w-full py-3 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors mt-4">Home</button>
+            <button
+              onClick={handlePostFinish}
+              className="w-full py-3 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors mt-4"
+            >
+              {getNextGame() ? 'Next Game →' : 'Finish Session'}
+            </button>
           </div>
         </div>
       ) : (

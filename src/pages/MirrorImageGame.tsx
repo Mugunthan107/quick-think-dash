@@ -28,7 +28,7 @@ function generateMirrorQ(): MirrorQ {
 
   const wrongSet = new Set<string>();
   wrongSet.add(original); // original is a common distractor
-  
+
   // Swap two chars
   if (answer.length >= 2) {
     const arr = answer.split('');
@@ -58,7 +58,7 @@ function generateMirrorQ(): MirrorQ {
 
 export default function MirrorImageGame() {
   const navigate = useNavigate();
-  const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest } = useGame();
+  const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, getNextGame } = useGame();
 
   const questions = useMemo(() => Array.from({ length: TOTAL_LEVELS }, generateMirrorQ), []);
 
@@ -125,6 +125,16 @@ export default function MirrorImageGame() {
     addCompletedGame('mirror');
   };
 
+  const handlePostFinish = useCallback(() => {
+    const next = getNextGame();
+    if (next) {
+      navigate('/select-game');
+    } else {
+      if (currentStudent) finishTest(currentStudent.username);
+      navigate('/');
+    }
+  }, [getNextGame, navigate, currentStudent, finishTest]);
+
   const handleEndTest = async () => {
     await finishGame(score, correct, level);
     if (currentStudent) await finishTest(currentStudent.username);
@@ -158,7 +168,12 @@ export default function MirrorImageGame() {
             <h2 className="text-2xl font-black text-[#0F172A] mb-2">Game Over!</h2>
             <p className="text-lg font-bold text-sky-500 mb-1">Score: {score}/{TOTAL_LEVELS}</p>
             <p className="text-sm text-[#64748B] mb-6">Correct: {correct}</p>
-            <button onClick={() => navigate('/')} className="w-full py-3 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors">Home</button>
+            <button
+              onClick={handlePostFinish}
+              className="w-full py-3 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors"
+            >
+              {getNextGame() ? 'Next Game →' : 'Finish Session'}
+            </button>
           </div>
         </div>
       ) : q && (
@@ -178,7 +193,7 @@ export default function MirrorImageGame() {
                 className={`py-4 rounded-2xl border-2 font-mono font-bold text-lg tracking-wider transition-all duration-200
                   ${selected === i && feedback === 'correct' ? 'bg-emerald-50 border-emerald-400 text-emerald-600' :
                     selected === i && feedback === 'wrong' ? 'bg-red-50 border-red-400 text-red-600' :
-                    'bg-white border-sky-200 text-[#0F172A] hover:border-sky-400 hover:shadow-md'}`}
+                      'bg-white border-sky-200 text-[#0F172A] hover:border-sky-400 hover:shadow-md'}`}
               >
                 {opt}
               </button>

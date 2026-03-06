@@ -65,10 +65,14 @@ const GameSelector = () => {
   const playedGameIds = currentStudent?.gameHistory?.map(g => g.gameId) || [];
 
   useEffect(() => {
-    if (!currentStudent || !currentTest) { navigate('/'); return; }
+    if (!currentStudent || !currentTest) return; // Wait for context
     if (currentTest.status === 'FINISHED') { navigate('/'); return; }
-    if (playedGameIds.length >= numGames) navigate('/');
-  }, [currentStudent, currentTest, playedGameIds, navigate, numGames]);
+
+    // Only redirect if ALL games are actually recorded in history
+    if (playedGameIds.length >= numGames && numGames > 0) {
+      navigate('/');
+    }
+  }, [currentStudent, currentTest, playedGameIds.length, navigate, numGames]);
 
   if (!currentStudent || !currentTest || playedGameIds.length >= numGames) return null;
 
