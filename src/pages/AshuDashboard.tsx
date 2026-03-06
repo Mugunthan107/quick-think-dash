@@ -27,6 +27,11 @@ const GAME_LABELS: Record<string, string> = {
   numlink: 'Link',
   aptirush: 'Apti',
   motion: 'Motion',
+  numberseries: 'Series',
+  mirror: 'Mirror',
+  waterimage: 'Water',
+  numpuzzle: 'Puzzle',
+  colorsort: 'Color',
 };
 
 const GAME_MAX_SCORES: Record<string, number> = {
@@ -35,6 +40,11 @@ const GAME_MAX_SCORES: Record<string, number> = {
   motion: 100,
   aptirush: 200,
   crossmath: 350,
+  numberseries: 20,
+  mirror: 20,
+  waterimage: 20,
+  numpuzzle: 20,
+  colorsort: 20,
 };
 
 const formatTime = (s: number) => {
@@ -218,7 +228,7 @@ const AshuDashboard = () => {
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
-  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink' | 'aptirush' | 'motion'>('overall');
+  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink' | 'aptirush' | 'motion' | 'numberseries' | 'mirror' | 'waterimage' | 'numpuzzle' | 'colorsort'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedGames, setSelectedGames] = useState<string[]>(['bubble']);
@@ -230,6 +240,11 @@ const AshuDashboard = () => {
     { id: 'numlink', name: 'NumLink' },
     { id: 'aptirush', name: 'AptiRush' },
     { id: 'motion', name: 'Motion' },
+    { id: 'numberseries', name: 'Number Series' },
+    { id: 'mirror', name: 'Mirror Image' },
+    { id: 'waterimage', name: 'Water Image' },
+    { id: 'numpuzzle', name: 'Number Puzzle' },
+    { id: 'colorsort', name: 'Color Sort' },
   ];
 
   // Track previous pending count so toast only fires on NEW arrivals (not on re-renders)

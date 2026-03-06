@@ -5,7 +5,7 @@ import { Clock, Trophy, LogOut } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 
 const TOTAL_LEVELS = 20;
-const TIME_PER_QUESTION = 30; // seconds
+const TIME_PER_QUESTION = 10; // seconds
 
 interface Question {
   id: string;

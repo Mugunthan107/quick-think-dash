@@ -12,6 +12,11 @@ const GAME_LABELS: Record<string, string> = {
   numlink: 'NumLink',
   aptirush: 'AptiRush',
   motion: 'Motion',
+  numberseries: 'Number Series',
+  mirror: 'Mirror Image',
+  waterimage: 'Water Image',
+  numpuzzle: 'Number Puzzle',
+  colorsort: 'Color Sort',
 };
 
 const GAME_MAX_SCORES: Record<string, number> = {
@@ -20,6 +25,11 @@ const GAME_MAX_SCORES: Record<string, number> = {
   motion: 100,
   aptirush: 200,
   crossmath: 350,
+  numberseries: 20,
+  mirror: 20,
+  waterimage: 20,
+  numpuzzle: 20,
+  colorsort: 20,
 };
 
 const formatTime = (s: number) => {

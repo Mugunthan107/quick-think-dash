@@ -51,10 +51,10 @@ function getBlankIndex(i: number, qIndex: number): number {
 }
 
 function getTotalTime(qIndex: number): number {
-  if (qIndex < 5) return 30;
-  if (qIndex < 10) return 30;
-  if (qIndex < 15) return 30;
-  return 30;
+  if (qIndex < 5) return 10;
+  if (qIndex < 10) return 15;
+  if (qIndex < 15) return 20;
+  return 25;
 }
 
 function compute(a: number, op: string, b: number): number {

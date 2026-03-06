@@ -21,10 +21,10 @@ interface LevelConfig {
 }
 
 const LEVELS: LevelConfig[] = [
-  { gridSize: 5, maxNumber: 8, label: 'Level 1', timeLimit: 40 },
-  { gridSize: 6, maxNumber: 9, label: 'Level 2', timeLimit: 40 },
-  { gridSize: 7, maxNumber: 10, label: 'Level 3', timeLimit: 40 },
-  { gridSize: 8, maxNumber: 12, label: 'Level 4', timeLimit: 40 },
+  { gridSize: 5, maxNumber: 8, label: 'Level 1', timeLimit: 10 },
+  { gridSize: 6, maxNumber: 9, label: 'Level 2', timeLimit: 20 },
+  { gridSize: 7, maxNumber: 10, label: 'Level 3', timeLimit: 25 },
+  { gridSize: 8, maxNumber: 12, label: 'Level 4', timeLimit: 30 },
 ];
 
 const ROUNDS_PER_LEVEL = 5;
