@@ -357,9 +357,9 @@ const CrossMathGame = () => {
 
     if (isCorrect) {
       const points =
-        puzzle.difficulty === 'expert' ? 25 :
-          puzzle.difficulty === 'hard' ? 20 :
-            puzzle.difficulty === 'medium' ? 15 : 10;
+        puzzle.difficulty === 'expert' ? 30 :
+          puzzle.difficulty === 'hard' ? 30 :
+            puzzle.difficulty === 'medium' ? 30 : 30;
       newScore = score + points;
       newCorrect = correctCount + 1;
       setScore(newScore);
