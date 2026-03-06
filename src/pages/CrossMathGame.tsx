@@ -51,10 +51,10 @@ function getBlankIndex(i: number, qIndex: number): number {
 }
 
 function getTotalTime(qIndex: number): number {
-  if (qIndex < 5) return 10;
-  if (qIndex < 10) return 15;
-  if (qIndex < 15) return 20;
-  return 25;
+  if (qIndex < 5) return 30;
+  if (qIndex < 10) return 30;
+  if (qIndex < 15) return 30;
+  return 30;
 }
 
 function compute(a: number, op: string, b: number): number {
@@ -357,9 +357,9 @@ const CrossMathGame = () => {
 
     if (isCorrect) {
       const points =
-        puzzle.difficulty === 'expert' ? 30 :
-          puzzle.difficulty === 'hard' ? 30 :
-            puzzle.difficulty === 'medium' ? 30 : 30;
+        puzzle.difficulty === 'expert' ? 25 :
+          puzzle.difficulty === 'hard' ? 20 :
+            puzzle.difficulty === 'medium' ? 15 : 10;
       newScore = score + points;
       newCorrect = correctCount + 1;
       setScore(newScore);
