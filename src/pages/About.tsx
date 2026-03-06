@@ -1,6 +1,6 @@
 import React from 'react';
 import DecorativeCurve from '@/components/DecorativeCurve';
-import { Brain, Grid3X3, Link2, CheckCircle2, Move, Zap } from 'lucide-react';
+import { Brain, Grid3X3, Link2, CheckCircle2, Move, Zap, Hash, FlipHorizontal, Droplets, LayoutGrid, Palette } from 'lucide-react';
 
 const GAMES_RULES = [
     {
@@ -75,7 +75,82 @@ const GAMES_RULES = [
             'Each level presents one unique logic/aptitude question with 4 answer options. You have 10–15 seconds per question.',
             'Scoring: +10 for correct answer, +5 speed bonus (answering within half the time), +50 completion bonus for finishing all 20 levels.',
             'The circular timer changes color as time runs out: Green → Normal, Orange → 5 sec left, Red → 3 sec left.',
-            'Questions never repeat across attempts. Difficulty increases progressively through the 20 levels.'
+        'Questions never repeat across attempts. Difficulty increases progressively through the 20 levels.'
+        ]
+    },
+    {
+        id: 'numberseries',
+        icon: Hash,
+        name: 'Number Series Catch',
+        accentColor: 'text-sky-500',
+        accentBg: 'bg-sky-500/10',
+        borderColor: 'border-sky-500/20',
+        objective: 'Identify the next number in a pattern and catch it with your bucket before it falls.',
+        rules: [
+            'A number series is displayed (arithmetic, geometric, square, cube, or alternating). You must figure out the pattern and the missing next number.',
+            'Four options fall from the top. Move your bucket left/right using arrow keys or on-screen buttons to position under the correct answer.',
+            'Press CATCH or Space/Enter to catch the number at your bucket position. Correct catch = +1 point, wrong or missed = 0.',
+            'Falling speed increases with level. You have 10 seconds per question. 20 levels total.'
+        ]
+    },
+    {
+        id: 'mirror',
+        icon: FlipHorizontal,
+        name: 'Mirror Image',
+        accentColor: 'text-sky-600',
+        accentBg: 'bg-sky-600/10',
+        borderColor: 'border-sky-600/20',
+        objective: 'Identify the correct mirror (horizontal flip) of a given text or number string.',
+        rules: [
+            'A random string of letters and/or numbers is shown. You must select its exact mirror image (reversed left-to-right).',
+            'Four options are provided — only one is the true mirror. Others are tricky distractors (partial reversal, shuffled, original).',
+            'You have 10 seconds per question. Correct = +1, Wrong = 0. 20 levels total.',
+            'Strings get longer and more complex as you progress through levels.'
+        ]
+    },
+    {
+        id: 'waterimage',
+        icon: Droplets,
+        name: 'Water Image',
+        accentColor: 'text-sky-400',
+        accentBg: 'bg-sky-400/10',
+        borderColor: 'border-sky-400/20',
+        objective: 'Identify the correct water reflection (vertical flip) of a given text string.',
+        rules: [
+            'A text string is shown with a visual water reflection line below it. You must choose the correct vertically-flipped representation.',
+            'Water reflections use special Unicode characters to simulate upside-down text (e.g., A→∀, M→W).',
+            'Four tricky options are given — partial flips, reversals, and originals serve as distractors.',
+            '10 seconds per question, 20 levels. Correct = +1, Wrong = 0.'
+        ]
+    },
+    {
+        id: 'numpuzzle',
+        icon: LayoutGrid,
+        name: 'Number Puzzle',
+        accentColor: 'text-sky-500',
+        accentBg: 'bg-sky-500/10',
+        borderColor: 'border-sky-500/20',
+        objective: 'Analyze a 4×4 number grid and determine the missing value based on row/column patterns.',
+        rules: [
+            'A 4×4 grid of numbers is shown with one cell marked "?". The grid follows a mathematical pattern (multiplication, addition, column progression).',
+            'Analyze row and column relationships to deduce the missing number.',
+            'Choose from 4 options — only one correctly fits the pattern. 10 seconds per puzzle.',
+            '20 puzzles total. Patterns include row multiples, column arithmetic, and addition tables.'
+        ]
+    },
+    {
+        id: 'colorsort',
+        icon: Palette,
+        name: 'Water Color Sort',
+        accentColor: 'text-sky-600',
+        accentBg: 'bg-sky-600/10',
+        borderColor: 'border-sky-600/20',
+        objective: 'Sort colored liquids into test tubes so each tube contains only one color.',
+        rules: [
+            'Multiple test tubes contain mixed colored layers. Tap a tube to select it, then tap another to pour. Liquid pours only if the top colors match or the destination is empty.',
+            'Continuous same-colored layers pour together. Tubes hold a maximum of 4 layers. Two empty tubes are provided for strategy.',
+            'Complete the sort within 10 seconds per level. Successfully sorted = +1 point. 20 levels with increasing color count.',
+            'Use the Reset button to restart a level. Difficulty increases from 3 colors to 5 colors as you progress.'
         ]
     }
 ];

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, Grid3X3, Layers3, BarChart2, Zap, Clock, Activity } from 'lucide-react';
+import { Brain, Grid3X3, Layers3, BarChart2, Zap, Clock, Activity, Hash, FlipHorizontal, Droplets, LayoutGrid, Palette } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    GAME DATA
@@ -65,6 +65,66 @@ const GAMES = [
         iconColor: '#EC4899',
         iconBg: 'rgba(236,72,153,0.08)',
         desc: 'Coordinate moves with maximum efficiency. Tests spatial awareness.',
+    },
+    {
+        id: 'numberseries',
+        name: 'Num Series',
+        tag: 'CATCH',
+        tagColor: '#0EA5E9',
+        tagBg: 'rgba(14,165,233,0.08)',
+        borderAccent: 'rgba(14,165,233,0.25)',
+        icon: Hash,
+        iconColor: '#0EA5E9',
+        iconBg: 'rgba(14,165,233,0.08)',
+        desc: 'Catch the correct next number in a falling series pattern.',
+    },
+    {
+        id: 'mirror',
+        name: 'Mirror',
+        tag: 'VISUAL',
+        tagColor: '#8B5CF6',
+        tagBg: 'rgba(139,92,246,0.08)',
+        borderAccent: 'rgba(139,92,246,0.25)',
+        icon: FlipHorizontal,
+        iconColor: '#8B5CF6',
+        iconBg: 'rgba(139,92,246,0.08)',
+        desc: 'Identify the correct mirror reflection of text and numbers.',
+    },
+    {
+        id: 'waterimage',
+        name: 'Water Image',
+        tag: 'REFLECT',
+        tagColor: '#06B6D4',
+        tagBg: 'rgba(6,182,212,0.08)',
+        borderAccent: 'rgba(6,182,212,0.25)',
+        icon: Droplets,
+        iconColor: '#06B6D4',
+        iconBg: 'rgba(6,182,212,0.08)',
+        desc: 'Find the correct water reflection of given text strings.',
+    },
+    {
+        id: 'numpuzzle',
+        name: 'Num Puzzle',
+        tag: 'GRID',
+        tagColor: '#D97706',
+        tagBg: 'rgba(217,119,6,0.08)',
+        borderAccent: 'rgba(217,119,6,0.25)',
+        icon: LayoutGrid,
+        iconColor: '#D97706',
+        iconBg: 'rgba(217,119,6,0.08)',
+        desc: 'Solve 4×4 grids by deducing the missing number logically.',
+    },
+    {
+        id: 'colorsort',
+        name: 'Color Sort',
+        tag: 'PUZZLE',
+        tagColor: '#E11D48',
+        tagBg: 'rgba(225,29,72,0.08)',
+        borderAccent: 'rgba(225,29,72,0.25)',
+        icon: Palette,
+        iconColor: '#E11D48',
+        iconBg: 'rgba(225,29,72,0.08)',
+        desc: 'Sort colored liquids in tubes using strategic pour moves.',
     },
 ] as const;
 
