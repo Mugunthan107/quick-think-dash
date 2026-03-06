@@ -25,12 +25,17 @@ import { lazy, Suspense } from "react";
 
 const MotionChallenge = lazy(() => import("./pages/MotionChallenge"));
 const AptiRush = lazy(() => import("./pages/AptiRush"));
+const NumberSeriesGame = lazy(() => import("./pages/NumberSeriesGame"));
+const MirrorImageGame = lazy(() => import("./pages/MirrorImageGame"));
+const WaterImageGame = lazy(() => import("./pages/WaterImageGame"));
+const NumberPuzzleGame = lazy(() => import("./pages/NumberPuzzleGame"));
+const WaterColorSortGame = lazy(() => import("./pages/WaterColorSortGame"));
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
-  const isGame = ['/game', '/crossmath', '/numlink', '/motion-challenge', '/aptirush'].some(path => location.pathname.startsWith(path));
+  const isGame = ['/game', '/crossmath', '/numlink', '/motion-challenge', '/aptirush', '/number-series', '/mirror-image', '/water-image', '/number-puzzle', '/color-sort'].some(path => location.pathname.startsWith(path));
   const isDashboard = location.pathname.startsWith('/ashu');
   const isHome = location.pathname === '/';
   const noScroll = isHome || isGame || isDashboard || location.pathname === '/lobby' || location.pathname === '/select-game';
@@ -63,6 +68,11 @@ const AppContent = () => {
             <Route path="/numlink" element={<NumLinkGame />} />
             <Route path="/motion-challenge" element={<MotionChallenge />} />
             <Route path="/aptirush" element={<AptiRush />} />
+            <Route path="/number-series" element={<NumberSeriesGame />} />
+            <Route path="/mirror-image" element={<MirrorImageGame />} />
+            <Route path="/water-image" element={<WaterImageGame />} />
+            <Route path="/number-puzzle" element={<NumberPuzzleGame />} />
+            <Route path="/color-sort" element={<WaterColorSortGame />} />
             <Route path="/select-game" element={<GameSelector />} />
             <Route path="/ashu" element={<AshuDashboard />} />
             <Route path="/lobby" element={<Lobby />} />
