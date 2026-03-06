@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Brain, Grid3X3, Link, CheckCircle2, ChevronRight, Gamepad2, Move, Zap } from 'lucide-react';
+import { Brain, Grid3X3, Link, CheckCircle2, ChevronRight, Gamepad2, Move, Zap, Hash, FlipHorizontal, Droplets, LayoutGrid, Palette } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 
 const games = [
@@ -29,6 +29,31 @@ const games = [
     id: 'aptirush', name: 'AptiRush', route: '/aptirush',
     description: '20 Levels. Pure Logic. Zero Repetition. Think Fast. Win Smart.',
     icon: Zap,
+  },
+  {
+    id: 'numberseries', name: 'Number Series', route: '/number-series',
+    description: 'Catch the correct next number in a falling series pattern.',
+    icon: Hash,
+  },
+  {
+    id: 'mirror', name: 'Mirror Image', route: '/mirror-image',
+    description: 'Identify the correct mirror reflection of text and numbers.',
+    icon: FlipHorizontal,
+  },
+  {
+    id: 'waterimage', name: 'Water Image', route: '/water-image',
+    description: 'Find the correct water reflection of the given text.',
+    icon: Droplets,
+  },
+  {
+    id: 'numpuzzle', name: 'Number Puzzle', route: '/number-puzzle',
+    description: 'Solve 4×4 grid puzzles by finding the missing number.',
+    icon: LayoutGrid,
+  },
+  {
+    id: 'colorsort', name: 'Color Sort', route: '/color-sort',
+    description: 'Sort colored liquids in test tubes using strategic moves.',
+    icon: Palette,
   },
 ];
 
