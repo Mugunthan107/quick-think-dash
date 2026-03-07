@@ -3,6 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Clock, Trophy, RotateCcw } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
+
+const SUCCESS_MESSAGES = [
+  "Hurray! You're brilliant! 🌟",
+  "Awesome! Keep it up! 💪",
+  "Stellar work! 🚀",
+  "You're a genius! 🧠",
+  "Perfecto! 🎯",
+  "Magnificent! ✨",
+  "Incredible! 🏆",
+];
+
+const OOPS_MESSAGES = [
+  "Oops! Don't worry, try again! 😊",
+  "Not quite, but you're getting closer! 🔄",
+  "Keep pushing! You've got this! ✨",
+  "Almost there! One more shot! 🎯",
+  "Mistakes are just steps to learning! 📚",
+  "Shake it off and try again! 🍀",
+];
 
 // ——— Types ——————————————————————————————————————————————————————————————————————
 interface Cell {
@@ -31,10 +52,7 @@ const ROUNDS_PER_LEVEL = 5;
 const TOTAL_ROUNDS = LEVELS.length * ROUNDS_PER_LEVEL;
 
 function getMarksForRound(round: number): number {
-  if (round <= 5) return 5;
-  if (round <= 10) return 10;
-  if (round <= 15) return 15;
-  return 20;
+  return 10;
 }
 
 // ——— Puzzle Generator ————————————————————————————————————————————————————————————
@@ -251,6 +269,9 @@ const NumLinkGame = () => {
         if (prev <= 1) {
           setRoundFailed(true);
           setShowFlash('wrong');
+          if (currentTest?.showResults !== false) {
+            toast.error(OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)], { icon: '⌛' });
+          }
           setTimeout(() => setShowFlash(null), 500);
           return 0;
         }
@@ -351,8 +372,10 @@ const NumLinkGame = () => {
         const marks = getMarksForRound(globalRound + 1);
         const newScore = score + marks;
         const newCorrect = correctCount + 1;
-        setScore(newScore);
         setCorrectCount(newCorrect);
+        if (currentTest?.showResults !== false) {
+          toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '🎉' });
+        }
         setShowFlash('correct');
         setTimeout(() => setShowFlash(null), 600);
 
@@ -413,6 +436,7 @@ const NumLinkGame = () => {
           completedAt: Date.now()
         }).then(() => {
           addCompletedGame('numlink');
+          confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
         });
       }
       return;
@@ -538,7 +562,7 @@ const NumLinkGame = () => {
   const progress = ((globalRound + 1) / TOTAL_ROUNDS) * 100;
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full bg-[#F0F7FF] font-sans relative overflow-hidden pt-16 sm:pt-20">
+    <div className={`flex flex-col flex-1 w-full h-full bg-[#F0F7FF] font-sans relative overflow-hidden pt-16 sm:pt-20 ${showFlash === 'correct' ? 'flash-correct' : showFlash === 'wrong' ? 'flash-wrong' : ''}`}>
       <div className="absolute inset-0 z-0 pointer-events-none">
         {/* Soft Multi-Gradient Base */}
         <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />

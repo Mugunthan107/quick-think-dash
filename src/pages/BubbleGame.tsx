@@ -2,8 +2,29 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Clock, Trophy, Activity, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 import NavBar from '@/components/NavBar';
 import DecorativeCurve from '@/components/DecorativeCurve';
+import confetti from 'canvas-confetti';
+
+const SUCCESS_MESSAGES = [
+  "Hurray! You're brilliant! 🌟",
+  "Awesome! Keep it up! 💪",
+  "Stellar work! 🚀",
+  "You're a genius! 🧠",
+  "Perfecto! 🎯",
+  "Magnificent! ✨",
+  "Incredible! 🏆",
+];
+
+const OOPS_MESSAGES = [
+  "Oops! Don't worry, try again! 😊",
+  "Not quite, but you're getting closer! 🔄",
+  "Keep pushing! You've got this! ✨",
+  "Almost there! One more shot! 🎯",
+  "Mistakes are just steps to learning! 📚",
+  "Shake it off and try again! 🍀",
+];
 
 interface BubbleData {
   text: string;
@@ -11,7 +32,7 @@ interface BubbleData {
   id: string;
 }
 
-const TOTAL_LEVELS = 30;
+const TOTAL_LEVELS = 20;
 const ROUND_SECONDS = 10;
 
 function getLevelConfig(level: number) {
@@ -23,6 +44,15 @@ function getLevelConfig(level: number) {
 
 function getNum(max: number) {
   return Math.floor(Math.random() * max) + 1;
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+  const newArr = [...array];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
 }
 
 function createExpression(level: number): BubbleData {
@@ -118,7 +148,7 @@ function BubbleGame() {
       const items = Array.from({ length: 3 }, () => createExpression(lvl));
       const sorted = [...items].sort((a, b) => a.value - b.value);
       setBubbles(sorted);
-      setShuffled(items.sort(() => Math.random() - 0.5));
+      setShuffled(shuffleArray(items));
       setSelectionOrder([]);
       setRoundTimeLeft(ROUND_SECONDS);
       setGameActive(true);
@@ -148,6 +178,8 @@ function BubbleGame() {
         addCompletedGame('bubble');
         if (isEndTest) {
           navigate('/select-game');
+        } else {
+          confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
         }
       });
     }
@@ -200,17 +232,21 @@ function BubbleGame() {
     setSelectionOrder(newOrder);
 
     if (newOrder.length === bubbles.length) {
-      const isCorrectOrder = newOrder.every((id, idx) => id === bubbles[idx].id);
+      const isCorrectOrder = newOrder.every((id, idx) => {
+        const bubble = shuffled.find(b => b.id === id);
+        return bubble?.value === bubbles[idx].value;
+      });
 
       let newTotalCorrect = totalCorrect;
       let newScore = score;
 
       if (isCorrectOrder) {
-        const pointsPerLevel = level > 20 ? 30 : level > 10 ? 20 : 10;
-        newScore = score + pointsPerLevel;
+        newScore = score + 10;
         newTotalCorrect = totalCorrect + 1;
         if (currentTest?.showResults !== false) {
           setFeedback('success');
+          const msg = SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)];
+          toast.success(msg, { icon: '🚀' });
         }
         setScore(newScore);
         setTotalCorrect(newTotalCorrect);
@@ -220,6 +256,8 @@ function BubbleGame() {
       } else {
         if (currentTest?.showResults !== false) {
           setFeedback('error');
+          const msg = OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)];
+          toast.error(msg, { icon: '🚫' });
         }
         // Deduct points removed as requested
       }
@@ -297,7 +335,7 @@ function BubbleGame() {
   }
 
   return (
-    <div className="flex flex-col bg-[#FDFDFF] font-sans min-h-screen overflow-hidden relative">
+    <div className={`flex flex-col bg-[#FDFDFF] font-sans min-h-screen overflow-hidden relative ${feedback === 'success' ? 'flash-correct' : feedback === 'error' ? 'flash-wrong' : ''}`}>
       <NavBar />
       <div className="relative flex-1 w-full flex flex-col justify-center">
         <div className="absolute inset-0 z-0 pointer-events-none">

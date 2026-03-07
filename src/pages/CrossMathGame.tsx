@@ -3,6 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Clock, Trophy, GripHorizontal, Timer, RotateCcw, Hash, Star } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
+
+const SUCCESS_MESSAGES = [
+  "Hurray! You're brilliant! 🌟",
+  "Awesome! Keep it up! 💪",
+  "Stellar work! 🚀",
+  "You're a genius! 🧠",
+  "Perfecto! 🎯",
+  "Magnificent! ✨",
+  "Incredible! 🏆",
+];
+
+const OOPS_MESSAGES = [
+  "Oops! Don't worry, try again! 😊",
+  "Not quite, but you're getting closer! 🔄",
+  "Keep pushing! You've got this! ✨",
+  "Almost there! One more shot! 🎯",
+  "Mistakes are just steps to learning! 📚",
+  "Shake it off and try again! 🍀",
+];
 
 // ——— Types ——————————————————————————————————————————————————————————————————————
 interface CrossMathPuzzle {
@@ -200,6 +221,7 @@ const CrossMathGame = () => {
   const [roundTimeLeft, setRoundTimeLeft] = useState(() => getTotalTime(0));
   const [questionActive, setQuestionActive] = useState(true);
   const [selectedBlank, setSelectedBlank] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<'success' | 'error' | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTickRef = useRef(Date.now());
   const scoreRef = useRef(score);
@@ -250,6 +272,8 @@ const CrossMathGame = () => {
         addCompletedGame('crossmath');
         if (isEndTest) {
           navigate('/select-game');
+        } else {
+          confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
         }
       });
     }
@@ -355,14 +379,19 @@ const CrossMathGame = () => {
     let newCorrect = correctCount;
 
     if (isCorrect) {
-      const points =
-        puzzle.difficulty === 'expert' ? 25 :
-          puzzle.difficulty === 'hard' ? 20 :
-            puzzle.difficulty === 'medium' ? 15 : 10;
-      newScore = score + points;
+      newScore = score + 10;
       newCorrect = correctCount + 1;
       setScore(newScore);
       setCorrectCount(newCorrect);
+      if (currentTest?.showResults !== false) {
+        setFeedback('success');
+        toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '🤖' });
+      }
+    } else {
+      if (currentTest?.showResults !== false) {
+        setFeedback('error');
+        toast.error(OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)], { icon: '📉' });
+      }
     }
 
     if (currentStudent) {
@@ -371,11 +400,14 @@ const CrossMathGame = () => {
 
     setQuestionActive(false);
     setSelectedOption(null);
-    if (currentQ + 1 >= TOTAL_QUESTIONS) {
-      handleFinish();
-    } else {
-      setCurrentQ(prev => prev + 1);
-    }
+    setTimeout(() => {
+      setFeedback(null);
+      if (currentQ + 1 >= TOTAL_QUESTIONS) {
+        handleFinish();
+      } else {
+        setCurrentQ(prev => prev + 1);
+      }
+    }, 600);
   }, [checkAnswer, score, correctCount, currentQ, puzzle, currentStudent, updateStudentProgress, handleFinish]);
 
   // Auto-submit when all blanks are filled
@@ -501,7 +533,7 @@ const CrossMathGame = () => {
   const progress = ((currentQ + 1) / TOTAL_QUESTIONS) * 100;
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans min-h-screen relative overflow-hidden pt-16">
+    <div className={`flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans min-h-screen relative overflow-hidden pt-16 ${feedback === 'success' ? 'flash-correct' : feedback === 'error' ? 'flash-wrong' : ''}`}>
       {/* Background Layers like Home Page */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />

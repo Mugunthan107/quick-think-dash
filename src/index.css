@@ -764,13 +764,15 @@
   body {
     font-size: 14px;
   }
-  
+
   .max-container {
     @apply px-3;
   }
 
   /* Fix overflow issues on small screens */
-  main, section, .page-bg {
+  main,
+  section,
+  .page-bg {
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -784,11 +786,56 @@
 
 /* Ensure touch targets are minimum 44px */
 @media (pointer: coarse) {
-  button, a, input, select, textarea {
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
     min-height: 44px;
   }
-  
-  input[type="text"], input[type="number"], input[type="email"] {
-    font-size: 16px; /* Prevent iOS zoom */
+
+  input[type="text"],
+  input[type="number"],
+  input[type="email"] {
+    font-size: 16px;
+    /* Prevent iOS zoom */
+  }
+
+  /* ─── FLASH FEEDBACK ─── */
+  @keyframes flash-green {
+    0% {
+      background-color: transparent;
+    }
+
+    25% {
+      background-color: rgba(34, 197, 94, 0.2);
+    }
+
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  @keyframes flash-red {
+    0% {
+      background-color: transparent;
+    }
+
+    25% {
+      background-color: rgba(239, 68, 68, 0.2);
+    }
+
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  .flash-correct {
+    animation: flash-green 0.7s ease-out forwards;
+  }
+
+  .flash-wrong {
+    animation: flash-red 0.7s ease-out forwards;
   }
 }

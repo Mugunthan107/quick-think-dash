@@ -2,6 +2,27 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Clock, Trophy, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
+
+const SUCCESS_MESSAGES = [
+  "Hurray! You're brilliant! 🌟",
+  "Awesome! Keep it up! 💪",
+  "Stellar work! 🚀",
+  "You're a genius! 🧠",
+  "Perfecto! 🎯",
+  "Magnificent! ✨",
+  "Incredible! 🏆",
+];
+
+const OOPS_MESSAGES = [
+  "Oops! Don't worry, try again! 😊",
+  "Not quite, but you're getting closer! 🔄",
+  "Keep pushing! You've got this! ✨",
+  "Almost there! One more shot! 🎯",
+  "Mistakes are just steps to learning! 📚",
+  "Shake it off and try again! 🍀",
+];
 import DecorativeCurve from '@/components/DecorativeCurve';
 
 const TOTAL_LEVELS = 20;
@@ -181,8 +202,14 @@ const AptiRush = () => {
       setScore(newScore);
       setCorrectCount(newCorrect);
       setShowResult('correct');
+      if (currentTest?.showResults !== false) {
+        toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '🎓' });
+      }
     } else {
       setShowResult('wrong');
+      if (currentTest?.showResults !== false) {
+        toast.error(OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)], { icon: '🤔' });
+      }
     }
 
     if (currentStudent) {
@@ -204,6 +231,8 @@ const AptiRush = () => {
         addCompletedGame('aptirush');
         if (isEndTest) {
           navigate('/select-game');
+        } else {
+          confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
         }
       });
     }
@@ -266,7 +295,7 @@ const AptiRush = () => {
   const progress = ((currentQ + 1) / TOTAL_LEVELS) * 100;
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
+    <div className={`flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden ${showResult === 'correct' ? 'flash-correct' : (showResult === 'wrong' || showResult === 'timeout') ? 'flash-wrong' : ''}`}>
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
         <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />

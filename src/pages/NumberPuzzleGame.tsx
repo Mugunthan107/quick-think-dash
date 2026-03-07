@@ -2,6 +2,27 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Clock, Trophy, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
+
+const SUCCESS_MESSAGES = [
+  "Hurray! You're brilliant! 🌟",
+  "Awesome! Keep it up! 💪",
+  "Stellar work! 🚀",
+  "You're a genius! 🧠",
+  "Perfecto! 🎯",
+  "Magnificent! ✨",
+  "Incredible! 🏆",
+];
+
+const OOPS_MESSAGES = [
+  "Oops! Don't worry, try again! 😊",
+  "Not quite, but you're getting closer! 🔄",
+  "Keep pushing! You've got this! ✨",
+  "Almost there! One more shot! 🎯",
+  "Mistakes are just steps to learning! 📚",
+  "Shake it off and try again! 🍀",
+];
 
 const TOTAL_LEVELS = 20;
 const TIME_PER_Q = 10;
@@ -100,11 +121,17 @@ export default function NumberPuzzleGame() {
     setSelected(idx);
     const q = questions[level];
     const isCorrect = idx >= 0 && q.options[idx] === q.answer;
-    const newScore = isCorrect ? score + 1 : score;
+    const newScore = isCorrect ? score + 10 : score;
     const newCorrect = isCorrect ? correct + 1 : correct;
     setScore(newScore);
     setCorrect(newCorrect);
     setFeedback(isCorrect ? 'correct' : 'wrong');
+
+    if (isCorrect && currentTest?.showResults !== false) {
+      toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '🧩' });
+    } else if (currentTest?.showResults !== false) {
+      toast.error(OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)], { icon: '🤔' });
+    }
 
     setTimeout(() => {
       setFeedback(null);
@@ -130,6 +157,7 @@ export default function NumberPuzzleGame() {
       completedAt: Date.now(),
     });
     addCompletedGame('numpuzzle');
+    confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
   };
 
   const handlePostFinish = useCallback(() => {
@@ -153,7 +181,7 @@ export default function NumberPuzzleGame() {
   const q = level < TOTAL_LEVELS ? questions[level] : null;
 
   return (
-    <div className="flex flex-col h-screen bg-[#F0F7FF] font-sans overflow-hidden">
+    <div className={`flex flex-col h-screen bg-[#F0F7FF] font-sans overflow-hidden ${feedback === 'correct' ? 'flash-correct' : feedback === 'wrong' ? 'flash-wrong' : ''}`}>
       <div className="flex items-center justify-between px-3 sm:px-6 py-3 bg-white/80 backdrop-blur border-b border-sky-100 z-20">
         <button onClick={handleEndTest} className="flex items-center gap-2 text-sm font-bold text-sky-500 hover:text-sky-600 transition-colors">
           <ArrowLeft className="w-4 h-4" /> End

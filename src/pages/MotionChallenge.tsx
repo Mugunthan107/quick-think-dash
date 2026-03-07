@@ -2,6 +2,27 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Trophy, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
+
+const SUCCESS_MESSAGES = [
+  "Hurray! You're brilliant! 🌟",
+  "Awesome! Keep it up! 💪",
+  "Stellar work! 🚀",
+  "You're a genius! 🧠",
+  "Perfecto! 🎯",
+  "Magnificent! ✨",
+  "Incredible! 🏆",
+];
+
+const OOPS_MESSAGES = [
+  "Oops! Don't worry, try again! 😊",
+  "Not quite, but you're getting closer! 🔄",
+  "Keep pushing! You've got this! ✨",
+  "Almost there! One more shot! 🎯",
+  "Mistakes are just steps to learning! 📚",
+  "Shake it off and try again! 🍀",
+];
 import NavBar from '@/components/NavBar';
 import DecorativeCurve from '@/components/DecorativeCurve';
 
@@ -345,8 +366,16 @@ const MotionChallenge = () => {
     let roundPoints = 0;
     if (won) {
       setCorrectCount(c => c + 1);
-      roundPoints = movesUsed < 12 ? 10 : 5;
+      roundPoints = 10;
       setScore(s => s + roundPoints);
+      if (won && currentTest?.showResults !== false) {
+        toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '⚽' });
+      }
+    } else {
+      setLevelFlash('wrong' as any); // Assuming 'wrong' flash exists in CSS
+      if (currentTest?.showResults !== false) {
+        toast.error(OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)], { icon: '🤔' });
+      }
     }
 
     setLevelFlash(won ? 'success' : null);
@@ -391,6 +420,7 @@ const MotionChallenge = () => {
         completedAt: Date.now(),
       }).then(() => {
         addCompletedGame('motion');
+        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
         if (isEndTest) {
           navigate('/select-game');
         }
@@ -534,7 +564,7 @@ const MotionChallenge = () => {
   const [ballR, ballC] = ballPos;
 
   return (
-    <div className="flex flex-col bg-[#FDFDFF] font-sans h-screen overflow-hidden relative">
+    <div className={`flex flex-col bg-[#FDFDFF] font-sans h-screen overflow-hidden relative ${levelFlash === 'success' ? 'flash-correct' : levelFlash === ('wrong' as any) ? 'flash-wrong' : ''}`}>
       <NavBar />
 
       {/* Main content */}

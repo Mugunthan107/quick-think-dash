@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import confetti from 'canvas-confetti';
 
 import {
   Select,
@@ -40,15 +41,16 @@ const GAME_MAX_SCORES: Record<string, number> = {
   motion: 100,
   aptirush: 200,
   crossmath: 350,
-  numberseries: 20,
-  mirror: 20,
-  waterimage: 20,
-  numpuzzle: 20,
-  colorsort: 20,
+  numberseries: 200,
+  mirror: 200,
+  waterimage: 200,
+  numpuzzle: 200,
+  colorsort: 200,
 };
 
 const formatTime = (s: number) => {
-  if (!s || s <= 0) return '—';
+  if (s === undefined || s === null) return '—';
+  if (s <= 0) return '0s';
   const m = Math.floor(s / 60);
   const sec = Math.round(s % 60);
   if (m > 0) return `${m}m ${sec}s`;
@@ -501,7 +503,13 @@ const AshuDashboard = () => {
                       </div>
                       <div className="p-3 max-h-[300px] overflow-y-auto custom-scrollbar">
                         {pendingStudents.length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground text-xs font-medium italic">No pending requests.</div>
+                          <div className="text-center py-10 flex flex-col items-center gap-3">
+                            <span className="text-4xl">😴</span>
+                            <div className="flex flex-col gap-1">
+                              <p className="text-[13px] font-bold text-slate-400 italic">"Silence... even the crickets are waiting."</p>
+                              <p className="text-[10px] text-slate-300 font-medium">No new students are knocking on the door yet.</p>
+                            </div>
+                          </div>
                         ) : (
                           <div className="space-y-2">
                             {pendingStudents.map(student => (
@@ -514,7 +522,10 @@ const AshuDashboard = () => {
                                 </div>
                                 <div className="flex gap-1.5">
                                   <Button size="icon" variant="ghost" className="text-destructive hover:bg-destructive/10 rounded-lg w-8 h-8" onClick={() => rejectStudent(student.username)}><X className="w-4 h-4" /></Button>
-                                  <Button size="icon" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg w-8 h-8 shadow-sm shadow-emerald-200" onClick={() => approveStudent(student.username)}><Check className="w-4 h-4" /></Button>
+                                  <Button size="icon" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg w-8 h-8 shadow-sm shadow-emerald-200" onClick={() => {
+                                    approveStudent(student.username);
+                                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                                  }}><Check className="w-4 h-4" /></Button>
                                 </div>
                               </div>
                             ))}

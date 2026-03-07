@@ -2,65 +2,103 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Clock, Trophy, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
+
+const SUCCESS_MESSAGES = [
+  "Hurray! You're brilliant! 🌟",
+  "Awesome! Keep it up! 💪",
+  "Stellar work! 🚀",
+  "You're a genius! 🧠",
+  "Perfecto! 🎯",
+  "Magnificent! ✨",
+  "Incredible! 🏆",
+];
+
+const OOPS_MESSAGES = [
+  "Oops! Don't worry, try again! 😊",
+  "Not quite, but you're getting closer! 🔄",
+  "Keep pushing! You've got this! ✨",
+  "Almost there! One more shot! 🎯",
+  "Mistakes are just steps to learning! 📚",
+  "Shake it off and try again! 🍀",
+];
 
 const TOTAL_LEVELS = 20;
 const TIME_PER_Q = 10;
 
+const MIRROR_QUESTIONS = [
+  'BANKING', 'RESEARCH', 'SUMMER', 'AQ716P', '7156',
+  'INDIA', 'AMBULANCE', 'DEGREE', '99663125', 'STROKE',
+  'SUPERVISOR', 'JUDGEMENT', 'TERMINATE', 'FIXING', 'MALAYALAM',
+  'GEOGRAPHY', 'INFORMATION', 'REASONING', 'EFFECTIVE', 'MAGAZINE'
+];
+interface MirrorOption {
+  text: string;
+  isMirror: boolean;
+}
+
 interface MirrorQ {
   original: string;
-  answer: string;
-  options: string[];
+  options: MirrorOption[];
+  correctIndex: number;
 }
 
-function reverseStr(s: string): string {
-  return s.split('').reverse().join('');
-}
-
-function generateMirrorQ(): MirrorQ {
+function generateMirrorQ(input?: string): MirrorQ {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
-  const len = Math.floor(Math.random() * 4) + 3; // 3-6 chars
-  let original = '';
-  for (let i = 0; i < len; i++) {
-    original += chars[Math.floor(Math.random() * chars.length)];
+  let original = input || '';
+
+  if (!original) {
+    const len = Math.floor(Math.random() * 4) + 3;
+    for (let i = 0; i < len; i++) original += chars[Math.floor(Math.random() * chars.length)];
   }
 
-  const answer = reverseStr(original);
+  const options: MirrorOption[] = [];
 
-  const wrongSet = new Set<string>();
-  wrongSet.add(original); // original is a common distractor
+  // 1. Correct: Original string, mirrored
+  options.push({ text: original, isMirror: true });
 
-  // Swap two chars
-  if (answer.length >= 2) {
-    const arr = answer.split('');
-    const i = Math.floor(Math.random() * (arr.length - 1));
-    [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
-    wrongSet.add(arr.join(''));
-  }
+  // Helper to get a similar string (1 char difference)
+  const getSimilar = (str: string) => {
+    const arr = str.split('');
+    const pos = Math.floor(Math.random() * arr.length);
+    let newChar = chars[Math.floor(Math.random() * chars.length)];
+    while (newChar === arr[pos]) {
+      newChar = chars[Math.floor(Math.random() * chars.length)];
+    }
+    arr[pos] = newChar;
+    return arr.join('');
+  };
 
-  // Partial reverse
-  const half = Math.ceil(original.length / 2);
-  wrongSet.add(reverseStr(original.slice(0, half)) + original.slice(half));
+  // 2. Trap: Similar string, mirrored
+  options.push({ text: getSimilar(original), isMirror: true });
 
-  // Another random permutation
-  const shuffled = original.split('').sort(() => Math.random() - 0.5).join('');
-  if (shuffled !== answer) wrongSet.add(shuffled);
+  // 3. Trap: Another similar string, mirrored
+  let s3 = getSimilar(original);
+  while (options.some(o => o.text === s3)) s3 = getSimilar(original);
+  options.push({ text: s3, isMirror: true });
 
-  wrongSet.delete(answer);
-  const wrongs = [...wrongSet].slice(0, 3);
-  while (wrongs.length < 3) {
-    const r = original.split('').sort(() => Math.random() - 0.5).join('');
-    if (r !== answer && !wrongs.includes(r)) wrongs.push(r);
-  }
+  // 4. Trap: Another similar string, mirrored
+  let s4 = getSimilar(original);
+  while (options.some(o => o.text === s4)) s4 = getSimilar(original);
+  options.push({ text: s4, isMirror: true });
 
-  const options = [answer, ...wrongs.slice(0, 3)].sort(() => Math.random() - 0.5);
-  return { original, answer, options };
+  // Shuffle options
+  const shuffledIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+  const shuffledOptions = shuffledIndices.map(i => options[i]);
+  const correctIndex = shuffledIndices.indexOf(0);
+
+  return { original, options: shuffledOptions, correctIndex };
 }
 
 export default function MirrorImageGame() {
   const navigate = useNavigate();
   const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, getNextGame } = useGame();
 
-  const questions = useMemo(() => Array.from({ length: TOTAL_LEVELS }, generateMirrorQ), []);
+  const questions = useMemo(() => {
+    const shuffled = [...MIRROR_QUESTIONS].sort(() => Math.random() - 0.5);
+    return shuffled.map(q => generateMirrorQ(q));
+  }, []);
 
   const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
@@ -92,12 +130,20 @@ export default function MirrorImageGame() {
     if (feedback || gameOver) return;
     setSelected(idx);
     const q = questions[level];
-    const isCorrect = idx >= 0 && q.options[idx] === q.answer;
-    const newScore = isCorrect ? score + 1 : score;
+    const isCorrect = idx === q.correctIndex;
+    const newScore = isCorrect ? score + 10 : score;
     const newCorrect = isCorrect ? correct + 1 : correct;
     setScore(newScore);
     setCorrect(newCorrect);
     setFeedback(isCorrect ? 'correct' : 'wrong');
+
+    if (currentTest?.showResults !== false) {
+      if (isCorrect) {
+        toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '✨' });
+      } else {
+        toast.error(OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)], { icon: '🪞' });
+      }
+    }
 
     setTimeout(() => {
       setFeedback(null);
@@ -123,6 +169,11 @@ export default function MirrorImageGame() {
       completedAt: Date.now(),
     });
     addCompletedGame('mirror');
+    if (getNextGame()) {
+      // Keep momentum
+    } else {
+      confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+    }
   };
 
   const handlePostFinish = useCallback(() => {
@@ -146,7 +197,7 @@ export default function MirrorImageGame() {
   const q = level < TOTAL_LEVELS ? questions[level] : null;
 
   return (
-    <div className="flex flex-col h-screen bg-[#F0F7FF] font-sans overflow-hidden">
+    <div className={`flex flex-col h-screen bg-[#F0F7FF] font-sans overflow-hidden ${feedback === 'correct' ? 'flash-correct' : feedback === 'wrong' ? 'flash-wrong' : ''}`}>
       <div className="flex items-center justify-between px-3 sm:px-6 py-3 bg-white/80 backdrop-blur border-b border-sky-100 z-20">
         <button onClick={handleEndTest} className="flex items-center gap-2 text-sm font-bold text-sky-500 hover:text-sky-600 transition-colors">
           <ArrowLeft className="w-4 h-4" /> End
@@ -191,12 +242,14 @@ export default function MirrorImageGame() {
                 key={i}
                 onClick={() => handleSelect(i)}
                 disabled={feedback !== null}
-                className={`py-4 rounded-2xl border-2 font-mono font-bold text-lg tracking-wider transition-all duration-200
+                className={`py-4 rounded-2xl border-2 font-mono font-bold text-lg tracking-wider transition-all duration-200 flex items-center justify-center
                   ${selected === i && feedback === 'correct' ? 'bg-emerald-50 border-emerald-400 text-emerald-600' :
                     selected === i && feedback === 'wrong' ? 'bg-red-50 border-red-400 text-red-600' :
                       'bg-white border-sky-200 text-[#0F172A] hover:border-sky-400 hover:shadow-md'}`}
               >
-                {opt}
+                <span style={{ transform: opt.isMirror ? 'scaleX(-1)' : 'none', display: 'inline-block' }}>
+                  {opt.text}
+                </span>
               </button>
             ))}
           </div>

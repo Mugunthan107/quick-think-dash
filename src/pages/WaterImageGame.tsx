@@ -2,69 +2,103 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Clock, Trophy, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
+
+const SUCCESS_MESSAGES = [
+  "Hurray! You're brilliant! 🌟",
+  "Awesome! Keep it up! 💪",
+  "Stellar work! 🚀",
+  "You're a genius! 🧠",
+  "Perfecto! 🎯",
+  "Magnificent! ✨",
+  "Incredible! 🏆",
+];
+
+const OOPS_MESSAGES = [
+  "Oops! Don't worry, try again! 😊",
+  "Not quite, but you're getting closer! 🔄",
+  "Keep pushing! You've got this! ✨",
+  "Almost there! One more shot! 🎯",
+  "Mistakes are just steps to learning! 📚",
+  "Shake it off and try again! 🍀",
+];
 
 const TOTAL_LEVELS = 20;
 const TIME_PER_Q = 10;
 
+const WATER_QUESTIONS = [
+  'REASONING', 'NAME', 'MANTRI', 'MISSISSIPPI', 'PAN20',
+  'PIONEER', 'P1PA2PU', 'CAT2015', 'NEXA', 'destination',
+  'BRIDGE', 'FRUIT', 'DISC', 'RAJ589', '9654',
+  'PQ8528', 'NUCLEAR', 'QUARREL', 'VAYU8436', 'GR98AP76ES'
+];
+
+interface WaterOption {
+  text: string;
+  isWater: boolean;
+}
+
 interface WaterQ {
   original: string;
-  answer: string;
-  options: string[];
+  options: WaterOption[];
+  correctIndex: number;
 }
 
-// Water reflection = vertical flip. For text, we simulate by flipping upside-down
-// Using Unicode flip approximations
-const FLIP_MAP: Record<string, string> = {
-  'A': '∀', 'B': 'q', 'C': 'Ɔ', 'D': 'p', 'E': 'Ǝ', 'F': 'Ⅎ',
-  'G': '⅁', 'H': 'H', 'J': 'ſ', 'K': 'ʞ', 'L': '˥', 'M': 'W',
-  'N': 'N', 'P': 'd', 'R': 'ɹ', 'T': '⊥', 'U': '∩', 'V': 'Λ',
-  'W': 'M', 'Y': '⅄', '1': 'Ɩ', '2': 'ᄅ', '3': 'Ɛ', '4': 'ㄣ',
-  '5': 'ϛ', '6': '9', '7': 'ㄥ', '8': '8', '9': '6', '0': '0',
-};
-
-function flipChar(c: string): string {
-  return FLIP_MAP[c] || c;
-}
-
-function waterFlip(s: string): string {
-  return s.split('').map(flipChar).join('');
-}
-
-function generateWaterQ(): WaterQ {
+function generateWaterQ(input?: string): WaterQ {
   const chars = 'ABCDEGHKLMPRTUVWY23456789';
-  const len = Math.floor(Math.random() * 3) + 3;
-  let original = '';
-  for (let i = 0; i < len; i++) original += chars[Math.floor(Math.random() * chars.length)];
-
-  const answer = waterFlip(original);
-
-  const wrongSet = new Set<string>();
-  // Reversed original
-  wrongSet.add(original.split('').reverse().join(''));
-  // Original itself
-  wrongSet.add(original);
-  // Partial flip
-  const half = Math.ceil(original.length / 2);
-  wrongSet.add(waterFlip(original.slice(0, half)) + original.slice(half));
-  // Reverse of water flip
-  wrongSet.add(waterFlip(original).split('').reverse().join(''));
-
-  wrongSet.delete(answer);
-  const wrongs = [...wrongSet].slice(0, 3);
-  while (wrongs.length < 3) {
-    const r = original.split('').sort(() => Math.random() - 0.5).map(flipChar).join('');
-    if (r !== answer && !wrongs.includes(r)) wrongs.push(r);
+  let original = input || '';
+  if (!original) {
+    const len = Math.floor(Math.random() * 3) + 3;
+    for (let i = 0; i < len; i++) original += chars[Math.floor(Math.random() * chars.length)];
   }
 
-  const options = [answer, ...wrongs.slice(0, 3)].sort(() => Math.random() - 0.5);
-  return { original, answer, options };
+  const options: WaterOption[] = [];
+
+  // 1. Correct: Original string, flipped vertically
+  options.push({ text: original, isWater: true });
+
+  // Helper to get a similar string (1 char difference)
+  const getSimilar = (str: string) => {
+    const arr = str.split('');
+    const pos = Math.floor(Math.random() * arr.length);
+    let newChar = chars[Math.floor(Math.random() * chars.length)];
+    while (newChar === arr[pos]) {
+      newChar = chars[Math.floor(Math.random() * chars.length)];
+    }
+    arr[pos] = newChar;
+    return arr.join('');
+  };
+
+  // 2. Trap: Similar string, flipped vertically
+  options.push({ text: getSimilar(original), isWater: true });
+
+  // 3. Trap: Another similar string, flipped vertically
+  let s3 = getSimilar(original);
+  while (options.some(o => o.text === s3)) s3 = getSimilar(original);
+  options.push({ text: s3, isWater: true });
+
+  // 4. Trap: Another similar string, flipped vertically
+  let s4 = getSimilar(original);
+  while (options.some(o => o.text === s4)) s4 = getSimilar(original);
+  options.push({ text: s4, isWater: true });
+
+  // Shuffle options
+  const shuffledIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+  const shuffledOptions = shuffledIndices.map(i => options[i]);
+  const correctIndex = shuffledIndices.indexOf(0);
+
+  return { original, options: shuffledOptions, correctIndex };
 }
 
 export default function WaterImageGame() {
   const navigate = useNavigate();
   const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, getNextGame } = useGame();
 
-  const questions = useMemo(() => Array.from({ length: TOTAL_LEVELS }, generateWaterQ), []);
+  const questions = useMemo(() => {
+    const shuffled = [...WATER_QUESTIONS].sort(() => Math.random() - 0.5);
+    return shuffled.map(q => generateWaterQ(q));
+  }, []);
 
   const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
@@ -96,12 +130,20 @@ export default function WaterImageGame() {
     if (feedback || gameOver) return;
     setSelected(idx);
     const q = questions[level];
-    const isCorrect = idx >= 0 && q.options[idx] === q.answer;
-    const newScore = isCorrect ? score + 1 : score;
+    const isCorrect = idx === q.correctIndex;
+    const newScore = isCorrect ? score + 10 : score;
     const newCorrect = isCorrect ? correct + 1 : correct;
     setScore(newScore);
     setCorrect(newCorrect);
     setFeedback(isCorrect ? 'correct' : 'wrong');
+
+    if (currentTest?.showResults !== false) {
+      if (isCorrect) {
+        toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '✨' });
+      } else {
+        toast.error(OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)], { icon: '💧' });
+      }
+    }
 
     setTimeout(() => {
       setFeedback(null);
@@ -127,6 +169,11 @@ export default function WaterImageGame() {
       completedAt: Date.now(),
     });
     addCompletedGame('waterimage');
+    if (getNextGame()) {
+      // Small celebration before next
+    } else {
+      confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+    }
   };
 
   const handlePostFinish = useCallback(() => {
@@ -150,7 +197,7 @@ export default function WaterImageGame() {
   const q = level < TOTAL_LEVELS ? questions[level] : null;
 
   return (
-    <div className="flex flex-col h-screen bg-[#F0F7FF] font-sans overflow-hidden">
+    <div className={`flex flex-col h-screen bg-[#F0F7FF] font-sans overflow-hidden ${feedback === 'correct' ? 'flash-correct' : feedback === 'wrong' ? 'flash-wrong' : ''}`}>
       <div className="flex items-center justify-between px-3 sm:px-6 py-3 bg-white/80 backdrop-blur border-b border-sky-100 z-20">
         <button onClick={handleEndTest} className="flex items-center gap-2 text-sm font-bold text-sky-500 hover:text-sky-600 transition-colors">
           <ArrowLeft className="w-4 h-4" /> End
@@ -185,17 +232,8 @@ export default function WaterImageGame() {
           <p className="text-xs text-[#94A3B8] font-bold">Level {level + 1}/{TOTAL_LEVELS}</p>
           <p className="text-sm text-[#64748B] font-medium">Find the water reflection:</p>
 
-          {/* Original with reflection line */}
-          <div className="flex flex-col items-center">
-            <div className="bg-white rounded-2xl border-2 border-sky-200 px-8 py-5 shadow-md">
-              <span className="text-3xl sm:text-5xl font-black text-[#0F172A] tracking-[0.15em] font-mono">{q.original}</span>
-            </div>
-            <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-sky-300 to-transparent my-2" />
-            <div className="bg-sky-50/50 rounded-2xl border border-dashed border-sky-200 px-8 py-4">
-              <span className="text-2xl sm:text-4xl font-black text-sky-300 tracking-[0.15em] font-mono" style={{ transform: 'scaleY(-1)', display: 'inline-block' }}>
-                {q.original}
-              </span>
-            </div>
+          <div className="bg-white rounded-2xl border-2 border-sky-200 px-8 py-5 shadow-md">
+            <span className="text-3xl sm:text-5xl font-black text-[#0F172A] tracking-[0.15em] font-mono">{q.original}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
@@ -204,12 +242,14 @@ export default function WaterImageGame() {
                 key={i}
                 onClick={() => handleSelect(i)}
                 disabled={feedback !== null}
-                className={`py-4 rounded-2xl border-2 font-mono font-bold text-base tracking-wider transition-all duration-200
+                className={`py-4 rounded-2xl border-2 font-mono font-bold text-base tracking-wider transition-all duration-200 flex items-center justify-center
                   ${selected === i && feedback === 'correct' ? 'bg-emerald-50 border-emerald-400 text-emerald-600' :
                     selected === i && feedback === 'wrong' ? 'bg-red-50 border-red-400 text-red-600' :
                       'bg-white border-sky-200 text-[#0F172A] hover:border-sky-400 hover:shadow-md'}`}
               >
-                {opt}
+                <span style={{ transform: opt.isWater ? 'scaleY(-1)' : 'none', display: 'inline-block' }}>
+                  {opt.text}
+                </span>
               </button>
             ))}
           </div>
