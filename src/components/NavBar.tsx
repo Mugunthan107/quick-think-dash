@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
+import { useFun } from '@/context/FunContext';
 import { ShieldCheck, Users, Activity, Trophy, Zap, BookOpen, Shield, X, Info, FileText, LogOut } from 'lucide-react';
 import DecorativeCurve from './DecorativeCurve';
+import FunModeToggle from './FunModeToggle';
 
 const IN_TEST_ROUTES = ['/game', '/crossmath', '/numlink', '/motion-challenge', '/aptirush', '/select-game', '/lobby', '/waiting-approval'];
 const HIDE_CTA_ROUTES = ['/student', '/leaderboard'];
@@ -11,8 +13,8 @@ const NavBar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { currentStudent, students, adminLoggedIn, adminLogout } = useGame();
+    const { handleLogoClick } = useFun();
     const [showInstructions, setShowInstructions] = useState(false);
-
     const path = location.pathname;
     const inTest = IN_TEST_ROUTES.includes(path);
     const hideCta = HIDE_CTA_ROUTES.includes(path);
@@ -36,7 +38,7 @@ const NavBar = () => {
                 <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-10 flex items-center justify-between gap-4">
 
                     {/* Left — Logo */}
-                    <button onClick={() => navigate('/')} className="flex items-center gap-2 group shrink-0 relative z-50">
+                    <button onClick={() => { handleLogoClick(); navigate('/'); }} className="flex items-center gap-2 group shrink-0 relative z-50">
                         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center shadow-md border border-[#F1F5F9] transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-blue-500/10 origin-center">
                             <img
                                 src="/favicon-round.png"
@@ -51,7 +53,10 @@ const NavBar = () => {
 
                     {/* Right */}
                     {!isMotionOrApti && (
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-3 sm:gap-6">
+                            {!inTest && !isCrossMath && !isAdmin && !hideCta && (
+                                <div className="hidden sm:block"><FunModeToggle /></div>
+                            )}
                             {!hideCta && !inTest && !isCrossMath && !isAdmin && (
                                 <button
                                     onClick={() => navigate(path === '/about' ? '/' : '/about')}
