@@ -924,8 +924,24 @@ const AshuDashboard = () => {
               <p className="text-sm text-muted-foreground mb-6 font-medium">Select which games students will play.</p>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-3 block font-semibold">Select Games</label>
-                  <div className="space-y-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm text-muted-foreground font-semibold">Select Games</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allIds = availableGamesList.map(g => g.id);
+                        if (selectedGames.length === allIds.length) {
+                          setSelectedGames(['bubble']);
+                        } else {
+                          setSelectedGames(allIds);
+                        }
+                      }}
+                      className="text-[11px] font-black text-accent hover:text-accent/80 transition-colors uppercase tracking-wider"
+                    >
+                      {selectedGames.length === availableGamesList.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  <div className="space-y-2 max-h-[280px] overflow-y-auto px-1 custom-scrollbar">
                     {availableGamesList.map(game => (
                       <button key={game.id}
                         onClick={() => setSelectedGames(prev => prev.includes(game.id) ? prev.filter(id => id !== game.id) : [...prev, game.id])}
