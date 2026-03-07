@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Brain, Grid3X3, Link, CheckCircle2, ChevronRight, Gamepad2, Move, Zap, Hash, FlipHorizontal, Droplets, LayoutGrid, Palette } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
-
+import GameWheel from '@/components/GameWheel';
+import FunModeToggle from '@/components/FunModeToggle';
+import { useFun } from '@/context/FunContext';
 const games = [
   {
     id: 'bubble', name: 'Bubble Sort', route: '/game',
@@ -60,7 +62,8 @@ const games = [
 const GameSelector = () => {
   const navigate = useNavigate();
   const { currentStudent, currentTest, completedGames } = useGame();
-
+  const { funMode } = useFun();
+  const [showWheel, setShowWheel] = useState(false);
   const numGames = currentTest?.numGames || 1;
   const playedGameIds = currentStudent?.gameHistory?.map(g => g.gameId) || [];
 
@@ -155,6 +158,19 @@ const GameSelector = () => {
             </div>
           )}
 
+          {/* Fun Mode Toggle + Game Wheel */}
+          {funMode && (
+            <div className="flex items-center justify-center gap-3 px-2">
+              <FunModeToggle />
+              <button
+                onClick={() => setShowWheel(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold bg-amber-50 border border-amber-200 text-amber-600 hover:bg-amber-100 transition-all"
+              >
+                🎡 Spin Wheel
+              </button>
+            </div>
+          )}
+
           <div className="space-y-4 px-2">
             {availableGames.map((game, i) => (
               <button key={game.id} onClick={() => navigate(game.route)}
@@ -166,17 +182,24 @@ const GameSelector = () => {
                     <game.icon className="w-6 h-6 text-sky-500" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-[#0F172A] text-lg sm:text-xl group-hover:text-sky-500 transition-colors duration-200">{game.name}</h3>
-                    <p className="text-[14px] text-[#64748B] mt-0.5 line-clamp-2 font-medium leading-tight">{game.description}</p>
+                    <h3 className="font-bold text-foreground text-lg sm:text-xl group-hover:text-sky-500 transition-colors duration-200">{game.name}</h3>
+                    <p className="text-[14px] text-muted-foreground mt-0.5 line-clamp-2 font-medium leading-tight">{game.description}</p>
                   </div>
-                  <ChevronRight className="w-6 h-6 text-[#94A3B8]/30 group-hover:text-sky-500 group-hover:translate-x-1 transition-all duration-200 shrink-0" />
+                  <ChevronRight className="w-6 h-6 text-muted-foreground/30 group-hover:text-sky-500 group-hover:translate-x-1 transition-all duration-200 shrink-0" />
                 </div>
               </button>
             ))}
             {availableGames.length === 0 && (
-              <div className="text-center p-8 text-[#64748B] font-bold bg-white/90 backdrop-blur-xl border border-sky-100 rounded-[20px] shadow-[0_8px_30px_rgba(56,189,248,0.06)]">All games completed! 🎉</div>
+              <div className="text-center p-8 text-muted-foreground font-bold bg-white/90 backdrop-blur-xl border border-sky-100 rounded-[20px] shadow-[0_8px_30px_rgba(56,189,248,0.06)]">All games completed! 🎉</div>
             )}
           </div>
+
+          {showWheel && (
+            <GameWheel
+              availableGameIds={availableGames.map(g => g.id)}
+              onClose={() => setShowWheel(false)}
+            />
+          )}
 
           {/* 140px spacer so the page scrolls past the last card */}
           <div style={{ height: '140px', flexShrink: 0 }} />
