@@ -757,3 +757,38 @@
 .btn-outline-neon {
   @apply btn-ghost-lavender;
 }
+
+/* ─── ENHANCED MOBILE RESPONSIVENESS ─── */
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .max-container {
+    @apply px-3;
+  }
+
+  /* Fix overflow issues on small screens */
+  main, section, .page-bg {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+}
+
+@media (max-width: 375px) {
+  .max-container {
+    @apply px-2;
+  }
+}
+
+/* Ensure touch targets are minimum 44px */
+@media (pointer: coarse) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  input[type="text"], input[type="number"], input[type="email"] {
+    font-size: 16px; /* Prevent iOS zoom */
+  }
+}
