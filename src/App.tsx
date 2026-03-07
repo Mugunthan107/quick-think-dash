@@ -3,7 +3,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { GameProvider } from "./context/GameContext";
+import { FunProvider } from "./context/FunContext";
 import AnimatedBackground from "./components/AnimatedBackground";
+import FunLayer from "./components/FunLayer";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
 import DecorativeCurve from "./components/DecorativeCurve";
@@ -22,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import SupabaseTest from "./pages/SupabaseTest";
 import About from "./pages/About";
 import { lazy, Suspense } from "react";
+import { getRandomLoadingMessage } from "./context/FunContext";
 
 const MotionChallenge = lazy(() => import("./pages/MotionChallenge"));
 const AptiRush = lazy(() => import("./pages/AptiRush"));
@@ -58,7 +61,7 @@ const AppContent = () => {
       )}
 
       <div className="relative z-10 flex flex-col flex-1 h-full w-full">
-        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex flex-col items-center justify-center min-h-screen gap-3"><div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" /><p className="text-xs text-muted-foreground font-medium animate-pulse">{getRandomLoadingMessage()}</p></div>}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/student" element={<StudentEntry />} />
@@ -92,17 +95,20 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <AnimatedBackground />
-      <GameProvider>
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-          }}
-        >
-          <NavBar />
-          <AppContent />
-        </BrowserRouter>
-      </GameProvider>
+      <FunProvider>
+        <GameProvider>
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
+            <NavBar />
+            <AppContent />
+            <FunLayer />
+          </BrowserRouter>
+        </GameProvider>
+      </FunProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
