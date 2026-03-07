@@ -203,8 +203,7 @@ const AptiRush = () => {
       }).then(() => {
         addCompletedGame('aptirush');
         if (isEndTest) {
-          finishTest(currentStudent.username);
-          navigate('/');
+          navigate('/select-game');
         }
       });
     }
@@ -292,13 +291,13 @@ const AptiRush = () => {
             </div>
             <button
               onClick={() => {
-                if (window.confirm('Are you sure you want to end the test? Your current score will be saved.')) {
+                if (window.confirm('End this game? Your current progress will be saved.')) {
                   handleFinish(true);
                 }
               }}
               className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest flex items-center gap-1"
             >
-              <LogOut className="w-3 h-3" /> End Test
+              <LogOut className="w-3 h-3" /> End Game
             </button>
           </div>
 

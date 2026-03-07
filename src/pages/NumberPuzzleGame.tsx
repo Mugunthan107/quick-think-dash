@@ -143,9 +143,10 @@ export default function NumberPuzzleGame() {
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
   const handleEndTest = async () => {
-    await finishGame(score, correct, level);
-    if (currentStudent) await finishTest(currentStudent.username);
-    navigate('/');
+    if (window.confirm('End this game? Current progress will be saved.')) {
+      await finishGame(score, correct, level);
+      navigate('/select-game');
+    }
   };
 
   if (!currentStudent || !currentTest) return null;

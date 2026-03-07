@@ -249,8 +249,7 @@ const CrossMathGame = () => {
       }).then(() => {
         addCompletedGame('crossmath');
         if (isEndTest) {
-          finishTest(currentStudent.username);
-          navigate('/');
+          navigate('/select-game');
         }
       });
     }
@@ -566,13 +565,13 @@ const CrossMathGame = () => {
           <div className="w-full flex justify-end mb-4 px-2">
             <button
               onClick={() => {
-                if (window.confirm('Are you sure you want to end the test? Your current score will be saved.')) {
+                if (window.confirm('End this game? Your current progress will be saved.')) {
                   handleFinish(true);
                 }
               }}
               className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"
             >
-              End Test
+              End Game
             </button>
           </div>
 

@@ -589,7 +589,7 @@ const NumLinkGame = () => {
             <div className="flex items-center justify-between px-2 tracking-tight font-bold scale-95 origin-center text-[#64748B] text-[13px]">
               <span className="truncate max-w-[150px]">{currentStudent?.username}</span>
               <button onClick={() => {
-                if (window.confirm('Are you sure you want to end the test? Your current score will be saved.')) {
+                if (window.confirm('End this game? Your current score will be saved.')) {
                   setFinished(true);
                   if (timerRef.current) clearInterval(timerRef.current);
                   if (currentStudent) {
@@ -597,10 +597,9 @@ const NumLinkGame = () => {
                       gameId: 'numlink', score, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: globalRound, completedAt: Date.now()
                     }).then(() => {
                       addCompletedGame('numlink');
-                      finishTest(currentStudent.username);
-                      navigate('/');
+                      navigate('/select-game');
                     });
-                  } else navigate('/');
+                  } else navigate('/select-game');
                 }
               }} className="text-[11px] text-[#94A3B8] hover:text-sky-500 transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest shrink-0">End Test</button>
             </div>

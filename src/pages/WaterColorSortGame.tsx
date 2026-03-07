@@ -206,9 +206,10 @@ export default function WaterColorSortGame() {
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
   const handleEndTest = async () => {
-    await finishGame(score, score, level);
-    if (currentStudent) await finishTest(currentStudent.username);
-    navigate('/');
+    if (window.confirm('End this game? Current progress will be saved.')) {
+      await finishGame(score, score, level);
+      navigate('/select-game');
+    }
   };
 
   if (!currentStudent || !currentTest) return null;

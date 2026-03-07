@@ -392,8 +392,7 @@ const MotionChallenge = () => {
       }).then(() => {
         addCompletedGame('motion');
         if (isEndTest) {
-          finishTest(currentStudent.username);
-          navigate('/');
+          navigate('/select-game');
         }
       });
 
@@ -560,14 +559,14 @@ const MotionChallenge = () => {
         <div className="relative z-10 w-full flex justify-end mb-4 px-4" style={{ maxWidth: 420 }}>
           <button
             onClick={() => {
-              if (window.confirm('Are you sure you want to end the test? Your current score will be saved.')) {
+              if (window.confirm('End this game? Your current progress will be saved.')) {
                 (window as any).__motionEndTest = true;
                 setFinished(true);
               }
             }}
             className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"
           >
-            End Test
+            End Game
           </button>
         </div>
 
