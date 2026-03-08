@@ -7,7 +7,7 @@
 @layer base {
   :root {
     /* ── Foundation ── */
-    --background: 220 20% 98%;
+    --background: 199 100% 98%;
     --foreground: 221 39% 11%;
 
     --card: 0 0% 100%;
@@ -72,7 +72,7 @@
 
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: #F8F9FB;
+    background: #F8FDFF;
     color: #111827;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;

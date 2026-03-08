@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Clock, Trophy, ArrowLeft } from 'lucide-react';
+import { Clock, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
@@ -25,7 +25,9 @@ const OOPS_MESSAGES = [
 ];
 
 const TOTAL_LEVELS = 20;
-const TIME_PER_Q = 10;
+function getRoundTime(level: number) {
+  return level < 10 ? 10 : 5;
+}
 
 const WATER_QUESTIONS = [
   'REASONING', 'NAME', 'MANTRI', 'MISSISSIPPI', 'PAN20',
@@ -103,7 +105,7 @@ export default function WaterImageGame() {
   const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(TIME_PER_Q);
+  const [timeLeft, setTimeLeft] = useState(getRoundTime(0));
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [selected, setSelected] = useState(-1);
@@ -116,10 +118,10 @@ export default function WaterImageGame() {
 
   useEffect(() => {
     if (gameOver || level >= TOTAL_LEVELS) return;
-    setTimeLeft(TIME_PER_Q);
+    setTimeLeft(getRoundTime(level));
     const iv = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) { handleSelect(-1); return TIME_PER_Q; }
+        if (prev <= 1) { handleSelect(-1); return getRoundTime(level); }
         return prev - 1;
       });
     }, 1000);
@@ -186,26 +188,17 @@ export default function WaterImageGame() {
     }
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
-  const handleEndTest = async () => {
-    if (window.confirm('End this game? Current progress will be saved.')) {
-      await finishGame(score, correct, level);
-      navigate('/select-game');
-    }
-  };
 
   if (!currentStudent || !currentTest) return null;
   const q = level < TOTAL_LEVELS ? questions[level] : null;
 
   return (
-    <div className={`flex flex-col h-screen bg-[#F0F7FF] font-sans overflow-hidden ${feedback === 'correct' ? 'flash-correct' : feedback === 'wrong' ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col h-screen bg-transparent font-sans overflow-hidden ${feedback === 'correct' ? 'flash-correct' : feedback === 'wrong' ? 'flash-wrong' : ''}`}>
       <div className="flex items-center justify-between px-3 sm:px-6 py-3 bg-white/80 backdrop-blur border-b border-sky-100 z-20">
-        <button onClick={handleEndTest} className="flex items-center gap-2 text-sm font-bold text-sky-500 hover:text-sky-600 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> End
-        </button>
+        <div className="w-[100px]" />
         <h1 className="text-base sm:text-lg font-black text-[#0F172A]">Water Image</h1>
         <div className="flex items-center gap-3 text-xs sm:text-sm font-bold">
-          <span className="flex items-center gap-1 text-sky-500"><Clock className="w-4 h-4" />{timeLeft}s</span>
-          <span className="flex items-center gap-1 text-emerald-500"><Trophy className="w-4 h-4" />{score}</span>
+          <span className="flex items-center gap-1 text-emerald-500"><Trophy className="w-4 h-4" />{currentTest?.showResults !== false ? score : '---'}</span>
         </div>
       </div>
 
@@ -214,22 +207,57 @@ export default function WaterImageGame() {
       </div>
 
       {gameOver ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 p-4">
-          <div className="bg-white rounded-[20px] border border-sky-100 shadow-lg p-8 text-center max-w-sm w-full">
-            <Trophy className="w-12 h-12 text-sky-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-black text-[#0F172A] mb-2">Game Over!</h2>
-            <p className="text-lg font-bold text-sky-500 mb-1">Score: {score}/{TOTAL_LEVELS}</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
+          <div className="text-center animate-fade-in max-w-md w-full">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
+              <Trophy className="w-10 h-10 text-sky-500" />
+            </div>
+            <h1 className="text-[32px] sm:text-[40px] font-black text-[#0F172A] tracking-tight leading-none mb-3">Water Image Complete!</h1>
+            <p className="text-[15px] text-[#64748B] mb-10 font-medium">Outstanding, {currentStudent?.username}!</p>
+
+            <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
+              <div className="flex items-center justify-center gap-10">
+                <div className="text-center">
+                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
+                  <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
+                </div>
+                <div className="w-px h-14 bg-sky-100" />
+                <div className="text-center">
+                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Correct</span>
+                  <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? `${correct}/${TOTAL_LEVELS}` : '---'}</span>
+                </div>
+              </div>
+            </div>
+
             <button
               onClick={handlePostFinish}
-              className="w-full py-3 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors mt-4"
+              className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95"
             >
               {getNextGame() ? 'Next Game →' : 'Finish Session'}
             </button>
           </div>
         </div>
       ) : q && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 p-4">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
           <p className="text-xs text-[#94A3B8] font-bold">Level {level + 1}/{TOTAL_LEVELS}</p>
+
+          {/* Timer */}
+          <div className="flex flex-col items-center gap-2 w-full max-w-sm">
+            <div className="flex items-center justify-between w-full px-1">
+              <span className="text-xs font-bold text-[#94A3B8] uppercase tracking-widest flex items-center gap-1"><Clock className="w-3 h-3" /> Time</span>
+              <span className={`text-xl font-black font-mono tabular-nums transition-colors duration-300 ${timeLeft <= 3 ? 'text-rose-500 animate-pulse' : timeLeft <= 5 ? 'text-orange-500' : 'text-sky-500'}`}>
+                {timeLeft}s
+              </span>
+            </div>
+            <div className="relative w-full h-3 bg-sky-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ease-linear ${timeLeft <= 3 ? 'bg-rose-500' : timeLeft <= 5 ? 'bg-orange-400' : 'bg-sky-500'
+                  }`}
+                style={{ width: `${(timeLeft / getRoundTime(level)) * 100}%` }}
+              />
+            </div>
+          </div>
+
           <p className="text-sm text-[#64748B] font-medium">Find the water reflection:</p>
 
           <div className="bg-white rounded-2xl border-2 border-sky-200 px-8 py-5 shadow-md">

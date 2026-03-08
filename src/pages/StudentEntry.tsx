@@ -49,37 +49,19 @@ const StudentEntry = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 h-screen fixed inset-0 overflow-hidden">
+    <div className="flex flex-col flex-1 w-full bg-transparent font-sans selection:bg-indigo-100 h-screen fixed inset-0 overflow-hidden">
       {/* Layer 1: Premium Background Depth */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* Soft Multi-Gradient Base - Sky Blue Focus */}
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F0F7FF_0%,_#F8FAFC_40%,_#FDFDFF_100%)]" />
-
-        {/* Very Faint Radial Glow behind Hero */}
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#3B82F6] opacity-[0.04] blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
 
-      {/* === TOP WAVES (CLEAN) === */}
-      {/* Top Wave - Deepest Layer */}
-      <DecorativeCurve
-        opacity={0.04}
-        height="h-[400px] sm:h-[550px]"
-        className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-8 mix-blend-multiply"
-        animate={true}
-      />
-      {/* Top Wave - Primary Smooth Layer */}
-      <DecorativeCurve
-        opacity={0.08}
-        height="h-[250px] sm:h-[350px]"
-        className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none w-full"
-        animate={true}
-      />
+      {/* Redundant Waves Removed */}
 
-      <div className="flex flex-col flex-1 items-center justify-center p-4 h-full relative z-10 w-full -mt-10 sm:-mt-12">
+      <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full min-h-screen pt-20 sm:pt-24 pb-16">
         <div className="relative w-full max-w-[400px] animate-fade-in-up opacity-0 px-4" style={{ animationFillMode: 'forwards' }}>
           <div className="relative z-20 overflow-hidden rounded-[2rem] bg-white/90 backdrop-blur-2xl border border-white/60 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)]">
             {/* Decorative Corner Accent */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2563EB]/10 to-transparent -mr-16 -mt-16 rounded-full blur-2xl" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2563EB]/10 to-transparent rounded-full blur-2xl" />
 
             <div className="relative z-10 p-8 sm:p-10">
               {/* Header */}
@@ -163,21 +145,7 @@ const StudentEntry = () => {
         </div>
       </div>
 
-      {/* === BOTTOM WAVES (CLEAN) === */}
-      {/* Bottom Wave - Deepest Layer */}
-      <DecorativeCurve
-        opacity={0.03}
-        height="h-[400px] sm:h-[550px]"
-        className="absolute -bottom-[50px] sm:-bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-8 mix-blend-multiply"
-        animate={true}
-      />
-      {/* Bottom Wave - Primary Smooth Layer */}
-      <DecorativeCurve
-        opacity={0.08}
-        height="h-[250px] sm:h-[350px]"
-        className="absolute bottom-0 left-0 z-0 pointer-events-none w-full"
-        animate={true}
-      />
+      {/* Redundant Waves Removed */}
     </div >
   );
 };

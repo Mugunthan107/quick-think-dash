@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Trophy, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trophy, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
@@ -22,6 +22,15 @@ const OOPS_MESSAGES = [
   "Almost there! One more shot! 🎯",
   "Mistakes are just steps to learning! 📚",
   "Shake it off and try again! 🍀",
+];
+
+const LOADING_MESSAGES = [
+  "Polishing the ball...",
+  "Oiling the blocks...",
+  "Stretching the grid...",
+  "Calculating tricky paths...",
+  "Setting up the holes...",
+  "Warming up the motion...",
 ];
 import NavBar from '@/components/NavBar';
 import DecorativeCurve from '@/components/DecorativeCurve';
@@ -320,6 +329,8 @@ const MotionChallenge = () => {
   const [levelFlash, setLevelFlash] = useState<'success' | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [roundTime, setRoundTime] = useState(30);
+  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -335,29 +346,19 @@ const MotionChallenge = () => {
     if (finished) return;
     if (!generatedLevels[levelIdx]) {
       setIsGenerating(true);
+      setLoadingMsgIdx(Math.floor(Math.random() * LOADING_MESSAGES.length));
       const t = setTimeout(() => {
         const nextLevel = generateSolvableLevel(levelIdx);
         setGeneratedLevels(prev => ({ ...prev, [levelIdx]: nextLevel }));
         setBlocks(deepCloneBlocks(nextLevel.blocks));
         setBallPos(nextLevel.ballPos);
         setMoves(0);
+        setRoundTime(30); // Reset round timer
         setIsGenerating(false);
-      }, 50);
+      }, 1500); // Slightly longer for the fun messages to read
       return () => clearTimeout(t);
     }
   }, [levelIdx, finished]);
-
-  /* ── Timer (Total Elapsed) ── */
-  useEffect(() => {
-    if (finished || transitioning || isGenerating) return;
-    timerRef.current = setInterval(() => {
-      setElapsed(e => e + 1);
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [finished, transitioning, isGenerating, levelIdx]);
-
-  /* ── Occupancy map derived from current blocks ── */
-  const occ = level ? buildOccupancyMap(blocks, level.gridRows, level.gridCols) : [];
 
   /* ── Advance level ── */
   const advanceLevel = useCallback((won: boolean, movesUsed: number) => {
@@ -372,7 +373,7 @@ const MotionChallenge = () => {
         toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '⚽' });
       }
     } else {
-      setLevelFlash('wrong' as any); // Assuming 'wrong' flash exists in CSS
+      setLevelFlash('wrong' as any);
       if (currentTest?.showResults !== false) {
         toast.error(OOPS_MESSAGES[Math.floor(Math.random() * OOPS_MESSAGES.length)], { icon: '🤔' });
       }
@@ -386,9 +387,7 @@ const MotionChallenge = () => {
       setLevelFlash(null);
       const next = levelIdx + 1;
 
-      // Real-time progress update for admin
       if (currentStudent) {
-        // Use functional state updates or local variables to avoid closure issues with score
         setScore(currentScore => {
           updateStudentProgress(currentStudent.username, currentScore, next, won ? correctCount + 1 : correctCount, TOTAL_LEVELS, 'motion');
           return currentScore;
@@ -398,35 +397,47 @@ const MotionChallenge = () => {
       if (next >= TOTAL_LEVELS) {
         setFinished(true);
       } else {
+        setRoundTime(30);
         setLevelIdx(next);
         setTransitioning(false);
       }
     }, 700);
   }, [levelIdx, correctCount, currentStudent, updateStudentProgress]);
 
+  /* ── Timer (Total Elapsed) ── */
+  useEffect(() => {
+    if (finished || transitioning || isGenerating) return;
+    timerRef.current = setInterval(() => {
+      setElapsed(e => e + 1);
+      setRoundTime(r => {
+        if (r <= 1) {
+          advanceLevel(false, moves);
+          return 30;
+        }
+        return r - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [finished, transitioning, isGenerating, levelIdx, moves, advanceLevel]);
+
+  /* ── Occupancy map derived from current blocks ── */
+  const occ = level ? buildOccupancyMap(blocks, level.gridRows, level.gridCols) : [];
+
   /* ── Data submission ── */
   useEffect(() => {
     if (finished && currentStudent && currentTest) {
-      const isEndTest = (window as any).__motionEndTest;
-      const questionsAttempted = isEndTest ? levelIdx : TOTAL_LEVELS;
-
       submitGameResult(currentStudent.username, {
         gameId: 'motion',
         score,
         moves: totalMoves,
         timeTaken: elapsed,
         correctAnswers: correctCount,
-        totalQuestions: questionsAttempted,
+        totalQuestions: TOTAL_LEVELS,
         completedAt: Date.now(),
       }).then(() => {
         addCompletedGame('motion');
         confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
-        if (isEndTest) {
-          navigate('/select-game');
-        }
       });
-
-      delete (window as any).__motionEndTest;
     }
   }, [finished]);
 
@@ -483,11 +494,11 @@ const MotionChallenge = () => {
   /* ─────────── FINISH SCREEN ─────────── */
   if (finished) {
     return (
-      <div className="flex flex-col bg-[#FDFDFF] font-sans min-h-screen overflow-hidden relative">
+      <div className="flex flex-col bg-transparent font-sans min-h-screen overflow-hidden relative">
         <NavBar />
         <div className="relative flex-1 w-full flex flex-col justify-center items-center">
           <div className="absolute inset-0 z-0 pointer-events-none">
-            <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
+            <div className="absolute inset-0 bg-transparent" />
           </div>
           <div className="relative z-10 w-full flex items-center justify-center px-4 pt-24 pb-10">
             <div className="text-center animate-fade-in max-w-2xl w-full">
@@ -540,7 +551,6 @@ const MotionChallenge = () => {
               </button>
             </div>
           </div>
-          <DecorativeCurve opacity={0.08} height="h-[280px] sm:h-[360px]" className="absolute bottom-0 left-0 w-full pointer-events-none" animate={true} />
         </div>
       </div>
     );
@@ -564,15 +574,14 @@ const MotionChallenge = () => {
   const [ballR, ballC] = ballPos;
 
   return (
-    <div className={`flex flex-col bg-[#FDFDFF] font-sans h-screen overflow-hidden relative ${levelFlash === 'success' ? 'flash-correct' : levelFlash === ('wrong' as any) ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col bg-transparent font-sans h-screen overflow-hidden relative ${levelFlash === 'success' ? 'flash-correct' : levelFlash === ('wrong' as any) ? 'flash-wrong' : ''}`}>
       <NavBar />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative pt-6 sm:pt-10">
         {/* Background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-          <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[#38BDF8] opacity-[0.04] blur-[100px] rounded-full" />
+          <div className="absolute inset-0 bg-transparent" />
         </div>
 
         {/* Page heading */}
@@ -586,19 +595,7 @@ const MotionChallenge = () => {
         </div>
 
         {/* End Test Hyperlink */}
-        <div className="relative z-10 w-full flex justify-end mb-4 px-4" style={{ maxWidth: 420 }}>
-          <button
-            onClick={() => {
-              if (window.confirm('End this game? Your current progress will be saved.')) {
-                (window as any).__motionEndTest = true;
-                setFinished(true);
-              }
-            }}
-            className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"
-          >
-            End Game
-          </button>
-        </div>
+        <div className="w-full h-4 mb-4" />
 
         {/* Game Card */}
         <div className={`relative z-10 bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.18)] border transition-all duration-300 mx-4 flex flex-col
@@ -618,7 +615,14 @@ const MotionChallenge = () => {
               </div>
 
               <div className="flex flex-col gap-1.5 text-center">
-                <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest">Total Time</span>
+                <span className="text-[11px] text-rose-500 font-bold uppercase tracking-widest whitespace-nowrap">Round Time</span>
+                <span className={`font-mono font-black text-2xl transition-colors ${roundTime < 10 ? 'text-rose-500 animate-pulse' : 'text-black'}`}>
+                  {roundTime}s
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-1.5 text-center">
+                <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest whitespace-nowrap">Total Time</span>
                 <span className="font-mono font-black text-2xl text-black">{formatTime(elapsed)}</span>
               </div>
 
@@ -648,10 +652,16 @@ const MotionChallenge = () => {
           {/* Grid area */}
           <div className="p-4 flex flex-col items-center justify-center min-h-[300px] relative">
             {isGenerating || !level ? (
-              <div className="flex flex-col items-center justify-center animate-pulse py-10">
-                <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-sm font-bold text-[#64748B]">Preparing Challenge...</p>
-                <p className="text-[10px] text-[#94A3B8] mt-1">Calculating tricky paths</p>
+              <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in">
+                <div className="w-16 h-16 rounded-3xl bg-sky-50 flex items-center justify-center mb-6">
+                  <Gamepad2 className="w-8 h-8 text-sky-500" />
+                </div>
+                <h3 className="text-lg font-black text-[#0F172A] tracking-tight mb-2">
+                  {LOADING_MESSAGES[loadingMsgIdx]}
+                </h3>
+                <p className="text-[13px] text-[#64748B] font-medium max-w-[200px] leading-relaxed">
+                  Almost ready to move...
+                </p>
               </div>
             ) : (
               <div

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Clock, Trophy, LogOut } from 'lucide-react';
+import { Clock, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
@@ -219,24 +219,19 @@ const AptiRush = () => {
     setTimeout(() => advanceQuestion(), 1200);
   };
 
-  const handleFinish = useCallback((isEndTest = false) => {
+  const handleFinish = useCallback(() => {
     setFinished(true);
     if (timerRef.current) clearInterval(timerRef.current);
     const finalScore = score;
     if (currentStudent && currentTest) {
-      const questionsAttempted = isEndTest ? currentQ : TOTAL_LEVELS;
       submitGameResult(currentStudent.username, {
-        gameId: 'aptirush', score: finalScore, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: questionsAttempted, completedAt: Date.now()
+        gameId: 'aptirush', score: finalScore, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: TOTAL_LEVELS, completedAt: Date.now()
       }).then(() => {
         addCompletedGame('aptirush');
-        if (isEndTest) {
-          navigate('/select-game');
-        } else {
-          confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
-        }
+        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
       });
     }
-  }, [score, correctCount, currentQ, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed, finishTest, navigate]);
+  }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
 
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
@@ -254,39 +249,48 @@ const AptiRush = () => {
 
   if (finished) {
     return (
-      <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
+      <div className="flex flex-col flex-1 w-full bg-transparent font-sans min-h-screen relative overflow-hidden">
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
+          <div className="absolute inset-0 bg-transparent" />
         </div>
-        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
-        <div className="flex items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-14 sm:-mt-16">
+        <div className="flex items-center justify-center p-4 relative z-10 w-full min-h-screen">
           <div className="text-center animate-fade-in max-w-md w-full px-4">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40"><Trophy className="w-10 h-10 text-sky-500" /></div>
-            <h1 className="text-[32px] sm:text-[42px] font-black text-black tracking-tight leading-none mb-3">AptiRush Complete!</h1>
-            <p className="text-[15px] text-[#64748B] mb-10 font-medium">Outstanding, {currentStudent?.username}!</p>
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
+              <Trophy className="w-10 h-10 text-sky-500" />
+            </div>
+            <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">AptiRush Complete!</h1>
+            <p className="text-[15px] text-[#64748B] mb-10 font-medium tracking-tight">Magnificent performance, {currentStudent?.username}!</p>
+
             <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
-              <div className="flex items-center justify-center gap-6">
+              <div className="flex items-center justify-center gap-6 sm:gap-10">
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
-                  <span className="font-mono font-black text-2xl sm:text-3xl text-sky-500">{currentTest?.showResults !== false ? `${score}/200` : '---'}</span>
+                  <span className="font-mono font-black text-2xl sm:text-3xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
                 </div>
-                <div className="w-px h-12 bg-sky-100" />
+                <div className="w-px h-14 bg-sky-100" />
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Correct</span>
-                  <span className="font-mono font-black text-2xl sm:text-3xl text-emerald-500">{currentTest?.showResults !== false ? `${correctCount}/${TOTAL_LEVELS}` : '---'}</span>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="font-mono font-black text-2xl sm:text-3xl text-emerald-500">{currentTest?.showResults !== false ? correctCount : '---'}</span>
+                    <span className="text-sm text-[#94A3B8] font-bold">/ {TOTAL_LEVELS}</span>
+                  </div>
                 </div>
-                <div className="w-px h-12 bg-sky-100" />
+                <div className="w-px h-14 bg-sky-100" />
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Time</span>
                   <span className="font-mono font-black text-2xl sm:text-3xl text-[#1E293B]">{formatTime(elapsed)}</span>
                 </div>
               </div>
             </div>
-            <button onClick={handlePostFinish} className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95">{getNextGame() ? 'Next Game →' : 'Finish Session'}</button>
+
+            <button
+              onClick={handlePostFinish}
+              className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95"
+            >
+              {getNextGame() ? 'Next Game →' : 'Finish Session'}
+            </button>
           </div>
         </div>
-        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
       </div>
     );
   }
@@ -295,12 +299,10 @@ const AptiRush = () => {
   const progress = ((currentQ + 1) / TOTAL_LEVELS) * 100;
 
   return (
-    <div className={`flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden ${showResult === 'correct' ? 'flash-correct' : (showResult === 'wrong' || showResult === 'timeout') ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col flex-1 w-full bg-transparent font-sans min-h-screen relative overflow-hidden ${showResult === 'correct' ? 'flash-correct' : (showResult === 'wrong' || showResult === 'timeout') ? 'flash-wrong' : ''}`}>
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
-      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
       <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-screen">
         <div className="w-full max-w-lg animate-fade-in relative">
           {/* Header */}
@@ -318,16 +320,7 @@ const AptiRush = () => {
                 {timeLeft}
               </span>
             </div>
-            <button
-              onClick={() => {
-                if (window.confirm('End this game? Your current progress will be saved.')) {
-                  handleFinish(true);
-                }
-              }}
-              className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest flex items-center gap-1"
-            >
-              <LogOut className="w-3 h-3" /> End Game
-            </button>
+            <div className="w-[100px]" />
           </div>
 
           <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.10)] border border-sky-100 overflow-hidden">
@@ -392,7 +385,6 @@ const AptiRush = () => {
           </div>
         </div>
       </div>
-      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
     </div>
   );
 };

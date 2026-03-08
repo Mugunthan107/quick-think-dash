@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Clock, Trophy, Activity, ArrowLeft } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import NavBar from '@/components/NavBar';
 import DecorativeCurve from '@/components/DecorativeCurve';
@@ -32,8 +32,13 @@ interface BubbleData {
   id: string;
 }
 
-const TOTAL_LEVELS = 20;
-const ROUND_SECONDS = 10;
+const TOTAL_LEVELS = 30;
+
+function getRoundConfig(level: number) {
+  if (level <= 10) return { seconds: 10, points: 10 };
+  if (level <= 20) return { seconds: 7, points: 20 };
+  return { seconds: 5, points: 30 };
+}
 
 function getLevelConfig(level: number) {
   if (level <= 5) return { max: 9, ops: ['+', '-'] as const };
@@ -106,7 +111,7 @@ function BubbleGame() {
   const [bubbles, setBubbles] = useState<BubbleData[]>([]);
   const [shuffled, setShuffled] = useState<BubbleData[]>([]);
   const [selectionOrder, setSelectionOrder] = useState<string[]>([]);
-  const [roundTimeLeft, setRoundTimeLeft] = useState(ROUND_SECONDS);
+  const [roundTimeLeft, setRoundTimeLeft] = useState(getRoundConfig(1).seconds);
   const [finished, setFinished] = useState(false);
   const [totalCorrect, setTotalCorrect] = useState(0);
   const [gameActive, setGameActive] = useState(true);
@@ -150,7 +155,8 @@ function BubbleGame() {
       setBubbles(sorted);
       setShuffled(shuffleArray(items));
       setSelectionOrder([]);
-      setRoundTimeLeft(ROUND_SECONDS);
+      const { seconds } = getRoundConfig(lvl);
+      setRoundTimeLeft(seconds);
       setGameActive(true);
     },
     [],
@@ -160,30 +166,24 @@ function BubbleGame() {
     startRound(level);
   }, [level, startRound]);
 
-  const handleFinish = useCallback((isEndTest = false) => {
+  const handleFinish = useCallback(() => {
     setFinished(true);
     setGameActive(false);
     if (timerRef.current) clearInterval(timerRef.current);
-
     if (currentStudent && currentTest) {
-      const questionsAttempted = isEndTest ? Math.max(level - 1, 0) : TOTAL_LEVELS;
       submitGameResult(currentStudent.username, {
         gameId: 'bubble',
         score,
         timeTaken: elapsed,
         correctAnswers: totalCorrect,
-        totalQuestions: questionsAttempted,
+        totalQuestions: TOTAL_LEVELS,
         completedAt: Date.now(),
       }).then(() => {
         addCompletedGame('bubble');
-        if (isEndTest) {
-          navigate('/select-game');
-        } else {
-          confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
-        }
+        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
       });
     }
-  }, [score, elapsed, totalCorrect, level, currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, navigate]);
+  }, [score, elapsed, totalCorrect, currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, navigate]);
 
   const handlePostFinish = useCallback(() => {
     const next = getNextGame();
@@ -241,7 +241,8 @@ function BubbleGame() {
       let newScore = score;
 
       if (isCorrectOrder) {
-        newScore = score + 10;
+        const { points } = getRoundConfig(level);
+        newScore = score + points;
         newTotalCorrect = totalCorrect + 1;
         if (currentTest?.showResults !== false) {
           setFeedback('success');
@@ -278,43 +279,34 @@ function BubbleGame() {
 
   if (finished) {
     return (
-      <div className="flex flex-col bg-[#FDFDFF] font-sans min-h-screen overflow-hidden relative">
+      <div className="flex flex-col bg-transparent font-sans min-h-screen overflow-hidden relative">
         <NavBar />
         <div className="relative flex-1 w-full flex flex-col justify-center items-center">
           <div className="absolute inset-0 z-0 pointer-events-none">
-            <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
+            <div className="absolute inset-0 bg-transparent" />
           </div>
-          <div className="relative z-10 w-full flex items-center justify-center px-4 pt-24 pb-10">
-            <div className="text-center animate-fade-in max-w-md w-full">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
+          <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full min-h-screen">
+            <div className="text-center animate-fade-in max-w-md w-full px-4">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
                 <Trophy className="w-10 h-10 text-sky-500" />
               </div>
-              <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">
-                Bubble Complete!
-              </h1>
-              <p className="text-[15px] text-[#64748B] mb-10 font-medium">
-                Excellent work, {currentStudent?.username}!
-              </p>
+              <h1 className="text-[32px] sm:text-[40px] font-black text-[#0F172A] tracking-tight leading-none mb-3">Bubble Sort Complete!</h1>
+              <p className="text-[15px] text-[#64748B] mb-10 font-medium tracking-tight">Magnificent performance, {currentStudent?.username}!</p>
+
               <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
                 <div className="flex items-center justify-center gap-10">
                   <div className="text-center">
-                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">
-                      Score
-                    </span>
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
                     <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
                   </div>
                   <div className="w-px h-14 bg-sky-100" />
                   <div className="text-center">
-                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">
-                      Time
-                    </span>
-                    <span className="font-mono font-black text-3xl sm:text-4xl text-[#1E293B]">
-                      {formatTime(elapsed)}
-                    </span>
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Correct</span>
+                    <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? `${level}/${TOTAL_LEVELS}` : '---'}</span>
                   </div>
                 </div>
               </div>
+
               <button
                 onClick={handlePostFinish}
                 className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95"
@@ -324,7 +316,7 @@ function BubbleGame() {
             </div>
           </div>
           <DecorativeCurve
-            opacity={0.08}
+            opacity={0.04}
             height="h-[280px] sm:h-[360px]"
             className="absolute bottom-0 left-0 w-full pointer-events-none"
             animate={true}
@@ -335,12 +327,11 @@ function BubbleGame() {
   }
 
   return (
-    <div className={`flex flex-col bg-[#FDFDFF] font-sans min-h-screen overflow-hidden relative ${feedback === 'success' ? 'flash-correct' : feedback === 'error' ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col bg-transparent font-sans min-h-screen overflow-hidden relative ${feedback === 'success' ? 'flash-correct' : feedback === 'error' ? 'flash-wrong' : ''}`}>
       <NavBar />
       <div className="relative flex-1 w-full flex flex-col justify-center">
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
-          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
+          <div className="absolute inset-0 bg-transparent" />
         </div>
 
         {/* Redundant Sidebar Stats Removed to match User Image */}
@@ -358,18 +349,7 @@ function BubbleGame() {
             </div>
 
             {/* End Test Hyperlink */}
-            <div className="w-full flex justify-end mb-4 px-2">
-              <button
-                onClick={() => {
-                  if (window.confirm('End this game? Your current progress will be saved.')) {
-                    handleFinish(true);
-                  }
-                }}
-                className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"
-              >
-                End Game
-              </button>
-            </div>
+            <div className="w-full h-4 mb-4" />
 
             <div className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border border-sky-100 transition-all duration-300 overflow-hidden relative min-h-[350px] flex flex-col">
               {feedback && currentTest?.showResults !== false && (
@@ -466,7 +446,7 @@ function BubbleGame() {
                       strokeWidth="4"
                       fill="transparent"
                       strokeDasharray={2 * Math.PI * 42}
-                      strokeDashoffset={2 * Math.PI * 42 * (1 - roundTimeLeft / ROUND_SECONDS)}
+                      strokeDashoffset={2 * Math.PI * 42 * (1 - roundTimeLeft / getRoundConfig(level).seconds)}
                       strokeLinecap="round"
                       className="transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(239,68,68,0.2)]"
                     />
@@ -486,7 +466,7 @@ function BubbleGame() {
               </div>
             </div>
             <DecorativeCurve
-              opacity={0.08}
+              opacity={0.04}
               height="h-[200px] sm:h-[240px]"
               className="absolute -bottom-8 left-0 w-full pointer-events-none"
               animate={true}
@@ -494,9 +474,8 @@ function BubbleGame() {
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 }
 
 export default BubbleGame;
-

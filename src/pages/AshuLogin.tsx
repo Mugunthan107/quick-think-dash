@@ -24,23 +24,14 @@ const AshuLogin = () => {
   };
 
   return (
-    <div className="relative flex flex-col flex-1 w-full items-center justify-center p-4 h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)] bg-[#FDFDFF] overflow-hidden font-sans selection:bg-indigo-100 -mt-14 sm:-mt-16">
+    <div className="relative flex flex-col flex-1 w-full items-center justify-center p-4 h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)] bg-transparent overflow-hidden font-sans selection:bg-indigo-100 mt-4 sm:mt-6">
 
       {/* Layer 1: Premium Background Depth */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* Soft Multi-Gradient Base */}
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
-
-        {/* Very Faint Radial Glow behind Hero */}
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
 
-      {/* Top Decorative Wave - Tertiary (Deepest layer) */}
-      <DecorativeCurve opacity={0.04} height="h-[200px] sm:h-[300px]" className="absolute -top-[40px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-4 mix-blend-multiply" animate={true} />
-      {/* Top Decorative Wave - Secondary (Layered behind) */}
-      <DecorativeCurve opacity={0.06} height="h-[150px] sm:h-[250px]" className="absolute top-0 left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]" animate={true} />
-      {/* Top Decorative Wave - Primary */}
-      <DecorativeCurve opacity={0.12} height="h-[100px] sm:h-[180px]" className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none" animate={true} />
+      {/* Redundant Waves Removed */}
 
       <div className="relative w-full max-w-[400px] animate-fade-in px-4 z-20">
         <div className="bg-white/90 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 sm:p-10 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] transition-all duration-500 relative overflow-hidden group mx-auto">
@@ -85,12 +76,7 @@ const AshuLogin = () => {
         </div>
       </div>
 
-      {/* Bottom Decorative Wave - Tertiary (Deepest layer) */}
-      <DecorativeCurve opacity={0.05} height="h-[200px] sm:h-[300px]" className="absolute -bottom-[40px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-4 mix-blend-multiply" animate={true} />
-      {/* Bottom Decorative Wave - Secondary (Layered behind) */}
-      <DecorativeCurve opacity={0.07} height="h-[150px] sm:h-[250px]" className="absolute bottom-0 left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]" animate={true} />
-      {/* Bottom Decorative Wave - Primary */}
-      <DecorativeCurve opacity={0.12} height="h-[100px] sm:h-[180px]" className="absolute bottom-0 left-0 z-0 pointer-events-none" animate={true} />
+      {/* Redundant Waves Removed */}
     </div>
   );
 };

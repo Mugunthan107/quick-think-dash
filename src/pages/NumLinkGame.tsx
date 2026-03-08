@@ -222,6 +222,7 @@ const NumLinkGame = () => {
   const [timeLeft, setTimeLeft] = useState(LEVELS[0].timeLimit);
   const [elapsed, setElapsed] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [showFlash, setShowFlash] = useState<'correct' | 'wrong' | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -231,6 +232,8 @@ const NumLinkGame = () => {
   const pathStackRef = useRef<{ row: number; col: number }[]>([]);
   const gridStateRef = useRef<Cell[][]>([]);
   const expectedNumberRef = useRef(1);
+  const scoreRef = useRef(0);
+  const correctCountRef = useRef(0);
 
   useEffect(() => {
     if (!currentStudent) {
@@ -370,9 +373,17 @@ const NumLinkGame = () => {
         setRoundComplete(true);
 
         const marks = getMarksForRound(globalRound + 1);
-        const newScore = score + marks;
+        setScore(prev => {
+          const ns = prev + marks;
+          scoreRef.current = ns;
+          return ns;
+        });
         const newCorrect = correctCount + 1;
-        setCorrectCount(newCorrect);
+        setCorrectCount(prev => {
+          const nc = prev + 1;
+          correctCountRef.current = nc;
+          return nc;
+        });
         if (currentTest?.showResults !== false) {
           toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '🎉' });
         }
@@ -380,7 +391,7 @@ const NumLinkGame = () => {
         setTimeout(() => setShowFlash(null), 600);
 
         if (currentStudent) {
-          updateStudentProgress(currentStudent.username, newScore, globalRound + 1, newCorrect, TOTAL_ROUNDS, 'numlink');
+          updateStudentProgress(currentStudent.username, scoreRef.current, globalRound + 1, correctCountRef.current, TOTAL_ROUNDS, 'numlink');
         }
 
         // Auto advance after brief delay
@@ -421,24 +432,27 @@ const NumLinkGame = () => {
 
   const handleNextRoundRef = useRef<() => void>(() => { });
 
+  useEffect(() => {
+    if (finished && currentStudent && !submitted) {
+      setSubmitted(true);
+      submitGameResult(currentStudent.username, {
+        gameId: 'numlink',
+        score: scoreRef.current,
+        timeTaken: elapsed,
+        correctAnswers: correctCountRef.current,
+        totalQuestions: 20, // TOTAL_ROUNDS
+        completedAt: Date.now()
+      }).then(() => {
+        addCompletedGame('numlink');
+        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+      });
+    }
+  }, [finished, currentStudent, submitted]);
+
   const handleNextRound = useCallback(() => {
     if (globalRound + 1 >= TOTAL_ROUNDS) {
       setFinished(true);
       if (timerRef.current) clearInterval(timerRef.current);
-
-      if (currentStudent) {
-        submitGameResult(currentStudent.username, {
-          gameId: 'numlink',
-          score,
-          timeTaken: elapsed,
-          correctAnswers: correctCount,
-          totalQuestions: TOTAL_ROUNDS,
-          completedAt: Date.now()
-        }).then(() => {
-          addCompletedGame('numlink');
-          confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
-        });
-      }
       return;
     }
 
@@ -513,43 +527,42 @@ const NumLinkGame = () => {
   // ——— Finished Screen ————————————————————————————————————————————————————————————
   if (finished) {
     return (
-      <div className="flex flex-col flex-1 w-full h-full bg-[#F0F7FF] font-sans relative overflow-hidden pt-12 sm:pt-14">
+      <div className="flex flex-col flex-1 w-full h-full bg-transparent font-sans relative overflow-hidden pt-12 sm:pt-14">
         <style>{`
           header { background: transparent !important; border: none !important; box-shadow: none !important; }
         `}</style>
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
+          <div className="absolute inset-0 bg-transparent" />
         </div>
         <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full h-full overflow-y-auto">
           <div className="text-center animate-fade-in max-w-md w-full px-4">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-lg shadow-sky-200/40">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
               <Trophy className="w-10 h-10 text-sky-500" />
             </div>
             <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">NumLink Complete!</h1>
-            <p className="text-[15px] text-[#64748B] mb-8 font-medium">Excellent work, {currentStudent?.username}!</p>
-            <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-8 sm:p-10 mb-8 sm:mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
-              <div className="flex items-center justify-center gap-8 sm:gap-10">
-                {currentTest?.showResults !== false && (
-                  <>
-                    <div className="text-center">
-                      <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
-                      <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{score}</span>
-                    </div>
-                    <div className="w-px h-14 bg-sky-100" />
-                  </>
-                )}
+            <p className="text-[15px] text-[#64748B] mb-10 font-medium tracking-tight">Magnificent performance, {currentStudent?.username}!</p>
+
+            <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
+              <div className="flex items-center justify-center gap-10">
+                <div className="text-center">
+                  <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
+                  <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
+                </div>
+                <div className="w-px h-14 bg-sky-100" />
                 <div className="text-center">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Rounds</span>
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">
-                      {currentTest?.showResults !== false ? correctCount : <span className="text-blue-300">---</span>}
-                    </span>
-                    <span className="text-sm text-[#94A3B8]">/ {TOTAL_ROUNDS}</span>
+                    <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? correctCount : '---'}</span>
+                    <span className="text-sm text-[#94A3B8] font-bold">/ {TOTAL_ROUNDS}</span>
                   </div>
                 </div>
               </div>
             </div>
-            <button onClick={handlePostFinish} className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95">
+
+            <button
+              onClick={handlePostFinish}
+              className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95"
+            >
               {getNextGame() ? 'Next Game →' : 'Finish Session'}
             </button>
           </div>
@@ -562,42 +575,11 @@ const NumLinkGame = () => {
   const progress = ((globalRound + 1) / TOTAL_ROUNDS) * 100;
 
   return (
-    <div className={`flex flex-col flex-1 w-full h-full bg-[#F0F7FF] font-sans relative overflow-hidden pt-16 sm:pt-20 ${showFlash === 'correct' ? 'flash-correct' : showFlash === 'wrong' ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col flex-1 w-full h-full bg-transparent font-sans relative overflow-hidden pt-16 sm:pt-20 ${showFlash === 'correct' ? 'flash-correct' : showFlash === 'wrong' ? 'flash-wrong' : ''}`}>
       <div className="absolute inset-0 z-0 pointer-events-none">
         {/* Soft Multi-Gradient Base */}
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
-
-      {/* Top Decorative Wave - Secondary (Deepest Layer for NumLink) */}
-      <DecorativeCurve
-        opacity={0.06}
-        height="h-[300px] sm:h-[400px]"
-        className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]"
-        animate={true}
-      />
-      {/* Top Decorative Wave - Primary */}
-      <DecorativeCurve
-        opacity={0.12}
-        height="h-[200px] sm:h-[280px]"
-        className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none"
-        animate={true}
-      />
-
-      {/* Bottom Decorative Wave - Secondary */}
-      <DecorativeCurve
-        opacity={0.07}
-        height="h-[300px] sm:h-[400px]"
-        className="absolute -bottom-[50px] sm:-bottom-[80px] left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]"
-        animate={true}
-      />
-      {/* Bottom Decorative Wave - Primary */}
-      <DecorativeCurve
-        opacity={0.12}
-        height="h-[200px] sm:h-[280px]"
-        className="absolute bottom-0 left-0 z-0 pointer-events-none"
-        animate={true}
-      />
 
       <div className="flex flex-col flex-1 items-center px-4 sm:px-6 pb-6 pt-2 sm:pt-4 relative z-10 w-full overflow-y-auto">
         <div className="w-full max-w-[500px] h-full flex flex-col justify-center animate-fade-in relative min-h-0">
@@ -612,20 +594,7 @@ const NumLinkGame = () => {
 
             <div className="flex items-center justify-between px-2 tracking-tight font-bold scale-95 origin-center text-[#64748B] text-[13px]">
               <span className="truncate max-w-[150px]">{currentStudent?.username}</span>
-              <button onClick={() => {
-                if (window.confirm('End this game? Your current score will be saved.')) {
-                  setFinished(true);
-                  if (timerRef.current) clearInterval(timerRef.current);
-                  if (currentStudent) {
-                    submitGameResult(currentStudent.username, {
-                      gameId: 'numlink', score, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: globalRound, completedAt: Date.now()
-                    }).then(() => {
-                      addCompletedGame('numlink');
-                      navigate('/select-game');
-                    });
-                  } else navigate('/select-game');
-                }
-              }} className="text-[11px] text-[#94A3B8] hover:text-sky-500 transition-colors px-3 py-1.5 rounded-xl hover:bg-white/80 border border-sky-100 font-bold uppercase tracking-widest shrink-0">End Test</button>
+              <div className="w-[100px]" />
             </div>
           </div>
 

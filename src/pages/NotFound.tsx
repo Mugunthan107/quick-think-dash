@@ -10,14 +10,12 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
+    <div className="flex flex-col flex-1 w-full bg-transparent font-sans min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.04] blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
 
-      <DecorativeCurve opacity={0.04} height="h-[400px]" className="absolute -top-[100px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1]" animate={true} />
-      <DecorativeCurve opacity={0.08} height="h-[250px]" className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none w-full" animate={true} />
+      {/* Redundant Waves Removed */}
 
       <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full">
         <div className="relative max-w-[400px] w-full text-center space-y-8 bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2rem] p-10 sm:p-12 shadow-[0_20px_50px_-15px_rgba(56,189,248,0.12)] animate-fade-in-up">

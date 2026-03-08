@@ -217,14 +217,12 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans selection:bg-sky-100 min-h-screen relative overflow-hidden">
+    <div className="flex flex-col flex-1 w-full bg-transparent font-sans selection:bg-sky-100 min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.04] blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
 
-      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]"
-        className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none mix-blend-multiply" animate={true} />
+      {/* Redundant Waves Removed */}
 
       <div className="max-w-full mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 relative z-10 animate-fade-in">
         <div className="flex items-center justify-between mb-6 sm:mb-8 gap-4 flex-wrap">
@@ -416,7 +414,7 @@ const Leaderboard = () => {
       </div>
 
 
-      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
+      {/* Redundant Waves Removed */}
     </div>
   );
 };

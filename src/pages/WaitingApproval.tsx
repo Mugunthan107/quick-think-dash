@@ -33,21 +33,15 @@ const WaitingApproval = () => {
 
     if (isRejected) {
         return (
-            <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
+            <div className="flex flex-col flex-1 w-full bg-transparent font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
                 {/* Layer 1: Premium Background Depth */}
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#FEF2F2_0%,_#FDFDFD_60%,_#FDFDFF_100%)]" />
-                    <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#EF4444] opacity-[0.03] blur-[120px] rounded-full" />
+                    <div className="absolute inset-0 bg-transparent" />
                 </div>
 
-                <DecorativeCurve
-                    opacity={0.04}
-                    height="h-[400px] sm:h-[550px]"
-                    className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none mix-blend-multiply"
-                    animate={true}
-                />
+                {/* Redundant Waves Removed */}
 
-                <div className="flex flex-col items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-10 sm:-mt-12">
+                <div className="flex flex-col items-center justify-center p-4 relative z-10 w-full min-h-screen pt-20 sm:pt-24 pb-16">
                     <div className="relative max-w-[400px] w-full text-center space-y-8 bg-white/90 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 sm:p-10 shadow-[0_20px_50px_-15px_rgba(239,68,68,0.06)] animate-fade-in">
                         <div className="relative w-16 h-16 mx-auto">
                             <div className="w-full h-full rounded-2xl bg-[#FEF2F2] border border-[#FECACA] flex items-center justify-center shadow-md shadow-red-500/5">
@@ -64,32 +58,21 @@ const WaitingApproval = () => {
                     </div>
                 </div>
 
-                <DecorativeCurve
-                    opacity={0.04}
-                    height="h-[400px] sm:h-[550px]"
-                    className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none"
-                    animate={true}
-                />
+                {/* Redundant Waves Removed */}
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
+        <div className="flex flex-col flex-1 w-full bg-transparent font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
             {/* Layer 1: Premium Background Depth */}
             <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F0F7FF_0%,_#F8FAFC_40%,_#FDFDFF_100%)]" />
-                <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#3B82F6] opacity-[0.04] blur-[120px] rounded-full" />
+                <div className="absolute inset-0 bg-transparent" />
             </div>
 
-            <DecorativeCurve
-                opacity={0.04}
-                height="h-[400px] sm:h-[550px]"
-                className="absolute -top-[100px] sm:-top-[150px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none mix-blend-multiply"
-                animate={true}
-            />
+            {/* Redundant Waves Removed */}
 
-            <div className="flex flex-col items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-10 sm:-mt-12">
+            <div className="flex flex-col items-center justify-center p-4 relative z-10 w-full min-h-screen pt-20 sm:pt-24 pb-16">
                 <div className="relative max-w-[400px] w-full text-center space-y-10 bg-white/90 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 sm:p-10 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] animate-fade-in">
                     <div className="relative w-16 h-16 mx-auto">
                         <div className="w-full h-full bg-amber-50 border border-amber-100 rounded-2xl flex items-center justify-center shadow-md shadow-amber-500/5">
@@ -121,12 +104,7 @@ const WaitingApproval = () => {
                 </div>
             </div>
 
-            <DecorativeCurve
-                opacity={0.04}
-                height="h-[400px] sm:h-[550px]"
-                className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none"
-                animate={true}
-            />
+            {/* Redundant Waves Removed */}
         </div>
     );
 };

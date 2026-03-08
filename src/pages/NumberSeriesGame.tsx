@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Clock, Trophy, Gamepad2, Play, ArrowRight } from 'lucide-react';
+import { Clock, Trophy, Gamepad2 } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
@@ -90,7 +90,7 @@ export default function NumberSeriesGame() {
       .slice(0, TOTAL_LEVELS);
   }, []);
 
-  const [gameStarted, setGameStarted] = useState(false);
+  const [gameStarted, setGameStarted] = useState(true);
   const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
@@ -276,77 +276,21 @@ export default function NumberSeriesGame() {
     else { if (currentStudent) finishTest(currentStudent.username); navigate('/'); }
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
-  const handleEndTest = async () => {
-    if (window.confirm('End this game? Current progress will be saved.')) {
-      await finishGame(score, correct, level);
-      navigate('/select-game');
-    }
-  };
 
   if (!currentStudent || !currentTest) return null;
 
-  if (!gameStarted) {
-    return (
-      <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.05] blur-[120px] rounded-full" />
-        </div>
-        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
-        <div className="flex flex-col items-center justify-center p-4 relative z-10 w-full min-h-screen">
-          <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-8 sm:p-12 max-w-lg w-full text-center shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
-            <div className="w-20 h-20 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
-              <Gamepad2 className="w-10 h-10 text-sky-500" />
-            </div>
-            <h1 className="text-[32px] sm:text-[40px] font-black text-[#0F172A] tracking-tight leading-none mb-4">Number Series</h1>
-            <p className="text-[15px] sm:text-lg text-[#64748B] mb-8 font-medium leading-relaxed">
-              Identify the pattern in the series and <b>drag the collector</b> to catch the falling correct number.
-            </p>
-            <div className="space-y-4 mb-10 text-left bg-sky-50/50 p-6 rounded-2xl border border-sky-100">
-              <div className="flex items-center gap-3 text-sm font-bold text-sky-700 font-sans">
-                <div className="w-2 h-2 rounded-full bg-sky-500" /> Multiple series patterns
-              </div>
-              <div className="flex items-center gap-3 text-sm font-bold text-sky-700 font-sans">
-                <div className="w-2 h-2 rounded-full bg-sky-500" /> Hold and drag to move
-              </div>
-              <div className="flex items-center gap-3 text-sm font-bold text-sky-700 font-sans">
-                <div className="w-2 h-2 rounded-full bg-sky-500" /> 20 Levels and 10s per level
-              </div>
-            </div>
-            <button
-              onClick={() => { setGameStarted(true); startTime.current = Date.now(); }}
-              className="w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-sky-500/25 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
-            >
-              <Play className="w-5 h-5 fill-current" /> START GAME
-            </button>
-          </div>
-        </div>
-        <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[100px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
-      </div>
-    );
-  }
 
   const q = level < TOTAL_LEVELS ? questions[level] : null;
 
   return (
     <div
-      className={`flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden ${feedback === 'correct' ? 'flash-correct' : (feedback === 'wrong' || feedback === 'timeout') ? 'flash-wrong' : ''}`}
+      className={`flex flex-col flex-1 w-full bg-transparent font-sans min-h-screen relative overflow-hidden ${feedback === 'correct' ? 'flash-correct' : (feedback === 'wrong' || feedback === 'timeout') ? 'flash-wrong' : ''}`}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
       onTouchMove={onTouchMove}
       onTouchEnd={() => { isDragging.current = false; }}
     >
-      <div className="absolute inset-x-0 bottom-24 flex justify-center pointer-events-none z-0">
-        <div className="flex gap-12 opacity-[0.03]">
-          <span className="text-[120px] font-black rotate-12">∑</span>
-          <span className="text-[100px] font-black -rotate-12">π</span>
-          <span className="text-[140px] font-black rotate-45">√</span>
-          <span className="text-[110px] font-black -rotate-6">∞</span>
-        </div>
-      </div>
-      <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[100px] -left-[10%] w-[120%] z-0 rotate-180 pointer-events-none" animate={true} />
-
       <div className="relative z-50 w-full px-4 sm:px-8 py-4 flex items-center justify-between bg-white/60 backdrop-blur-xl border-b border-white/40 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
@@ -373,40 +317,44 @@ export default function NumberSeriesGame() {
               <span className="font-mono font-black text-xl leading-none">{currentTest?.showResults !== false ? score : '---'}</span>
             </div>
           </div>
-          <button
-            onClick={handleEndTest}
-            className="ml-2 px-4 py-2 rounded-xl bg-white/80 border border-slate-200 text-[#94A3B8] hover:text-rose-500 hover:border-rose-100 hover:bg-rose-50 transition-all font-black text-[10px] uppercase tracking-widest active:scale-95 shadow-sm leading-none"
-          >
-            End Test
-          </button>
+          <div className="w-[100px]" />
         </div>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 relative z-10 w-full overflow-hidden">
         {gameOver ? (
-          <div className="text-center animate-fade-in max-w-lg w-full px-4 py-12">
-            <div className="w-24 h-24 rounded-[2.5rem] bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-sky-500/30">
-              <Trophy className="w-12 h-12 text-white" />
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-black text-[#0F172A] tracking-tight leading-none mb-4 font-sans">Bravo!</h1>
-            <p className="text-lg text-[#64748B] mb-12 font-medium font-sans">Session complete. Great job, {currentStudent.username}!</p>
-            <div className="grid grid-cols-2 gap-6 mb-12 w-full">
-              <div className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2.5rem] p-8 shadow-[0_20px_50px_-15px_rgba(56,189,248,0.1)] text-center">
-                <span className="text-[11px] text-[#1e293b] font-black uppercase tracking-widest block mb-2 font-sans">Total Points</span>
-                <span className="font-mono font-black text-4xl text-sky-500 leading-none">{currentTest?.showResults !== false ? score : '---'}</span>
+          <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
+            <div className="text-center animate-fade-in max-w-md w-full px-4">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
+                <Trophy className="w-10 h-10 text-sky-500" />
               </div>
-              <div className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2.5rem] p-8 shadow-[0_20px_50px_-15px_rgba(56,189,248,0.1)] text-center">
-                <span className="text-[11px] text-[#1e293b] font-black uppercase tracking-widest block mb-2 font-sans">Accuracy</span>
-                <span className="font-mono font-black text-4xl text-emerald-500 leading-none">{currentTest?.showResults !== false ? Math.round((correct / TOTAL_LEVELS) * 100) + '%' : '---'}</span>
+              <h1 className="text-[32px] sm:text-[40px] font-black text-[#0F172A] tracking-tight leading-none mb-3">Number Series Complete!</h1>
+              <p className="text-[15px] text-[#64748B] mb-10 font-medium tracking-tight">Magnificent job, {currentStudent?.username}!</p>
+
+              <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
+                <div className="flex items-center justify-center gap-10">
+                  <div className="text-center">
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Score</span>
+                    <span className="font-mono font-black text-3xl sm:text-4xl text-sky-500">{currentTest?.showResults !== false ? score : '---'}</span>
+                  </div>
+                  <div className="w-px h-14 bg-sky-100" />
+                  <div className="text-center">
+                    <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Correct</span>
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? correct : '---'}</span>
+                      <span className="text-sm text-[#94A3B8] font-bold">/ {TOTAL_LEVELS}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              <button
+                onClick={handlePostFinish}
+                className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95"
+              >
+                {getNextGame() ? 'Next Game →' : 'Finish Session'}
+              </button>
             </div>
-            <button
-              onClick={handlePostFinish}
-              className="group relative inline-flex items-center justify-center gap-3 bg-sky-500 hover:bg-sky-600 text-white px-12 py-5 rounded-[2.2rem] font-black text-lg shadow-2xl shadow-sky-500/30 transition-all hover:scale-105 active:scale-95 font-sans"
-            >
-              <span className="relative z-10">{getNextGame() ? 'Go to Next Game' : 'Finish Session'}</span>
-              <ArrowRight className="w-6 h-6 transition-transform group-hover:translate-x-1" />
-            </button>
           </div>
         ) : q && (
           <div
@@ -502,7 +450,6 @@ export default function NumberSeriesGame() {
           </div>
         )}
       </div>
-      <DecorativeCurve opacity={0.03} height="h-[350px] sm:h-[450px]" className="absolute -bottom-[80px] -left-[10%] w-[120%] z-0 pointer-events-none" animate={true} />
-    </div>
+    </div >
   );
 }

@@ -1,6 +1,5 @@
 import React from 'react';
 import BrainAssistant from './BrainAssistant';
-import BrainPowerMeter from './BrainPowerMeter';
 import { useFun } from '@/context/FunContext';
 
 /**
@@ -15,7 +14,6 @@ const FunLayer = () => {
   return (
     <>
       <BrainAssistant />
-      <BrainPowerMeter />
     </>
   );
 };

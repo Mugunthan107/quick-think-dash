@@ -131,7 +131,7 @@ export default function Index() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col bg-[#F0F7FF] flex-1 overflow-hidden font-sans selection:bg-sky-100 relative">
+    <div className="flex flex-col bg-transparent flex-1 overflow-hidden font-sans selection:bg-sky-100 relative">
       <div className="w-full flex-1 flex flex-col">
         {/* ─────────────────────────────────────────────────────────
                                 HERO SECTION
@@ -140,8 +140,7 @@ export default function Index() {
 
           {/* Layer 1: Premium Background Depth */}
           <div className="absolute inset-0 z-0 pointer-events-none">
-            <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#38BDF8] opacity-[0.04] blur-[120px] rounded-full" />
+            <div className="absolute inset-0 bg-transparent" />
           </div>
 
           {/* Master Container */}
@@ -189,9 +188,7 @@ export default function Index() {
 
                 {/* Central Element: Rotating Game Card */}
                 <div className="relative z-20 w-full max-w-[400px] flex items-center justify-center">
-                  <div className="p-3 sm:p-4 rounded-[40px] bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl shadow-sky-100/30">
-                    <RotatingGameCard />
-                  </div>
+                  <RotatingGameCard />
                 </div>
 
                 {/* Orbital Path Rings (Subtle) */}
@@ -208,49 +205,7 @@ export default function Index() {
 
           </div>
 
-          {/* Top Decorative Wave - Tertiary (Deepest layer) */}
-          <DecorativeCurve
-            opacity={0.04}
-            height="h-[400px] sm:h-[550px]"
-            className="absolute -top-[80px] sm:-top-[120px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-4 mix-blend-multiply"
-            animate={true}
-          />
-          {/* Top Decorative Wave - Secondary (Layered behind) */}
-          <DecorativeCurve
-            opacity={0.06}
-            height="h-[350px] sm:h-[480px]"
-            className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]"
-            animate={true}
-          />
-          {/* Top Decorative Wave - Primary */}
-          <DecorativeCurve
-            opacity={0.12}
-            height="h-[250px] sm:h-[360px]"
-            className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none"
-            animate={true}
-          />
-
-          {/* Bottom Decorative Wave - Tertiary (Deepest layer) */}
-          <DecorativeCurve
-            opacity={0.05}
-            height="h-[400px] sm:h-[550px]"
-            className="absolute -bottom-[80px] sm:-bottom-[120px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-4 mix-blend-multiply"
-            animate={true}
-          />
-          {/* Bottom Decorative Wave - Secondary (Layered behind) */}
-          <DecorativeCurve
-            opacity={0.07}
-            height="h-[350px] sm:h-[480px]"
-            className="absolute -bottom-[50px] sm:-bottom-[80px] left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]"
-            animate={true}
-          />
-          {/* Bottom Decorative Wave - Primary */}
-          <DecorativeCurve
-            opacity={0.12}
-            height="h-[250px] sm:h-[360px]"
-            className="absolute bottom-0 left-0 z-0 pointer-events-none"
-            animate={true}
-          />
+          {/* Redundant Waves Removed */}
 
         </section>
       </div>

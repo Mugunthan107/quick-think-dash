@@ -51,39 +51,29 @@ const Lobby = () => {
     return (
         <>
             {showCountdown && <CountdownOverlay onComplete={() => navigate('/select-game')} />}
-            <div className="flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans selection:bg-indigo-100 min-h-screen relative overflow-hidden">
+            <div className="flex flex-col flex-1 w-full bg-transparent font-sans selection:bg-sky-100 min-h-screen relative overflow-hidden">
                 {/* Layer 1: Premium Background Depth */}
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    {/* Soft Multi-Gradient Base */}
-                    <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
-
-                    {/* Very Faint Radial Glow behind Hero */}
-                    <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+                    <div className="absolute inset-0 bg-transparent" />
                 </div>
 
-                {/* === TOP WAVES (MATCHING LANDING) === */}
-                {/* Top Wave - Tertiary (Deepest layer) */}
-                <DecorativeCurve opacity={0.04} height="h-[400px] sm:h-[550px]" className="absolute -top-[80px] sm:-top-[120px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] translate-x-4 mix-blend-multiply" animate={true} />
-                {/* Top Wave - Secondary (Layered behind) */}
-                <DecorativeCurve opacity={0.06} height="h-[350px] sm:h-[480px]" className="absolute -top-[50px] sm:-top-[80px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]" animate={true} />
-                {/* Top Wave - Primary */}
-                <DecorativeCurve opacity={0.12} height="h-[250px] sm:h-[360px]" className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none" animate={true} />
+                {/* Redundant Waves Removed */}
 
-                <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full min-h-screen -mt-10 sm:-mt-12">
+                <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full min-h-screen pt-20 sm:pt-24 pb-16">
                     <div className="relative w-full max-w-[480px] space-y-8 animate-fade-in-up">
                         <div className="text-center space-y-3 px-4">
                             <h1 className="text-[32px] sm:text-[40px] font-black text-[#0F172A] tracking-tight leading-none">Game Lobby</h1>
                             <p className="text-[14px] sm:text-[15px] text-[#64748B] font-medium leading-relaxed max-w-[320px] mx-auto">Waiting for instructor to start the session</p>
                         </div>
 
-                        <div className="bg-white/90 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 sm:p-10 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] relative overflow-hidden">
+                        <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2rem] p-8 sm:p-10 shadow-[0_20px_50px_-15px_rgba(56,189,248,0.1)] relative overflow-hidden">
                             {/* Decorative Corner Accent */}
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2563EB]/10 to-transparent -mr-16 -mt-16 rounded-full blur-2xl pointer-events-none" />
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#38BDF8]/10 to-transparent -mr-16 -mt-16 rounded-full blur-2xl pointer-events-none" />
 
                             <div className="text-center mb-10 relative z-10">
                                 <span className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-widest block mb-4">Session PIN</span>
-                                <div className="inline-flex items-center justify-center bg-[#F8FAFC] border-2 border-[#2563EB] rounded-2xl px-8 py-4 shadow-sm group transition-all">
-                                    <span className="font-mono text-4xl sm:text-5xl font-black text-[#2563EB] tracking-[0.2em] ml-[0.2em]">{currentTest.pin}</span>
+                                <div className="inline-flex items-center justify-center bg-sky-50 border-2 border-sky-400 rounded-2xl px-8 py-4 shadow-sm group transition-all">
+                                    <span className="font-mono text-4xl sm:text-5xl font-black text-sky-500 tracking-[0.2em] ml-[0.2em]">{currentTest.pin}</span>
                                 </div>
                             </div>
 
@@ -108,7 +98,7 @@ const Lobby = () => {
                                         </div>
                                     ))}
                                     {students.length === 0 && (
-                                        <div className="col-span-full py-8 text-center bg-[#F8FAFC]/50 border border-dashed border-[#E2E8F0] rounded-2xl">
+                                        <div className="col-span-full py-8 text-center bg-sky-50/50 border border-dashed border-[#E2E8F0] rounded-2xl">
                                             <p className="text-[#94A3B8] text-[13px] font-medium">No students joined yet</p>
                                         </div>
                                     )}
@@ -116,7 +106,7 @@ const Lobby = () => {
 
                                 <div className="pt-8 border-t border-[#F1F5F9] flex flex-col items-center gap-4">
                                     <div className="flex items-center gap-3 text-[14px] text-[#64748B] font-semibold">
-                                        <Loader2 className="w-4 h-4 text-[#2563EB] animate-spin" />
+                                        <Loader2 className="w-4 h-4 text-sky-500 animate-spin" />
                                         <span>Instructor will start shortly…</span>
                                     </div>
                                 </div>
@@ -125,13 +115,7 @@ const Lobby = () => {
                     </div>
                 </div>
 
-                {/* === BOTTOM WAVES (MATCHING LANDING) === */}
-                {/* Bottom Wave - Tertiary (Deepest layer) */}
-                <DecorativeCurve opacity={0.05} height="h-[400px] sm:h-[550px]" className="absolute -bottom-[80px] sm:-bottom-[120px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] -translate-x-4 mix-blend-multiply" animate={true} />
-                {/* Bottom Wave - Secondary (Layered behind) */}
-                <DecorativeCurve opacity={0.07} height="h-[350px] sm:h-[480px]" className="absolute -bottom-[50px] sm:-bottom-[80px] left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]" animate={true} />
-                {/* Bottom Wave - Primary */}
-                <DecorativeCurve opacity={0.12} height="h-[250px] sm:h-[360px]" className="absolute bottom-0 left-0 z-0 pointer-events-none" animate={true} />
+                {/* Redundant Waves Removed */}
             </div>
         </>
     );

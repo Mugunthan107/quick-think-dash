@@ -171,7 +171,6 @@ export default function RotatingGameCard() {
                     position: 'absolute',
                     inset: 0,
                     background: '#fff',
-                    border: `1px solid ${game.borderAccent}`,
                     borderRadius: '50%', // Circle 
                     boxShadow: `0 20px 48px -12px ${game.borderAccent.replace('0.3', '0.15')}, 0 4px 16px -4px rgba(0,0,0,0.06)`,
                     backfaceVisibility: 'hidden',
@@ -194,7 +193,6 @@ export default function RotatingGameCard() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: '0.5rem',
-                    boxShadow: `inset 0 0 0 1px ${game.borderAccent}`,
                 }}>
                     <GameIcon style={{ width: 22, height: 22, color: game.iconColor }} />
                 </div>

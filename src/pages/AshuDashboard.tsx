@@ -429,40 +429,23 @@ const AshuDashboard = () => {
   };
 
   return (
-    <div className="relative flex flex-col flex-1 w-full h-full bg-[#FDFDFF] overflow-y-auto font-sans selection:bg-indigo-100 pb-16 pt-6 sm:pt-10">
+    <div className="relative flex flex-col flex-1 w-full h-full bg-transparent overflow-y-auto font-sans selection:bg-indigo-100 pb-16 pt-6 sm:pt-10">
       {showCountdown && <CountdownOverlay onComplete={() => setShowCountdown(false)} />}
 
       {/* Layer 1: Premium Background Depth */}
       <div className="absolute inset-0 z-0 pointer-events-none fixed">
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
 
       {/* Decorative Waves */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Top Decorative Wave - Tertiary */}
-        <DecorativeCurve opacity={0.04} height="h-[200px] sm:h-[300px]" className="absolute -top-[40px] left-[-10%] w-[120%] rotate-180 scale-x-[1.1] translate-x-4 mix-blend-multiply" animate={true} />
-        {/* Top Decorative Wave - Secondary */}
-        <DecorativeCurve opacity={0.06} height="h-[150px] sm:h-[250px]" className="absolute top-0 left-[-5%] w-[110%] rotate-180 scale-x-[1.05]" animate={true} />
-        {/* Top Decorative Wave - Primary */}
-        <DecorativeCurve opacity={0.12} height="h-[100px] sm:h-[180px]" className="absolute top-0 left-0 rotate-180" animate={true} />
-
-        {/* Bottom Decorative Wave - Tertiary */}
-        <DecorativeCurve opacity={0.05} height="h-[200px] sm:h-[300px]" className="absolute -bottom-[40px] left-[-10%] w-[120%] scale-x-[1.1] -translate-x-4 mix-blend-multiply" animate={true} />
-        {/* Bottom Decorative Wave - Secondary */}
-        <DecorativeCurve opacity={0.07} height="h-[150px] sm:h-[250px]" className="absolute bottom-0 left-[-5%] w-[110%] scale-x-[1.05]" animate={true} />
-        {/* Bottom Decorative Wave - Primary */}
-        <DecorativeCurve opacity={0.12} height="h-[100px] sm:h-[180px]" className="absolute bottom-0 left-0" animate={true} />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
 
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-10 animate-fade-in group/container space-y-8">
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-20 animate-fade-in group/container space-y-8">
 
-        <div className="flex items-center justify-between gap-4 mb-6 sm:mb-8 px-2">
-          <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-[28px] font-black text-[#0F172A] tracking-tight leading-none mb-2">Admin Dashboard</h1>
-            <p className="text-[13px] sm:text-[14px] text-[#64748B] font-medium leading-tight">Manage tests and monitor progress</p>
-          </div>
-        </div>
+        {/* Header content relocated to Navbar */}
+        <div className="mb-2 sm:mb-4 px-2" />
 
         {/* Test PIN Section */}
         <div className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-[0_8px_30px_rgba(20,20,40,0.04)] p-6 sm:p-10 mb-6 sm:mb-8">

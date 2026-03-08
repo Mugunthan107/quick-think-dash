@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
-import { Clock, Trophy, GripHorizontal, Timer, RotateCcw, Hash, Star } from 'lucide-react';
+import { Clock, Trophy } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
@@ -256,28 +256,23 @@ const CrossMathGame = () => {
     if (currentTest?.status === 'FINISHED') navigate('/');
   }, [currentTest?.status, navigate]);
 
-  const handleFinish = useCallback((isEndTest = false) => {
+  const handleFinish = useCallback(() => {
     setFinished(true);
     if (timerRef.current) clearInterval(timerRef.current);
     if (currentStudent && currentTest) {
-      const questionsAttempted = isEndTest ? currentQ : TOTAL_QUESTIONS;
       submitGameResult(currentStudent.username, {
         gameId: 'crossmath',
         score: scoreRef.current,
         timeTaken: elapsedRef.current,
         correctAnswers: correctCountRef.current,
-        totalQuestions: questionsAttempted,
+        totalQuestions: TOTAL_QUESTIONS,
         completedAt: Date.now()
       }).then(() => {
         addCompletedGame('crossmath');
-        if (isEndTest) {
-          navigate('/select-game');
-        } else {
-          confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
-        }
+        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
       });
     }
-  }, [currentStudent, currentTest, currentQ, submitGameResult, addCompletedGame, finishTest, navigate]);
+  }, [currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, navigate]);
 
   // Reset per-question timer when moving to a new puzzle
   useEffect(() => {
@@ -494,17 +489,18 @@ const CrossMathGame = () => {
 
   if (finished) {
     return (
-      <div className="flex flex-col flex-1 w-full bg-[#F0F7FF] font-sans min-h-screen relative overflow-hidden">
+      <div className="flex flex-col flex-1 w-full bg-transparent font-sans min-h-screen relative overflow-hidden">
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#E0F2FE_0%,_#F0F9FF_40%,_#FFFFFF_100%)]" />
+          <div className="absolute inset-0 bg-transparent" />
         </div>
-        <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full min-h-screen">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
           <div className="text-center animate-fade-in max-w-md w-full px-4">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
               <Trophy className="w-10 h-10 text-sky-500" />
             </div>
             <h1 className="text-[32px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-3">CrossMath Complete!</h1>
-            <p className="text-[15px] text-[#64748B] mb-10 font-medium">Great work, {currentStudent?.username}!</p>
+            <p className="text-[15px] text-[#64748B] mb-10 font-medium tracking-tight">Magnificent performance, {currentStudent?.username}!</p>
+
             <div className="bg-white/90 backdrop-blur-2xl border border-sky-100 rounded-[2.5rem] p-10 mb-10 shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)]">
               <div className="flex items-center justify-center gap-10">
                 <div className="text-center">
@@ -516,12 +512,16 @@ const CrossMathGame = () => {
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Correct</span>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? correctCount : '---'}</span>
-                    <span className="text-sm text-[#94A3B8]">/ {TOTAL_QUESTIONS}</span>
+                    <span className="text-sm text-[#94A3B8] font-bold">/ {TOTAL_QUESTIONS}</span>
                   </div>
                 </div>
               </div>
             </div>
-            <button onClick={handlePostFinish} className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95">
+
+            <button
+              onClick={handlePostFinish}
+              className="w-full sm:w-auto px-12 py-4 bg-gradient-to-r from-[#38BDF8] to-[#0EA5E9] hover:from-[#0EA5E9] hover:to-[#0284C7] text-white rounded-2xl font-bold text-[16px] shadow-xl shadow-sky-500/25 transition-all hover:scale-105 active:scale-95"
+            >
               {getNextGame() ? 'Next Game →' : 'Finish Session'}
             </button>
           </div>
@@ -533,22 +533,11 @@ const CrossMathGame = () => {
   const progress = ((currentQ + 1) / TOTAL_QUESTIONS) * 100;
 
   return (
-    <div className={`flex flex-col flex-1 w-full bg-[#FDFDFF] font-sans min-h-screen relative overflow-hidden pt-16 ${feedback === 'success' ? 'flash-correct' : feedback === 'error' ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col flex-1 w-full bg-transparent font-sans min-h-screen relative overflow-hidden pt-16 ${feedback === 'success' ? 'flash-correct' : feedback === 'error' ? 'flash-wrong' : ''}`}>
       {/* Background Layers like Home Page */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(at_top_left,_#F5F3FF_0%,_#ECFEFF_40%,_#FFFFFF_100%)]" />
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF] opacity-[0.03] blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-transparent" />
       </div>
-
-      {/* Top Waves like Home Page */}
-      <DecorativeCurve opacity={0.04} height="h-[300px] sm:h-[450px]" className="absolute -top-[100px] left-[-10%] w-[120%] z-0 rotate-180 pointer-events-none scale-x-[1.1] mix-blend-multiply" animate={true} />
-      <DecorativeCurve opacity={0.06} height="h-[250px] sm:h-[380px]" className="absolute -top-[50px] left-[-5%] w-[110%] z-0 rotate-180 pointer-events-none scale-x-[1.05]" animate={true} />
-      <DecorativeCurve opacity={0.12} height="h-[180px] sm:h-[260px]" className="absolute top-0 left-0 z-0 rotate-180 pointer-events-none" animate={true} />
-
-      {/* Bottom Waves like Home Page */}
-      <DecorativeCurve opacity={0.05} height="h-[300px] sm:h-[450px]" className="absolute -bottom-[100px] left-[-10%] w-[120%] z-0 pointer-events-none scale-x-[1.1] mix-blend-multiply" animate={true} />
-      <DecorativeCurve opacity={0.07} height="h-[250px] sm:h-[380px]" className="absolute -bottom-[50px] left-[-5%] w-[110%] z-0 pointer-events-none scale-x-[1.05]" animate={true} />
-      <DecorativeCurve opacity={0.12} height="h-[180px] sm:h-[260px]" className="absolute bottom-0 left-0 z-0 pointer-events-none" animate={true} />
 
       <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full pt-0 pb-20">
         <div className="w-full max-w-[580px] animate-fade-in relative flex flex-col items-center">
@@ -594,18 +583,7 @@ const CrossMathGame = () => {
           </div>
 
           {/* End Test Hyperlink */}
-          <div className="w-full flex justify-end mb-4 px-2">
-            <button
-              onClick={() => {
-                if (window.confirm('End this game? Your current progress will be saved.')) {
-                  handleFinish(true);
-                }
-              }}
-              className="text-[11px] font-black uppercase tracking-widest text-[#94A3B8] hover:text-rose-500 transition-colors underline underline-offset-4"
-            >
-              End Game
-            </button>
-          </div>
+          <div className="w-full h-4 mb-4" />
 
           {/* Unified Game Container */}
           <div className="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)] border border-sky-100 transition-all duration-300 overflow-hidden relative w-full flex flex-col">
