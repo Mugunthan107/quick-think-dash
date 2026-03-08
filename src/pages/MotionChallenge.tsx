@@ -578,15 +578,15 @@ const MotionChallenge = () => {
       <NavBar />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative pt-6 sm:pt-10">
+      <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative pt-2 sm:pt-4">
         {/* Background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 bg-transparent" />
         </div>
 
         {/* Page heading */}
-        <div className="relative z-10 text-center pb-6 px-4">
-          <h1 className="text-[28px] sm:text-[42px] font-black tracking-tighter text-black leading-tight">
+        <div className="relative z-10 text-center pb-2 px-4">
+          <h1 className="text-[24px] sm:text-[32px] font-black tracking-tighter text-black leading-tight">
             Motion Challenge
           </h1>
           <p className="text-[12px] sm:text-[13px] text-[#64748B] font-medium mt-1">
@@ -595,7 +595,7 @@ const MotionChallenge = () => {
         </div>
 
         {/* End Test Hyperlink */}
-        <div className="w-full h-4 mb-4" />
+        <div className="w-full h-2 mb-2" />
 
         {/* Game Card */}
         <div className={`relative z-10 bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.18)] border transition-all duration-300 mx-4 flex flex-col
@@ -607,8 +607,8 @@ const MotionChallenge = () => {
             <div className={`absolute inset-x-0 top-0 h-1.5 rounded-t-[2rem] z-30 animate-pulse bg-emerald-500`} />
           )}
 
-          <div className="bg-white border-b border-sky-100/50 p-6 sm:p-8">
-            <div className={`grid ${currentTest?.showResults ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'} items-center gap-6 mb-6`}>
+          <div className="bg-white border-b border-sky-100/50 p-4 sm:p-5">
+            <div className={`grid ${currentTest?.showResults ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'} items-center gap-4 mb-4`}>
               <div className="flex flex-col gap-1.5 text-center">
                 <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest">Level</span>
                 <span className="text-black text-2xl font-black">{levelIdx + 1}<span className="text-[#94A3B8] text-lg font-bold">/{TOTAL_LEVELS}</span></span>
@@ -650,7 +650,7 @@ const MotionChallenge = () => {
           </div>
 
           {/* Grid area */}
-          <div className="p-4 flex flex-col items-center justify-center min-h-[300px] relative">
+          <div className="p-2 flex flex-col items-center justify-center min-h-[250px] relative">
             {isGenerating || !level ? (
               <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in">
                 <div className="w-16 h-16 rounded-3xl bg-sky-50 flex items-center justify-center mb-6">

@@ -27,8 +27,14 @@ const OOPS_MESSAGES = [
 ];
 
 const TOTAL_LEVELS = 20;
-const TIME_PER_Q = 30;
 const TUBE_CAPACITY = 4;
+
+function getTimeLimit(difficulty: number) {
+  if (difficulty < 5) return 30;
+  if (difficulty < 10) return 40;
+  if (difficulty < 15) return 45;
+  return 50;
+}
 
 const COLORS = ['#38BDF8', '#F59E0B', '#10B981', '#EC4899', '#8B5CF6', '#EF4444', '#F97316', '#06B6D4'];
 const COLOR_NAMES = ['Sky', 'Amber', 'Green', 'Pink', 'Purple', 'Red', 'Orange', 'Cyan'];
@@ -101,7 +107,7 @@ export default function WaterColorSortGame() {
   const [score, setScore] = useState(0);
   const [tubes, setTubes] = useState<Tube[]>(levels[0].tubes.map(t => ({ colors: [...t.colors] })));
   const [selectedTube, setSelectedTube] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(TIME_PER_Q);
+  const [timeLeft, setTimeLeft] = useState(getTimeLimit(0));
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [moves, setMoves] = useState(0);
@@ -119,7 +125,7 @@ export default function WaterColorSortGame() {
       setTubes(levels[level].tubes.map(t => ({ colors: [...t.colors] })));
       setSelectedTube(null);
       setMoves(0);
-      setTimeLeft(TIME_PER_Q);
+      setTimeLeft(getTimeLimit(level));
     }
   }, [level, gameOver, levels]);
 
@@ -130,7 +136,7 @@ export default function WaterColorSortGame() {
       setTimeLeft(prev => {
         if (prev <= 1) {
           advanceLevel(false);
-          return TIME_PER_Q;
+          return getTimeLimit(level);
         }
         return prev - 1;
       });
@@ -165,7 +171,7 @@ export default function WaterColorSortGame() {
         setTubes(levels[nextLevel].tubes.map(t => ({ colors: [...t.colors] })));
         setMoves(0);
         setSelectedTube(null);
-        setTimeLeft(TIME_PER_Q);
+        setTimeLeft(getTimeLimit(nextLevel));
         setFeedback(null);
       }
     }, 1200);
@@ -344,7 +350,7 @@ export default function WaterColorSortGame() {
                   <circle cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-sky-50" />
                   <circle
                     cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="3.5" fill="transparent"
-                    strokeDasharray={138} strokeDashoffset={138 - (138 * timeLeft) / TIME_PER_Q}
+                    strokeDasharray={138} strokeDashoffset={138 - (138 * timeLeft) / getTimeLimit(level)}
                     strokeLinecap="round" className="text-red-500 transition-all duration-1000 linear"
                   />
                 </svg>
@@ -355,8 +361,8 @@ export default function WaterColorSortGame() {
               {/* Hint bar */}
               <div className="w-full flex items-center justify-center mb-3">
                 <div className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${selectedTube !== null
-                    ? 'bg-sky-500 text-white shadow-lg shadow-sky-400/30'
-                    : 'bg-white/70 text-[#64748B] border border-sky-100'
+                  ? 'bg-sky-500 text-white shadow-lg shadow-sky-400/30'
+                  : 'bg-white/70 text-[#64748B] border border-sky-100'
                   }`}>
                   {selectedColor && (
                     <span className="w-4 h-4 rounded-full inline-block border-2 border-white/50 shadow-sm" style={{ backgroundColor: selectedColor }} />

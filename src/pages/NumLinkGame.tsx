@@ -575,18 +575,18 @@ const NumLinkGame = () => {
   const progress = ((globalRound + 1) / TOTAL_ROUNDS) * 100;
 
   return (
-    <div className={`flex flex-col flex-1 w-full h-full bg-transparent font-sans relative overflow-hidden pt-16 sm:pt-20 ${showFlash === 'correct' ? 'flash-correct' : showFlash === 'wrong' ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col flex-1 w-full h-full bg-transparent font-sans relative overflow-hidden pt-12 sm:pt-14 ${showFlash === 'correct' ? 'flash-correct' : showFlash === 'wrong' ? 'flash-wrong' : ''}`}>
       <div className="absolute inset-0 z-0 pointer-events-none">
         {/* Soft Multi-Gradient Base */}
         <div className="absolute inset-0 bg-transparent" />
       </div>
 
-      <div className="flex flex-col flex-1 items-center px-4 sm:px-6 pb-6 pt-2 sm:pt-4 relative z-10 w-full overflow-y-auto">
+      <div className="flex flex-col flex-1 items-center px-4 sm:px-6 pb-4 pt-1 sm:pt-2 relative z-10 w-full overflow-y-auto">
         <div className="w-full max-w-[500px] h-full flex flex-col justify-center animate-fade-in relative min-h-0">
 
           <div className="flex-none mb-0 sm:mb-1">
             <div className="w-full mb-1 sm:mb-1.5 flex flex-col items-center text-center">
-              <h1 className="text-[20px] sm:text-[24px] font-black tracking-tight text-[#0F172A] uppercase leading-none">
+              <h1 className="text-[18px] sm:text-[22px] font-black tracking-tight text-[#0F172A] uppercase leading-none">
                 NumLink
               </h1>
               <p className="text-[12px] text-[#64748B] font-bold mt-0.5 max-w-[200px] truncate sm:max-w-none">Connect numbers and fill the grid</p>
@@ -598,7 +598,7 @@ const NumLinkGame = () => {
             </div>
           </div>
 
-          <div className="flex-none flex flex-col justify-center relative mt-3 sm:mt-4">
+          <div className="flex-none flex flex-col justify-center relative mt-2 sm:mt-3">
 
             {/* Timer pill floating left outside */}
             <div className="absolute -top-12 left-4 sm:top-6 sm:-left-24 z-20">
@@ -610,8 +610,8 @@ const NumLinkGame = () => {
               </div>
             </div>
 
-            <div className={`bg-white/95 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 transition-all duration-300 overflow-hidden relative ${showFlash === 'wrong' && currentTest?.showResults !== false ? 'border-red-200' : showFlash === 'correct' && currentTest?.showResults !== false ? 'border-emerald-200' : 'border-sky-100'}`}>
-              <div className="px-5 sm:px-8 pt-5 sm:pt-8 pb-3 border-b border-sky-50">
+            <div className={`bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 transition-all duration-300 overflow-hidden relative ${showFlash === 'wrong' && currentTest?.showResults !== false ? 'border-red-200' : showFlash === 'correct' && currentTest?.showResults !== false ? 'border-emerald-200' : 'border-sky-100'}`}>
+              <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 border-b border-sky-50">
                 <div className="relative flex items-center justify-between mb-4 h-10">
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="flex items-center gap-2">
@@ -636,7 +636,7 @@ const NumLinkGame = () => {
                 </div>
               </div>
 
-              <div className="p-3 sm:p-5 flex justify-center">
+              <div className="p-2 sm:p-4 flex justify-center">
                 <div
                   ref={gridRef}
                   className="inline-grid gap-1 sm:gap-1.5"
@@ -682,7 +682,7 @@ const NumLinkGame = () => {
                 </div>
               </div>
 
-              <div className="px-4 sm:px-6 pb-4 sm:pb-5 flex flex-col gap-2">
+              <div className="px-4 sm:px-6 pb-2 sm:pb-3 flex flex-col gap-1">
                 <div className="flex gap-2">
                   {!roundComplete && !roundFailed && (
                     <button onClick={handleReset} className="flex-1 py-3 mb-1 rounded-[14px] sm:rounded-2xl font-black text-[12px] sm:text-[14px] uppercase tracking-widest bg-sky-50 text-sky-500 border-2 border-sky-100 hover:bg-sky-100 transition-all flex items-center justify-center gap-2">
