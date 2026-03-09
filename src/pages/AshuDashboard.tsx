@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useGame } from '@/context/GameContext';
+import { useGame, Student } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Copy, Download, Trash2, Plus, Users, Activity, Play, Search, X, Bell, Check, RefreshCw, Clock, Square, Trophy, Medal, Filter, Eye, EyeOff, Crown, User, FileText, FileSpreadsheet } from 'lucide-react';
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import CountdownOverlay from '@/components/CountdownOverlay';
 import DecorativeCurve from '@/components/DecorativeCurve';
 
@@ -286,6 +286,67 @@ const AshuDashboard = () => {
     }
   };
 
+
+  // ──────────────────────────────────────────────────────
+  // Build leaderboard data for modal & display
+  // ──────────────────────────────────────────────────────
+  const getSessionData = useCallback((s: Student) => {
+    const selectedGamesList = currentTest?.selectedGames || ['bubble'];
+    const sessionHistory = s.gameHistory?.filter(h => selectedGamesList.includes(h.gameId)) || [];
+    const sessionScore = sessionHistory.reduce((a, g) => a + (g.score || 0), 0);
+    const sessionCorrect = sessionHistory.reduce((a, g) => a + (g.correctAnswers || 0), 0);
+    const sessionTotalQ = selectedGamesList.reduce((acc, gId) => acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : 20), 0);
+    const totalTime = sessionHistory.reduce((a, g) => a + (g.timeTaken || 0), 0) || 0;
+    const totalPossible = selectedGamesList.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+    const percentage = totalPossible > 0 ? ((sessionScore / totalPossible) * 100).toFixed(0) + '%' : '0%';
+
+    return {
+      ...s,
+      sessionScore,
+      sessionCorrect,
+      sessionTotalQ,
+      sessionTime: totalTime,
+      sessionPercentage: percentage
+    };
+  }, [currentTest?.selectedGames]);
+
+  const getSessionLeaderboard = useCallback(() => {
+    const raw = getLeaderboard();
+    return raw.map(s => getSessionData(s)).sort((a, b) => {
+      if (b.sessionScore !== a.sessionScore) return b.sessionScore - a.sessionScore;
+      return a.sessionTime - b.sessionTime;
+    });
+  }, [getLeaderboard, getSessionData]);
+
+  const getDisplayLeaderboard = () => {
+    if (leaderboardTab === 'overall') {
+      return getSessionLeaderboard().filter(s => s.username.toLowerCase().includes(leaderboardSearch.toLowerCase()));
+    }
+    const raw = getGameLeaderboard(leaderboardTab);
+    return raw.filter(s => s.username.toLowerCase().includes(leaderboardSearch.toLowerCase()));
+  };
+
+  const buildPodiumEntry = (s: any) => {
+    if (leaderboardTab === 'overall') {
+      const data = getSessionData(s);
+      return {
+        username: data.username,
+        score: data.sessionScore,
+        correctAnswers: data.sessionCorrect,
+        totalQuestions: data.sessionTotalQ,
+        timeTaken: data.sessionTime
+      };
+    }
+    const h = s.gameHistory?.find((g: any) => g.gameId === leaderboardTab);
+    return {
+      username: s.username,
+      score: h?.score ?? 0,
+      correctAnswers: h?.correctAnswers || 0,
+      totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : 20),
+      timeTaken: h?.timeTaken || 0
+    };
+  };
+
   if (!adminLoggedIn) return <AshuLogin />;
 
   const handleCopyPin = () => {
@@ -296,7 +357,7 @@ const AshuDashboard = () => {
   };
 
   const exportPDF = () => {
-    const leaderboard = getLeaderboard();
+    const leaderboard = getSessionLeaderboard();
     if (leaderboard.length === 0) { toast.error('No completed results to download'); return; }
 
     const selectedGames = currentTest?.selectedGames || ['bubble'];
@@ -367,28 +428,25 @@ const AshuDashboard = () => {
   };
 
   const exportExcel = () => {
-    const leaderboard = getLeaderboard();
+    const leaderboard = getSessionLeaderboard();
     if (leaderboard.length === 0) { toast.error('No completed results to download'); return; }
 
     const selectedGames = currentTest?.selectedGames || ['bubble'];
     const headers = ["Rank", "Name", ...selectedGames.map(g => GAME_LABELS[g] || g), "Total", "Score %", "Total Time"];
 
     const tableRows = leaderboard.map((student, index) => {
-      const totalTime = student.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || 0;
       const getGameCell = (gameId: string) => {
         const g = student.gameHistory?.find(h => h.gameId === gameId);
         if (!g) return '—';
         return `${g.score}`;
       };
-      const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
-      const percentage = totalPossible > 0 ? `${((student.score / totalPossible) * 100).toFixed(0)}%` : '0%';
       return [
         index + 1,
         student.username,
         ...selectedGames.map(gId => getGameCell(gId)),
-        student.score,
-        percentage,
-        formatTime(totalTime),
+        student.sessionScore,
+        student.sessionPercentage,
+        formatTime(student.sessionTime),
       ];
     });
 
@@ -409,24 +467,6 @@ const AshuDashboard = () => {
 
   const finished = students.filter(s => s.isFinished);
   const active = students.filter(s => !s.isFinished);
-
-  // ──────────────────────────────────────────────────────
-  // Build leaderboard data for modal
-  // ──────────────────────────────────────────────────────
-  const getDisplayLeaderboard = () => {
-    const raw = leaderboardTab === 'overall' ? getLeaderboard() : getGameLeaderboard(leaderboardTab);
-    return raw.filter(s => s.username.toLowerCase().includes(leaderboardSearch.toLowerCase()));
-  };
-
-  const buildPodiumEntry = (s: any) => {
-    if (leaderboardTab === 'overall') {
-      const totalTime = s.gameHistory?.reduce((acc: number, g: any) => acc + g.timeTaken, 0) || 0;
-      return { username: s.username, score: s.score, correctAnswers: s.correctAnswers || 0, totalQuestions: s.totalQuestions || 0, timeTaken: totalTime };
-    }
-    const h = s.gameHistory?.find((g: any) => g.gameId === leaderboardTab);
-    const displayScore = leaderboardTab === 'motion' ? (h?.moves ?? h?.score ?? 0) : (h?.score ?? 0);
-    return { username: s.username, score: displayScore, correctAnswers: h?.correctAnswers || 0, totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : 20), timeTaken: h?.timeTaken || 0 };
-  };
 
   return (
     <div className="relative flex flex-col flex-1 w-full h-full bg-transparent overflow-y-auto font-sans selection:bg-indigo-100 pb-16 pt-6 sm:pt-10">
@@ -706,9 +746,8 @@ const AshuDashboard = () => {
                 </h2>
               </div>
 
-              {/* Podium display for Top 3 */}
               <div className="bg-slate-50/30 border-b border-border">
-                <PodiumRow top3={lb.slice(0, 3).map(s => buildPodiumEntry(s))} />
+                <PodiumRow top3={getSessionLeaderboard().slice(0, 3).map(s => buildPodiumEntry(s))} />
               </div>
 
               <div className="overflow-x-auto">
@@ -726,8 +765,8 @@ const AshuDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {lb.map((s, idx) => {
-                      const totalTime = s.gameHistory?.reduce((a, g) => a + g.timeTaken, 0) || 0;
+                    {getSessionLeaderboard().map((s, idx) => {
+                      const selectedGames = currentTest?.selectedGames || ['bubble'];
                       return (
                         <tr key={s.username} className="group transition-colors">
                           <td className="px-4 py-3 text-center sticky left-0 z-20 bg-white group-hover:bg-slate-50 transition-colors">
@@ -741,7 +780,7 @@ const AshuDashboard = () => {
                           </td>
                           <td className="px-4 py-3 sticky left-[56px] z-20 bg-white group-hover:bg-slate-50 transition-colors border-r border-border/50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
                             <span className="font-bold text-foreground block truncate max-w-[120px]">{s.username}</span>
-                            <span className="text-[10px] text-muted-foreground font-semibold">{formatTime(totalTime)}</span>
+                            <span className="text-[10px] text-muted-foreground font-semibold">{formatTime(s.sessionTime)}</span>
                           </td>
                           {selectedGames.map(gId => {
                             const gd = s.gameHistory?.find(h => h.gameId === gId);
@@ -758,24 +797,20 @@ const AshuDashboard = () => {
                           })}
                           <td className="px-4 py-3 text-right">
                             <span className="font-mono font-bold text-emerald-500 text-sm leading-none">
-                              {s.correctAnswers}/{s.totalQuestions}
+                              {s.sessionCorrect}/{s.sessionTotalQ}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
                             <span className="font-mono font-black text-foreground text-base tracking-tighter block leading-none">
-                              {s.score}
+                              {s.sessionScore}
                             </span>
                             <span className="font-mono font-bold text-[#94A3B8] text-[10px] block mt-1">
-                              {totalTime.toFixed(1)}s
+                              {s.sessionTime.toFixed(1)}s
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
                             <span className="font-mono font-black text-sky-500 text-base tracking-tighter block leading-none">
-                              {(() => {
-                                const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
-                                if (totalPossible === 0) return '0%';
-                                return `${((s.score / totalPossible) * 100).toFixed(0)}%`;
-                              })()}
+                              {s.sessionPercentage}
                             </span>
                           </td>
                         </tr>
@@ -835,8 +870,18 @@ const AshuDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {displayList.map((s, idx) => {
-                          const totalTime = s.gameHistory?.reduce((a, g) => a + (g.timeTaken || 0), 0) || 0;
+                        {displayList.map((s: any, idx) => {
+                          const isOverall = leaderboardTab === 'overall';
+                          const selectedGames = currentTest?.selectedGames || ['bubble'];
+
+                          // Use the pre-calculated session data if overall, or calculate local if single game
+                          const score = isOverall ? s.sessionScore : (s.gameHistory?.find((h: any) => h.gameId === leaderboardTab)?.score || 0);
+                          const time = isOverall ? s.sessionTime : (s.gameHistory?.find((h: any) => h.gameId === leaderboardTab)?.timeTaken || 0);
+                          const correct = isOverall ? s.sessionCorrect : (s.gameHistory?.find((h: any) => h.gameId === leaderboardTab)?.correctAnswers || 0);
+                          const totalQ = isOverall ? s.sessionTotalQ : (s.gameHistory?.find((h: any) => h.gameId === leaderboardTab)?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : 20));
+                          const perc = isOverall ? s.sessionPercentage : (GAME_MAX_SCORES[leaderboardTab] ? ((score / GAME_MAX_SCORES[leaderboardTab]) * 100).toFixed(0) + '%' : '0%');
+                          const history = s.gameHistory || [];
+
                           const trClass = idx < 3 ? 'bg-amber-50' : 'bg-white';
                           const hoverClass = idx < 3 ? 'group-hover:bg-amber-100/50' : 'group-hover:bg-slate-50';
                           return (
@@ -854,13 +899,13 @@ const AshuDashboard = () => {
                                 <span className="font-black text-foreground text-[15px]">{s.username}</span>
                                 <div className="flex items-center gap-2 mt-1">
                                   <Clock className="w-3 h-3 text-muted-foreground" />
-                                  <span className="text-[11px] text-muted-foreground font-bold">{formatTime(totalTime)}</span>
+                                  <span className="text-[11px] text-muted-foreground font-bold">{formatTime(time)}</span>
                                   <span className="text-[11px] text-muted-foreground">•</span>
-                                  <span className="text-[11px] text-muted-foreground font-bold">{s.gamesPlayed || 0} Games</span>
+                                  <span className="text-[11px] text-muted-foreground font-bold">{history.length} Games</span>
                                 </div>
                               </td>
                               {selectedGames.map(gId => {
-                                const gd = s.gameHistory?.find(h => h.gameId === gId);
+                                const gd = history.find((h: any) => h.gameId === gId);
                                 return (
                                   <td key={gId} className="px-6 py-5 text-center">
                                     {gd ? (
@@ -869,7 +914,7 @@ const AshuDashboard = () => {
                                           <span className="font-mono font-black text-foreground text-[14px]">{gd.score}</span>
                                         </div>
                                         <div className="flex items-center gap-2 justify-center">
-                                          <span className="text-[10px] text-success font-black">{gd.correctAnswers}/{gd.totalQuestions}</span>
+                                          <span className="text-[10px] text-success font-black">{gd.correctAnswers}/{gd.totalQuestions || (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : 20)}</span>
                                           <span className="text-[10px] text-muted-foreground font-semibold tabular-nums">{formatTime(gd.timeTaken)}</span>
                                         </div>
                                       </div>
@@ -878,15 +923,11 @@ const AshuDashboard = () => {
                                 );
                               })}
                               <td className="px-6 py-5 text-right font-mono font-black text-foreground text-xl tracking-tighter">
-                                {s.score}
+                                {score}
                               </td>
                               <td className="px-6 py-5 text-right sticky right-0 bg-inherit z-10 shadow-[-10px_0_15px_-10px_rgba(0,0,0,0.05)]">
                                 <span className="font-mono font-black text-sky-600 text-xl tracking-tighter">
-                                  {(() => {
-                                    const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
-                                    if (totalPossible === 0) return '0%';
-                                    return `${((s.score / totalPossible) * 100).toFixed(0)}%`;
-                                  })()}
+                                  {perc}
                                 </span>
                               </td>
                             </tr>

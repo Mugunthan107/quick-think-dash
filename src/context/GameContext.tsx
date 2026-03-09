@@ -757,14 +757,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const resA = a.gameHistory.find(g => g.gameId === gameId)!;
         const resB = b.gameHistory.find(g => g.gameId === gameId)!;
 
+        // Primary: Score DESC (More levels/points = better)
+        if (resB.score !== resA.score) return resB.score - resA.score;
+
+        // Secondary: Metric ASC (Lower is better)
         if (gameId === 'motion') {
-          // Motion sorts by moves ASC (Lower moves = better)
           const movesA = resA.moves ?? resA.score;
           const movesB = resB.moves ?? resB.score;
-          if (movesA !== movesB) return movesA - movesB;
-        } else {
-          // Others sort by score DESC (Higher score = better)
-          if (resB.score !== resA.score) return resB.score - resA.score;
+          return movesA - movesB;
         }
         return resA.timeTaken - resB.timeTaken;
       });

@@ -139,6 +139,31 @@ const Leaderboard = () => {
     return { bg: 'bg-white', text: 'text-[#64748B]', shadow: '' };
   };
 
+  const getSessionData = (s: Student) => {
+    const sessionHistory = s.gameHistory?.filter(h => selectedGames.includes(h.gameId)) || [];
+    const sessionScore = sessionHistory.reduce((a, g) => a + (Number(g.score) || 0), 0);
+    const sessionCorrect = sessionHistory.reduce((a, g) => a + (Number(g.correctAnswers) || 0), 0);
+    const sessionTotalQ = selectedGames.reduce((acc, gId) => acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : 20), 0);
+    const totalTime = sessionHistory.reduce((a, g) => a + (Number(g.timeTaken) || 0), 0) || 0;
+    const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
+    const percentage = totalPossible > 0 ? ((sessionScore / totalPossible) * 100).toFixed(0) + '%' : '0%';
+
+    return {
+      ...s,
+      sessionScore,
+      sessionCorrect,
+      sessionTotalQ,
+      sessionTime: totalTime,
+      sessionPercentage: percentage,
+      sessionHistory
+    };
+  };
+
+  const sessionLeaderboard = leaderboard.map(s => getSessionData(s)).sort((a, b) => {
+    if (b.sessionScore !== a.sessionScore) return b.sessionScore - a.sessionScore;
+    return a.sessionTime - b.sessionTime;
+  });
+
   // ─── PDF Export ──────────────────────────────────────────────────────────────
   const exportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -150,7 +175,7 @@ const Leaderboard = () => {
     doc.text('Leaderboard', margin, 18);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Test PIN: ${currentTest?.pin || '—'}   |   Candidates: ${leaderboard.length}   |   Generated: ${new Date().toLocaleString()}`, margin, 25);
+    doc.text(`Test PIN: ${currentTest?.pin || '—'}   |   Candidates: ${sessionLeaderboard.length}   |   Generated: ${new Date().toLocaleString()}`, margin, 25);
 
     const colHeaders = ['#', 'Name', ...selectedGames.map(g => GAME_LABELS[g] || g), 'Total', '%', 'Total Time'];
     const colWidths: number[] = [10, 50, ...selectedGames.map(() => 28), 24, 24, 28];
@@ -169,17 +194,14 @@ const Leaderboard = () => {
     });
 
     doc.setFont('helvetica', 'normal');
-    leaderboard.forEach((s: Student, i: number) => {
+    sessionLeaderboard.forEach((s, i: number) => {
       const y = tableTop + (i + 1) * rowH;
       if (i % 2 === 0) {
         doc.setFillColor(249, 252, 255);
         doc.rect(margin, y - 6, pageW - 2 * margin, rowH, 'F');
       }
-      const totalTime = s.gameHistory?.reduce((acc: number, g: GameResult) => acc + (g.timeTaken || 0), 0) || 0;
-      const getGame = (id: string) => s.gameHistory?.find((h: GameResult) => h.gameId === id);
+      const getGame = (id: string) => s.sessionHistory?.find((h: any) => h.gameId === id);
       let cx = margin;
-      const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
-      const percentage = totalPossible > 0 ? `${((s.score / totalPossible) * 100).toFixed(0)}%` : '0%';
       const cells = [
         String(i + 1),
         s.username,
@@ -187,9 +209,9 @@ const Leaderboard = () => {
           const g = getGame(gId);
           return g ? String(g.score) : '—';
         }),
-        String(s.score),
-        percentage,
-        formatTime(totalTime),
+        String(s.sessionScore),
+        s.sessionPercentage,
+        formatTime(s.sessionTime),
       ];
       cells.forEach((cell, ci) => {
         doc.setFont('helvetica', ci === 1 ? 'bold' : 'normal');
@@ -204,18 +226,15 @@ const Leaderboard = () => {
   // ─── Excel Export ─────────────────────────────────────────────────────────────
   const exportExcel = () => {
     const headers = ['Rank', 'Name', ...selectedGames.map(g => `${GAME_LABELS[g] || g} Score`), 'Total', '%', 'Total Time (s)'];
-    const rows = leaderboard.map((s: Student, i: number) => {
-      const totalTime = s.gameHistory?.reduce((acc: number, g: GameResult) => acc + (g.timeTaken || 0), 0) || 0;
-      const getGame = (id: string) => s.gameHistory?.find((h: GameResult) => h.gameId === id);
-      const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
-      const percentage = totalPossible > 0 ? `${((s.score / totalPossible) * 100).toFixed(0)}%` : '0%';
+    const rows = sessionLeaderboard.map((s, i: number) => {
+      const getGame = (id: string) => s.sessionHistory?.find((h: any) => h.gameId === id);
       return [
         i + 1,
         s.username,
         ...selectedGames.map(gId => getGame(gId)?.score ?? 0),
-        s.score,
-        percentage,
-        Math.round(totalTime),
+        s.sessionScore,
+        s.sessionPercentage,
+        Math.round(s.sessionTime),
       ];
     });
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -288,7 +307,7 @@ const Leaderboard = () => {
               <h1 className="text-[24px] sm:text-[42px] font-black text-[#0F172A] tracking-tight leading-none mb-1 sm:mb-2">Leaderboard</h1>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-[12px] sm:text-[14px] text-[#64748B] font-bold uppercase tracking-widest">{leaderboard.length} Candidates</p>
+                <p className="text-[12px] sm:text-[14px] text-[#64748B] font-bold uppercase tracking-widest">{sessionLeaderboard.length} Candidates</p>
               </div>
             </div>
           </div>
@@ -300,7 +319,7 @@ const Leaderboard = () => {
           )}
         </div>
 
-        {leaderboard.length === 0 ? (
+        {sessionLeaderboard.length === 0 ? (
           <div className="text-center py-16 sm:py-24 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)]">
             <Medal className="w-12 h-12 sm:w-16 sm:h-16 text-[#CBD5E1] mx-auto mb-4 sm:mb-6 opacity-40" />
             <h3 className="text-lg sm:text-xl font-black text-[#0F172A] mb-2">No results yet</h3>
@@ -311,29 +330,28 @@ const Leaderboard = () => {
             {/* Podium for Top 3 */}
             <div className="flex items-end justify-center gap-2 sm:gap-6 pt-8 pb-4">
               {(() => {
-                const top3 = leaderboard.slice(0, 3);
+                const top3 = sessionLeaderboard.slice(0, 3);
                 const [first, second, third] = top3;
 
-                const getStudentData = (s: any) => {
+                const getPodiumData = (s: any) => {
                   if (!s) return null;
-                  const totalTime = s.gameHistory?.reduce((acc: number, g: any) => acc + (g.timeTaken || 0), 0) || 0;
                   return {
                     name: s.username,
-                    score: s.score,
-                    correctAnswers: s.correctAnswers || 0,
-                    totalQuestions: s.totalQuestions || 0,
-                    timeTaken: totalTime
+                    score: s.sessionScore,
+                    correctAnswers: s.sessionCorrect,
+                    totalQuestions: s.sessionTotalQ,
+                    timeTaken: s.sessionTime
                   };
                 };
 
-                const f = getStudentData(first);
-                const s = getStudentData(second);
-                const t = getStudentData(third);
+                const f = getPodiumData(first);
+                const secondPlace = getPodiumData(second);
+                const t = getPodiumData(third);
 
                 return (
                   <>
                     {/* 2nd place */}
-                    {s ? <PodiumCard rank={2} {...s} /> : <div className="w-18 sm:w-24 px-4" />}
+                    {secondPlace ? <PodiumCard rank={2} {...secondPlace} /> : <div className="w-18 sm:w-24 px-4" />}
 
                     {/* 1st place */}
                     {f ? <PodiumCard rank={1} {...f} large /> : null}
@@ -361,10 +379,8 @@ const Leaderboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-sky-50">
-                    {leaderboard.map((s, idx) => {
+                    {sessionLeaderboard.map((s, idx) => {
                       const isMe = currentStudent?.username === s.username;
-                      const totalTime = s.gameHistory?.reduce((acc, g) => acc + (g.timeTaken || 0), 0) || 0;
-                      const getGame = (id: string) => s.gameHistory?.find(h => h.gameId === id);
                       const rs = rankStyle(idx);
                       const trClass = isMe ? 'bg-sky-100' : idx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
                       return (
@@ -376,11 +392,11 @@ const Leaderboard = () => {
                             <span className="font-black text-[#0F172A] text-[14px] block whitespace-nowrap">{s.username}</span>
                             <div className="flex items-center gap-2 mt-0.5">
                               {isMe && <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">You</span>}
-                              <span className="text-[11px] text-[#94A3B8] font-bold">{s.gamesPlayed || 0} Games</span>
+                              <span className="text-[11px] text-[#94A3B8] font-bold">{s.sessionHistory.length} Games</span>
                             </div>
                           </td>
                           {selectedGames.map(gId => {
-                            const gd = getGame(gId);
+                            const gd = s.sessionHistory.find((h: any) => h.gameId === gId);
                             return (
                               <td key={gId} className="text-center px-3 py-4">
                                 {gd ? (
@@ -396,21 +412,17 @@ const Leaderboard = () => {
                           })}
                           <td className="text-right px-3 sm:px-4 py-4">
                             <span className="font-mono font-black text-[18px] sm:text-[20px] text-foreground tabular-nums block leading-none">
-                              {s.score}
+                              {s.sessionScore}
                             </span>
                           </td>
                           <td className="text-right px-3 sm:px-4 py-4">
                             <span className="font-mono font-black text-[18px] sm:text-[20px] text-sky-500 tabular-nums block leading-none" style={{ textShadow: '0 0 20px rgba(56,189,248,0.1)' }}>
-                              {(() => {
-                                const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
-                                if (totalPossible === 0) return '0%';
-                                return `${((s.score / totalPossible) * 100).toFixed(0)}%`;
-                              })()}
+                              {s.sessionPercentage}
                             </span>
                           </td>
                           <td className="text-right px-3 sm:px-4 py-4">
                             <div className="flex items-center gap-1.5 justify-end">
-                              <span className="font-mono text-[13px] sm:text-[14px] font-black text-[#0F172A]">{totalTime.toFixed(1)}s</span>
+                              <span className="font-mono text-[13px] sm:text-[14px] font-black text-[#0F172A]">{s.sessionTime.toFixed(1)}s</span>
                             </div>
                           </td>
                         </tr>
