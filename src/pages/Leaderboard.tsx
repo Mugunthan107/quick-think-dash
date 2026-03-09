@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGame } from '@/context/GameContext';
+import { useGame, Student, GameResult } from '@/context/GameContext';
 import { Trophy, Medal, Clock, ChevronLeft, Download, X, FileText, FileSpreadsheet, Crown, User } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 import jsPDF from 'jspdf';
@@ -21,15 +21,15 @@ const GAME_LABELS: Record<string, string> = {
 
 const GAME_MAX_SCORES: Record<string, number> = {
   bubble: 600,
-  numlink: 250,
+  numlink: 200,
   motion: 100,
   aptirush: 200,
-  crossmath: 350,
-  numberseries: 20,
-  mirror: 20,
-  waterimage: 20,
-  numpuzzle: 20,
-  colorsort: 20,
+  crossmath: 200,
+  numberseries: 200,
+  mirror: 200,
+  waterimage: 200,
+  numpuzzle: 200,
+  colorsort: 200,
 };
 
 const formatTime = (s: number) => {
@@ -66,7 +66,17 @@ const MEDAL = {
 } as const;
 
 // ─── Podium Card Component ───────────────────────────────
-const PodiumCard = ({ rank, name, score, correctAnswers, totalQuestions, timeTaken, large }: any) => {
+interface PodiumProps {
+  rank: number;
+  name: string;
+  score: number;
+  correctAnswers: number;
+  totalQuestions: number;
+  timeTaken: number;
+  large?: boolean;
+}
+
+const PodiumCard = ({ rank, name, score, correctAnswers, totalQuestions, timeTaken, large }: PodiumProps) => {
   const m = MEDAL[rank as 1 | 2 | 3];
   return (
     <div className={`flex flex-col items-center ${large ? '-mt-4 sm:-mt-6' : ''}`}>
@@ -159,14 +169,14 @@ const Leaderboard = () => {
     });
 
     doc.setFont('helvetica', 'normal');
-    leaderboard.forEach((s, i) => {
+    leaderboard.forEach((s: Student, i: number) => {
       const y = tableTop + (i + 1) * rowH;
       if (i % 2 === 0) {
         doc.setFillColor(249, 252, 255);
         doc.rect(margin, y - 6, pageW - 2 * margin, rowH, 'F');
       }
-      const totalTime = s.gameHistory?.reduce((acc, g) => acc + (g.timeTaken || 0), 0) || 0;
-      const getGame = (id: string) => s.gameHistory?.find(h => h.gameId === id);
+      const totalTime = s.gameHistory?.reduce((acc: number, g: GameResult) => acc + (g.timeTaken || 0), 0) || 0;
+      const getGame = (id: string) => s.gameHistory?.find((h: GameResult) => h.gameId === id);
       let cx = margin;
       const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
       const percentage = totalPossible > 0 ? `${((s.score / totalPossible) * 100).toFixed(0)}%` : '0%';
@@ -194,9 +204,9 @@ const Leaderboard = () => {
   // ─── Excel Export ─────────────────────────────────────────────────────────────
   const exportExcel = () => {
     const headers = ['Rank', 'Name', ...selectedGames.map(g => `${GAME_LABELS[g] || g} Score`), 'Total', '%', 'Total Time (s)'];
-    const rows = leaderboard.map((s, i) => {
-      const totalTime = s.gameHistory?.reduce((acc, g) => acc + (g.timeTaken || 0), 0) || 0;
-      const getGame = (id: string) => s.gameHistory?.find(h => h.gameId === id);
+    const rows = leaderboard.map((s: Student, i: number) => {
+      const totalTime = s.gameHistory?.reduce((acc: number, g: GameResult) => acc + (g.timeTaken || 0), 0) || 0;
+      const getGame = (id: string) => s.gameHistory?.find((h: GameResult) => h.gameId === id);
       const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
       const percentage = totalPossible > 0 ? `${((s.score / totalPossible) * 100).toFixed(0)}%` : '0%';
       return [
@@ -339,9 +349,9 @@ const Leaderboard = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" style={{ minWidth: `${400 + selectedGames.length * 120}px` }}>
                   <thead>
-                    <tr className="bg-sky-50/60 border-b border-sky-100">
-                      <th className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-center w-14 sticky left-0 bg-sky-50/60 z-10">#</th>
-                      <th className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-left min-w-[140px] sticky left-14 bg-sky-50/60 z-10">Name</th>
+                    <tr className="bg-sky-50 border-b border-sky-100">
+                      <th className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-center min-w-[56px] sticky left-0 bg-sky-50 z-20">#</th>
+                      <th className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-left min-w-[140px] sticky left-[56px] bg-sky-50 z-20 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] border-r border-sky-100/60">Name</th>
                       {selectedGames.map(gId => (
                         <th key={gId} className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest px-3 py-4 text-center min-w-[120px]">{GAME_LABELS[gId] || gId}</th>
                       ))}
@@ -356,12 +366,13 @@ const Leaderboard = () => {
                       const totalTime = s.gameHistory?.reduce((acc, g) => acc + (g.timeTaken || 0), 0) || 0;
                       const getGame = (id: string) => s.gameHistory?.find(h => h.gameId === id);
                       const rs = rankStyle(idx);
+                      const trClass = isMe ? 'bg-sky-100' : idx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
                       return (
-                        <tr key={s.username} className={`transition-all duration-300 hover:bg-sky-50/40 ${isMe ? 'bg-sky-50/30' : idx % 2 === 0 ? 'bg-white' : 'bg-sky-50/10'}`}>
-                          <td className="text-center px-3 py-4 sticky left-0 z-10" style={{ background: 'inherit' }}>
+                        <tr key={s.username} className={`group transition-all duration-300 ${trClass}`}>
+                          <td className={`text-center px-3 py-4 sticky left-0 z-20 ${trClass} group-hover:bg-sky-50 transition-colors min-w-[56px]`}>
                             <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-lg mx-auto ${rs.bg} ${rs.text} ${rs.shadow} ${idx > 2 ? 'border border-[#E2E8F0]' : ''}`}>{idx + 1}</span>
                           </td>
-                          <td className="px-3 py-4 sticky left-14 z-10" style={{ background: 'inherit' }}>
+                          <td className={`px-3 py-4 sticky left-[56px] z-20 ${trClass} group-hover:bg-sky-50 transition-colors border-r border-sky-100/60 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]`}>
                             <span className="font-black text-[#0F172A] text-[14px] block whitespace-nowrap">{s.username}</span>
                             <div className="flex items-center gap-2 mt-0.5">
                               {isMe && <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">You</span>}

@@ -37,10 +37,10 @@ const GAME_LABELS: Record<string, string> = {
 
 const GAME_MAX_SCORES: Record<string, number> = {
   bubble: 600,
-  numlink: 250,
+  numlink: 200,
   motion: 100,
   aptirush: 200,
-  crossmath: 350,
+  crossmath: 200,
   numberseries: 200,
   mirror: 200,
   waterimage: 200,
@@ -714,9 +714,9 @@ const AshuDashboard = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse" style={{ minWidth: `${400 + selectedGames.length * 100}px` }}>
                   <thead>
-                    <tr className="bg-slate-50/50 border-b border-border">
-                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center w-12 sticky left-0 bg-slate-50 z-10">#</th>
-                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-left min-w-[140px] sticky left-12 bg-slate-50 z-10">Name</th>
+                    <tr className="bg-slate-50 border-b border-border">
+                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center min-w-[56px] sticky left-0 bg-slate-50 z-20">#</th>
+                      <th className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-left min-w-[140px] sticky left-[56px] bg-slate-50 z-20 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)] border-r border-border/50">Name</th>
                       {selectedGames.map(gId => (
                         <th key={gId} className="px-4 py-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center">{GAME_LABELS[gId] || gId}</th>
                       ))}
@@ -729,8 +729,8 @@ const AshuDashboard = () => {
                     {lb.map((s, idx) => {
                       const totalTime = s.gameHistory?.reduce((a, g) => a + g.timeTaken, 0) || 0;
                       return (
-                        <tr key={s.username} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-4 py-3 text-center sticky left-0 bg-inherit z-10">
+                        <tr key={s.username} className="group transition-colors">
+                          <td className="px-4 py-3 text-center sticky left-0 z-20 bg-white group-hover:bg-slate-50 transition-colors">
                             <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black
                               ${idx === 0 ? 'bg-amber-100 text-amber-600 border border-amber-200 shadow-sm' :
                                 idx === 1 ? 'bg-slate-100 text-slate-600 border border-slate-200 shadow-sm' :
@@ -739,7 +739,7 @@ const AshuDashboard = () => {
                               {idx + 1}
                             </span>
                           </td>
-                          <td className="px-4 py-3 sticky left-12 bg-inherit z-10">
+                          <td className="px-4 py-3 sticky left-[56px] z-20 bg-white group-hover:bg-slate-50 transition-colors border-r border-border/50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
                             <span className="font-bold text-foreground block truncate max-w-[120px]">{s.username}</span>
                             <span className="text-[10px] text-muted-foreground font-semibold">{formatTime(totalTime)}</span>
                           </td>
@@ -824,9 +824,9 @@ const AshuDashboard = () => {
                   ) : (
                     <table className="w-full text-sm border-collapse" style={{ minWidth: `${500 + selectedGames.length * 100}px` }}>
                       <thead>
-                        <tr className="bg-secondary/40 border-b border-border sticky top-0 z-20">
-                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center w-16 sticky left-0 bg-secondary z-30">Rank</th>
-                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-left min-w-[180px] sticky left-16 bg-secondary z-30">Student Name</th>
+                        <tr className="bg-secondary border-b border-border sticky top-0 z-20">
+                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center min-w-[80px] sticky left-0 bg-secondary z-30">Rank</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-left min-w-[180px] sticky left-[80px] bg-secondary z-30 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] border-r border-border/50">Student Name</th>
                           {selectedGames.map(gId => (
                             <th key={gId} className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-wider text-center">{GAME_LABELS[gId] || gId}</th>
                           ))}
@@ -837,9 +837,11 @@ const AshuDashboard = () => {
                       <tbody className="divide-y divide-border">
                         {displayList.map((s, idx) => {
                           const totalTime = s.gameHistory?.reduce((a, g) => a + (g.timeTaken || 0), 0) || 0;
+                          const trClass = idx < 3 ? 'bg-amber-50' : 'bg-white';
+                          const hoverClass = idx < 3 ? 'group-hover:bg-amber-100/50' : 'group-hover:bg-slate-50';
                           return (
-                            <tr key={s.username} className={`hover:bg-slate-50 transition-colors group ${idx < 3 ? 'bg-amber-50/10' : ''}`}>
-                              <td className="px-6 py-5 text-center sticky left-0 bg-inherit z-10">
+                            <tr key={s.username} className={`group transition-colors ${trClass}`}>
+                              <td className={`px-6 py-5 text-center sticky left-0 z-20 ${trClass} ${hoverClass} transition-colors`}>
                                 <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-sm mx-auto
                                   ${idx === 0 ? 'bg-amber-400 text-white' :
                                     idx === 1 ? 'bg-slate-400 text-white' :
@@ -848,7 +850,7 @@ const AshuDashboard = () => {
                                   {idx + 1}
                                 </span>
                               </td>
-                              <td className="px-6 py-5 sticky left-16 bg-inherit z-10 border-r border-border/50">
+                              <td className={`px-6 py-5 sticky left-[80px] z-20 ${trClass} ${hoverClass} transition-colors border-r border-border/60 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]`}>
                                 <span className="font-black text-foreground text-[15px]">{s.username}</span>
                                 <div className="flex items-center gap-2 mt-1">
                                   <Clock className="w-3 h-3 text-muted-foreground" />

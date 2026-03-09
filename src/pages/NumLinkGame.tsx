@@ -59,7 +59,8 @@ function getMarksForRound(round: number): number {
 function generatePuzzle(gridSize: number, maxNumber: number): Cell[][] {
   let path = generateHamiltonianPath(gridSize);
 
-  if (!path || path.length < maxNumber) {
+  // Ensure path is Hamiltonian (covers all cells)
+  if (!path || path.length < gridSize * gridSize) {
     path = generateSnakePuzzlePath(gridSize);
   }
 
@@ -367,23 +368,22 @@ const NumLinkGame = () => {
 
       const level = LEVELS[currentLevel];
       const allFilled = newGrid.every(r => r.every(c => c.filled || c.inPath));
-      if (newExpected > level.maxNumber && allFilled) {
+      
+      // Support finishing as long as all numbers are connected. 
+      // Filling everything is encouraged by Hamiltonian generation but we add a safety check.
+      if (newExpected > level.maxNumber) {
         isDrawingRef.current = false;
         setIsDrawing(false);
         setRoundComplete(true);
 
         const marks = getMarksForRound(globalRound + 1);
-        setScore(prev => {
-          const ns = prev + marks;
-          scoreRef.current = ns;
-          return ns;
-        });
+        const newScore = score + marks;
+        setScore(newScore);
+        scoreRef.current = newScore;
+        
         const newCorrect = correctCount + 1;
-        setCorrectCount(prev => {
-          const nc = prev + 1;
-          correctCountRef.current = nc;
-          return nc;
-        });
+        setCorrectCount(newCorrect);
+        correctCountRef.current = newCorrect;
         if (currentTest?.showResults !== false) {
           toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '🎉' });
         }
@@ -437,17 +437,17 @@ const NumLinkGame = () => {
       setSubmitted(true);
       submitGameResult(currentStudent.username, {
         gameId: 'numlink',
-        score: scoreRef.current,
+        score: score,
         timeTaken: elapsed,
-        correctAnswers: correctCountRef.current,
-        totalQuestions: 20, // TOTAL_ROUNDS
+        correctAnswers: correctCount,
+        totalQuestions: TOTAL_ROUNDS,
         completedAt: Date.now()
       }).then(() => {
         addCompletedGame('numlink');
         confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
       });
     }
-  }, [finished, currentStudent, submitted]);
+  }, [finished, currentStudent, submitted, elapsed, score, correctCount, submitGameResult, addCompletedGame, TOTAL_ROUNDS]);
 
   const handleNextRound = useCallback(() => {
     if (globalRound + 1 >= TOTAL_ROUNDS) {
