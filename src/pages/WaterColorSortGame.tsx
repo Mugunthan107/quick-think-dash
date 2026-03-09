@@ -105,6 +105,7 @@ export default function WaterColorSortGame() {
 
   const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
+  const [correct, setCorrect] = useState(0);
   const [tubes, setTubes] = useState<Tube[]>(levels[0].tubes.map(t => ({ colors: [...t.colors] })));
   const [selectedTube, setSelectedTube] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(getTimeLimit(0));
@@ -148,7 +149,10 @@ export default function WaterColorSortGame() {
     if (feedback || isTransitioning.current) return;
     isTransitioning.current = true;
     const newScore = solved ? score + 10 : score;
+    const newCorrect = solved ? correct + 1 : correct;
     setScore(newScore);
+    setCorrect(newCorrect);
+
     if (solved) {
       setFeedback('correct');
       if (currentTest?.showResults !== false) {
@@ -164,7 +168,7 @@ export default function WaterColorSortGame() {
     setTimeout(() => {
       isTransitioning.current = false;
       if (level + 1 >= TOTAL_LEVELS) {
-        finishGame(newScore, solved ? score + 1 : score, level + 1);
+        finishGame(newScore, newCorrect, level + 1);
       } else {
         const nextLevel = level + 1;
         setLevel(nextLevel);
@@ -319,7 +323,7 @@ export default function WaterColorSortGame() {
                   <div className="w-px h-14 bg-sky-100" />
                   <div className="text-center">
                     <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Correct</span>
-                    <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? `${level}/${TOTAL_LEVELS}` : '---'}</span>
+                    <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? `${correct}/${TOTAL_LEVELS}` : '---'}</span>
                   </div>
                 </div>
               </div>
