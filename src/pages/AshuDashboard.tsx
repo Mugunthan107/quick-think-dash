@@ -295,7 +295,11 @@ const AshuDashboard = () => {
     const sessionHistory = s.gameHistory?.filter(h => selectedGamesList.includes(h.gameId)) || [];
     const sessionScore = sessionHistory.reduce((a, g) => a + (g.score || 0), 0);
     const sessionCorrect = sessionHistory.reduce((a, g) => a + (g.correctAnswers || 0), 0);
-    const sessionTotalQ = selectedGamesList.reduce((acc, gId) => acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : 20), 0);
+    const sessionTotalQ = selectedGamesList.reduce((acc, gId) => {
+      // Use the FIXED total levels for each game as requested by the user
+      // Even if stopped half-way, the total should reflect the game's full length
+      return acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : 20);
+    }, 0);
     const totalTime = sessionHistory.reduce((a, g) => a + (g.timeTaken || 0), 0) || 0;
     const totalPossible = selectedGamesList.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
     const percentage = totalPossible > 0 ? ((sessionScore / totalPossible) * 100).toFixed(0) + '%' : '0%';

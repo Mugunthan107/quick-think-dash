@@ -338,7 +338,7 @@ export default function WaterColorSortGame() {
           </div>
         ) : (
           <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full pt-20 pb-12">
-            <div className="w-full max-w-[620px] animate-fade-in relative flex flex-col items-center">
+            <div className="w-full max-w-[90vw] animate-fade-in relative flex flex-col items-center">
               <div className="w-full mb-8 flex flex-col items-center text-center">
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A] uppercase leading-none">
                   Sort the colors
@@ -348,18 +348,7 @@ export default function WaterColorSortGame() {
                 </p>
               </div>
 
-              {/* Floating circular timer */}
-              <div className="absolute -left-10 sm:-left-20 top-20 flex items-center justify-center w-14 h-14 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-sky-100/50 z-20">
-                <svg className="w-full h-full -rotate-90 filter drop-shadow-sm" viewBox="0 0 56 56">
-                  <circle cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-sky-50" />
-                  <circle
-                    cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="3.5" fill="transparent"
-                    strokeDasharray={138} strokeDashoffset={138 - (138 * timeLeft) / getTimeLimit(level)}
-                    strokeLinecap="round" className="text-red-500 transition-all duration-1000 linear"
-                  />
-                </svg>
-                <span className="absolute font-black text-[18px] text-red-500 font-mono tracking-tighter translate-y-[1px]">{timeLeft}</span>
-              </div>
+
 
 
               {/* Hint bar */}
@@ -375,7 +364,19 @@ export default function WaterColorSortGame() {
                 </div>
               </div>
 
-              <div className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)] border border-sky-100 transition-all duration-300 overflow-hidden relative w-full flex flex-col min-h-[420px]">
+              <div className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)] border border-sky-100 transition-all duration-300 relative w-auto min-w-[320px] lg:min-w-[620px] flex flex-col min-h-[420px]">
+                {/* Floating circular timer */}
+                <div className="absolute -left-6 -top-6 flex items-center justify-center w-14 h-14 bg-white backdrop-blur-md rounded-full shadow-xl border border-sky-100 z-50">
+                  <svg className="w-full h-full -rotate-90 filter drop-shadow-sm" viewBox="0 0 56 56">
+                    <circle cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-sky-50" />
+                    <circle
+                      cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="3.5" fill="transparent"
+                      strokeDasharray={138} strokeDashoffset={138 - (138 * timeLeft) / getTimeLimit(level)}
+                      strokeLinecap="round" className="text-red-500 transition-all duration-1000 linear"
+                    />
+                  </svg>
+                  <span className="absolute font-black text-[18px] text-red-500 font-mono tracking-tighter translate-y-[1px]">{timeLeft}</span>
+                </div>
                 {feedback && (
                   <div className={`absolute inset-x-0 top-0 h-2 ${feedback === 'correct' ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse z-40`} />
                 )}
@@ -418,7 +419,7 @@ export default function WaterColorSortGame() {
 
                 {/* Tubes Area */}
                 <div className="flex-1 p-6 flex flex-col items-center justify-center gap-6">
-                  <div className="flex items-end gap-4 sm:gap-5 flex-wrap justify-center">
+                  <div className="flex items-end gap-3 sm:gap-4 justify-center">
                     {tubes.map((tube, idx) => {
                       const destState = getDestState(idx);
                       return (

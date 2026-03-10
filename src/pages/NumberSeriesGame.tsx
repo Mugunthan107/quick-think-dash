@@ -107,6 +107,7 @@ export default function NumberSeriesGame() {
   const animFrame = useRef<number>();
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
+  const isSubmitting = useRef(false);
 
   useEffect(() => {
     if (!currentStudent || !currentTest) { navigate('/'); return; }
@@ -151,10 +152,12 @@ export default function NumberSeriesGame() {
     } else {
       setLevel(l => l + 1);
     }
+    isSubmitting.current = false;
   }, [level, score, correct, feedback, finishGame]);
 
   const handleAnswer = useCallback((idx: number) => {
-    if (caught || gameOver) return;
+    if (caught || gameOver || isSubmitting.current) return;
+    isSubmitting.current = true;
     setCaught(true);
 
     if (idx === -1) {
@@ -179,7 +182,8 @@ export default function NumberSeriesGame() {
   }, [caught, gameOver, fallingOptions, questions, level, currentTest, advanceLevel]);
 
   const handleCatch = useCallback((idx: number) => {
-    if (caught || gameOver) return;
+    if (caught || gameOver || isSubmitting.current) return;
+    isSubmitting.current = true;
     setCaught(true);
     const isCorrect = fallingOptions[idx] === questions[level].answer;
 

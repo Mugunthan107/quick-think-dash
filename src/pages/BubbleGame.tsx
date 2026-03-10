@@ -148,6 +148,8 @@ function BubbleGame() {
     }
   }, [currentTest?.status, navigate]);
 
+  const isSubmitting = useRef(false);
+
   const startRound = useCallback(
     (lvl: number) => {
       const items = Array.from({ length: 3 }, () => createExpression(lvl));
@@ -158,6 +160,7 @@ function BubbleGame() {
       const { seconds } = getRoundConfig(lvl);
       setRoundTimeLeft(seconds);
       setGameActive(true);
+      isSubmitting.current = false;
     },
     [],
   );
@@ -169,6 +172,7 @@ function BubbleGame() {
   const handleFinish = useCallback(() => {
     setFinished(true);
     setGameActive(false);
+    isSubmitting.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
     if (currentStudent && currentTest) {
       submitGameResult(currentStudent.username, {
@@ -196,6 +200,8 @@ function BubbleGame() {
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
   const failRound = useCallback(() => {
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
     setGameActive(false);
     if (timerRef.current) clearInterval(timerRef.current);
     setSelectionOrder([]);
@@ -216,7 +222,7 @@ function BubbleGame() {
   }, [roundTimeLeft, gameActive, failRound]);
 
   const handleBubbleClick = (bubble: BubbleData) => {
-    if (!gameActive) return;
+    if (!gameActive || isSubmitting.current) return;
 
     // Toggle selection when clicking the same bubble again
     let newOrder: string[];
@@ -262,6 +268,7 @@ function BubbleGame() {
         }
         // Deduct points removed as requested
       }
+      isSubmitting.current = true;
       setGameActive(false);
       if (timerRef.current) clearInterval(timerRef.current);
 
@@ -302,7 +309,7 @@ function BubbleGame() {
                   <div className="w-px h-14 bg-sky-100" />
                   <div className="text-center">
                     <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest block mb-1.5">Correct</span>
-                    <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? `${level}/${TOTAL_LEVELS}` : '---'}</span>
+                    <span className="font-mono font-black text-3xl sm:text-4xl text-emerald-500">{currentTest?.showResults !== false ? `${totalCorrect}/${TOTAL_LEVELS}` : '---'}</span>
                   </div>
                 </div>
               </div>

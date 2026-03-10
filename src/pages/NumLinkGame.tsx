@@ -235,6 +235,7 @@ const NumLinkGame = () => {
   const expectedNumberRef = useRef(1);
   const scoreRef = useRef(0);
   const correctCountRef = useRef(0);
+  const isSubmitting = useRef(false);
 
   useEffect(() => {
     if (!currentStudent) {
@@ -372,6 +373,12 @@ const NumLinkGame = () => {
       // Support finishing as long as all numbers are connected. 
       // Filling everything is encouraged by Hamiltonian generation but we add a safety check.
       if (newExpected > level.maxNumber) {
+        if (!allFilled) {
+          toast.error("Connect all numbers AND fill the entire grid!", { id: 'fill-grid-warn' });
+          return;
+        }
+        if (isSubmitting.current) return;
+        isSubmitting.current = true;
         isDrawingRef.current = false;
         setIsDrawing(false);
         setRoundComplete(true);
@@ -462,6 +469,7 @@ const NumLinkGame = () => {
     } else {
       setCurrentRound(prev => prev + 1);
     }
+    isSubmitting.current = false;
   }, [globalRound, currentRound, currentStudent, elapsed, score, correctCount, submitGameResult, addCompletedGame, TOTAL_ROUNDS, ROUNDS_PER_LEVEL]);
 
   useEffect(() => {

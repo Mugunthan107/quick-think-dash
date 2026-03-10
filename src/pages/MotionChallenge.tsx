@@ -354,22 +354,29 @@ const MotionChallenge = () => {
         setBallPos(nextLevel.ballPos);
         setMoves(0);
         setRoundTime(30); // Reset round timer
+        isSubmitting.current = false;
         setIsGenerating(false);
       }, 1500); // Slightly longer for the fun messages to read
       return () => clearTimeout(t);
     }
   }, [levelIdx, finished]);
 
+  const isSubmitting = useRef(false);
+
   /* ── Advance level ── */
   const advanceLevel = useCallback((won: boolean, movesUsed: number) => {
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
 
-    let roundPoints = 0;
+    const newScore = won ? score + 10 : score;
+    const newCorrectCount = won ? correctCount + 1 : correctCount;
+
     if (won) {
       setCorrectCount(c => c + 1);
-      roundPoints = 10;
-      setScore(s => s + roundPoints);
-      if (won && currentTest?.showResults !== false) {
+      setScore(s => s + 10);
+      setLevelFlash('success');
+      if (currentTest?.showResults !== false) {
         toast.success(SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)], { icon: '⚽' });
       }
     } else {
@@ -379,7 +386,6 @@ const MotionChallenge = () => {
       }
     }
 
-    setLevelFlash(won ? 'success' : null);
     setTransitioning(true);
     setSelectedBlockId(null);
 
@@ -388,10 +394,7 @@ const MotionChallenge = () => {
       const next = levelIdx + 1;
 
       if (currentStudent) {
-        setScore(currentScore => {
-          updateStudentProgress(currentStudent.username, currentScore, next, won ? correctCount + 1 : correctCount, TOTAL_LEVELS, 'motion');
-          return currentScore;
-        });
+        updateStudentProgress(currentStudent.username, newScore, next, newCorrectCount, TOTAL_LEVELS, 'motion');
       }
 
       if (next >= TOTAL_LEVELS) {
@@ -402,7 +405,7 @@ const MotionChallenge = () => {
         setTransitioning(false);
       }
     }, 700);
-  }, [levelIdx, correctCount, currentStudent, updateStudentProgress]);
+  }, [levelIdx, score, correctCount, currentTest, currentStudent, updateStudentProgress]);
 
   /* ── Timer (Total Elapsed) ── */
   useEffect(() => {
@@ -486,6 +489,7 @@ const MotionChallenge = () => {
   }, [transitioning, finished, isGenerating, ballPos, occ]);
 
   const handleArrow = useCallback((dir: 'up' | 'down' | 'left' | 'right') => {
+    if (isSubmitting.current) return;
     if (selectedBlockId === '__ball__') handleBallArrow(dir);
     else if (selectedBlockId) handleBlockArrow(dir);
   }, [selectedBlockId, handleBallArrow, handleBlockArrow]);

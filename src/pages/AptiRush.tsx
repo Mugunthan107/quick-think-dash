@@ -177,9 +177,12 @@ const AptiRush = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [currentQ, finished, showResult]);
 
+  const isSubmitting = useRef(false);
+
   const advanceQuestion = useCallback(() => {
     setShowResult(null);
     setSelected(null);
+    isSubmitting.current = false;
     if (currentQ + 1 >= TOTAL_LEVELS) {
       handleFinish();
     } else {
@@ -188,7 +191,8 @@ const AptiRush = () => {
   }, [currentQ]);
 
   const handleAnswer = (idx: number) => {
-    if (showResult || finished) return;
+    if (showResult || finished || isSubmitting.current) return;
+    isSubmitting.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
     setSelected(idx);
 

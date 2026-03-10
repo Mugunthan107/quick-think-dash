@@ -100,6 +100,7 @@ export default function NumberPuzzleGame() {
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [selected, setSelected] = useState(-1);
   const startTime = useRef(Date.now());
+  const isSubmitting = useRef(false);
 
   useEffect(() => {
     if (!currentStudent || !currentTest) { navigate('/'); return; }
@@ -119,7 +120,8 @@ export default function NumberPuzzleGame() {
   }, [level, gameOver]);
 
   const handleSelect = useCallback((idx: number) => {
-    if (feedback || gameOver) return;
+    if (feedback || gameOver || isSubmitting.current) return;
+    isSubmitting.current = true;
     setSelected(idx);
     const q = questions[level];
     const isCorrect = idx >= 0 && q.options[idx] === q.answer;
@@ -138,6 +140,7 @@ export default function NumberPuzzleGame() {
     setTimeout(() => {
       setFeedback(null);
       setSelected(-1);
+      isSubmitting.current = false;
       if (level + 1 >= TOTAL_LEVELS) {
         finishGame(newScore, newCorrect, level + 1);
       } else {

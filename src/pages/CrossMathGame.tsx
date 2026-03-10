@@ -227,6 +227,7 @@ const CrossMathGame = () => {
   const scoreRef = useRef(score);
   const correctCountRef = useRef(correctCount);
   const elapsedRef = useRef(elapsed);
+  const isSubmitting = useRef(false);
 
   useEffect(() => { scoreRef.current = score; }, [score]);
   useEffect(() => { correctCountRef.current = correctCount; }, [correctCount]);
@@ -368,6 +369,8 @@ const CrossMathGame = () => {
   }, [getCurrentAnswers, puzzle]);
 
   const handleSubmit = useCallback(() => {
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
     const isCorrect = checkAnswer();
 
     let newScore = score;
@@ -397,6 +400,8 @@ const CrossMathGame = () => {
     setSelectedOption(null);
     setTimeout(() => {
       setFeedback(null);
+      setSelectedOption(null);
+      isSubmitting.current = false;
       if (currentQ + 1 >= TOTAL_QUESTIONS) {
         handleFinish();
       } else {
