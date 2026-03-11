@@ -42,10 +42,10 @@ interface LevelConfig {
 }
 
 const LEVELS: LevelConfig[] = [
-  { gridSize: 5, maxNumber: 8, label: 'Level 1', timeLimit: 10 },
-  { gridSize: 6, maxNumber: 9, label: 'Level 2', timeLimit: 20 },
-  { gridSize: 7, maxNumber: 10, label: 'Level 3', timeLimit: 25 },
-  { gridSize: 8, maxNumber: 12, label: 'Level 4', timeLimit: 30 },
+  { gridSize: 5, maxNumber: 10, label: 'Level 1', timeLimit: 15 },
+  { gridSize: 6, maxNumber: 12, label: 'Level 2', timeLimit: 25 },
+  { gridSize: 7, maxNumber: 14, label: 'Level 3', timeLimit: 30 },
+  { gridSize: 8, maxNumber: 16, label: 'Level 4', timeLimit: 40 },
 ];
 
 const ROUNDS_PER_LEVEL = 5;
@@ -57,20 +57,44 @@ function getMarksForRound(round: number): number {
 
 // ——— Puzzle Generator ————————————————————————————————————————————————————————————
 function generatePuzzle(gridSize: number, maxNumber: number): Cell[][] {
-  let path = generateHamiltonianPath(gridSize);
+  let path: { row: number; col: number }[] | null = null;
+  
+  // Try up to 5 times to get a decent Hamiltonian path
+  for (let attempt = 0; attempt < 5; attempt++) {
+    path = generateHamiltonianPath(gridSize);
+    if (path && path.length === gridSize * gridSize) break;
+  }
 
-  // Ensure path is Hamiltonian (covers all cells)
-  if (!path || path.length < gridSize * gridSize) {
+  // Ensure path is long enough, fallback to snake if needed
+  if (!path || path.length < Math.max(maxNumber, gridSize * gridSize * 0.5)) {
     path = generateSnakePuzzlePath(gridSize);
   }
 
   const numberPositions = new Map<string, number>();
-
-  for (let i = 0; i < maxNumber; i++) {
-    const pathIndex = Math.round((i * (path.length - 1)) / (maxNumber - 1));
-    const pos = path[pathIndex];
-    numberPositions.set(`${pos.row}-${pos.col}`, i + 1);
+  
+  // Guarantee unique indices for numbers
+  // Always include start (0) and end (path.length - 1)
+  const availableIndices = Array.from({ length: path.length - 2 }, (_, i) => i + 1);
+  // Shuffle available indices to pick random checkpoints
+  for (let i = availableIndices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
   }
+  
+  const selectedIndices = [0];
+  const numCheckpoints = Math.min(maxNumber - 2, availableIndices.length);
+  for (let i = 0; i < numCheckpoints; i++) {
+    selectedIndices.push(availableIndices[i]);
+  }
+  selectedIndices.push(path.length - 1);
+  selectedIndices.sort((a, b) => a - b);
+
+  // Map the selected indices to numbers 1 to maxNumber
+  // If we have fewer indices than maxNumber, we just use what we have
+  selectedIndices.forEach((pathIndex, i) => {
+    const pos = path![pathIndex];
+    numberPositions.set(`${pos.row}-${pos.col}`, i + 1);
+  });
 
   const grid: Cell[][] = [];
   for (let r = 0; r < gridSize; r++) {
@@ -124,7 +148,7 @@ function generateHamiltonianPath(size: number): { row: number; col: number }[] |
       bestPath = [...p];
     }
     // Limit strictly so we don't freeze, but warnsdorff makes it very efficient
-    if (iters.count++ > 4000) return false;
+    if (iters.count++ > 6000) return false;
     if (p.length === t) return true;
 
     const current = p[p.length - 1];
@@ -181,20 +205,32 @@ function generateHamiltonianPath(size: number): { row: number; col: number }[] |
 
 function generateSnakePuzzlePath(gridSize: number): { row: number; col: number }[] {
   const path: { row: number; col: number }[] = [];
-  const startSide = Math.random() > 0.5;
+  const startCorner = Math.floor(Math.random() * 4); // 0: TL, 1: TR, 2: BL, 3: BR
   const horizontal = Math.random() > 0.5;
 
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
-      let actualR = startSide ? r : gridSize - 1 - r;
-      let actualC = horizontal
-        ? (r % 2 === 0 ? c : gridSize - 1 - c)
-        : (c % 2 === 0 ? r : gridSize - 1 - r);
+      let actualR = r;
+      let actualC = (r % 2 === 0 ? c : gridSize - 1 - c);
+      
+      // Rotate/Flip based on start corner
+      let finalR = actualR;
+      let finalC = actualC;
+      
+      if (!horizontal) {
+        [finalR, finalC] = [actualC, actualR];
+      }
+      
+      if (startCorner === 1) { // Top Right
+        finalC = gridSize - 1 - finalC;
+      } else if (startCorner === 2) { // Bottom Left
+        finalR = gridSize - 1 - finalR;
+      } else if (startCorner === 3) { // Bottom Right
+        finalR = gridSize - 1 - finalR;
+        finalC = gridSize - 1 - finalC;
+      }
 
-      const row = horizontal ? actualR : actualC;
-      const col = horizontal ? actualC : actualR;
-
-      path.push({ row, col });
+      path.push({ row: finalR, col: finalC });
     }
   }
   return path;
