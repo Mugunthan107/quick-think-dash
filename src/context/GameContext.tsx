@@ -77,7 +77,7 @@ interface GameContextType extends GameState {
 
 const ADMIN_PASSWORD = 'admin123';
 
-const AVAILABLE_GAMES = ['bubble', 'crossmath', 'numlink', 'aptirush', 'motion', 'numberseries', 'mirror', 'waterimage', 'numpuzzle', 'colorsort'];
+const AVAILABLE_GAMES = ['bubble', 'crossmath', 'numlink', 'aptirush', 'motion', 'numberseries', 'mirror', 'waterimage', 'numpuzzle', 'colorsort', 'thugofwar'];
 
 const GameContext = createContext<GameContextType | null>(null);
 
@@ -681,14 +681,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const getLeaderboard = useCallback(() => {
     return [...students]
-      .filter(s => s.isFinished)
       .sort((a, b) => {
         // Overall is ALWAYS sorted by Score Descending (Higher points = better)
         if (b.score !== a.score) return b.score - a.score;
 
         // Secondary: Total Time (Ascending - lower is better)
-        const timeA = a.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || (a.completedAt! - a.startedAt) / 1000;
-        const timeB = b.gameHistory?.reduce((acc, g) => acc + g.timeTaken, 0) || (b.completedAt! - b.startedAt) / 1000;
+        const timeA = a.gameHistory?.reduce((acc, g) => acc + (g.timeTaken || 0), 0) || ((a.completedAt || Date.now()) - a.startedAt) / 1000;
+        const timeB = b.gameHistory?.reduce((acc, g) => acc + (g.timeTaken || 0), 0) || ((b.completedAt || Date.now()) - b.startedAt) / 1000;
         return timeA - timeB;
       });
   }, [students]);

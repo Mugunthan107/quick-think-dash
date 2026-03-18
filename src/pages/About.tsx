@@ -152,7 +152,22 @@ const GAMES_RULES = [
             'Two empty tubes are provided for strategic maneuvering. Sort all colors within 10 seconds.',
             'Difficulty scales from 3 simple colors to 5 complex color layers over 20 levels.'
         ]
-    }
+    },
+    {
+        id: 'thugofwar',
+        icon: Zap,
+        name: 'Thug of War',
+        accentColor: 'text-rose-500',
+        accentBg: 'bg-rose-500/5',
+        borderColor: 'border-rose-500/20',
+        objective: 'Defeat the AI in a Vedic Math challenge by correctly answering 10 questions to pull the rope to your side.',
+        rules: [
+            'Each correct answer pulls the rope 10% toward your side and grants 20 marks.',
+            'A wrong answer or taking more than 10 seconds allows the AI to pull the rope 10% toward its side.',
+            'The game ends when someone reaches 10 points or after 20 attempts (Max 200 marks).',
+            'Questions involve Vedic Math techniques like squaring numbers ending in 5 and multiplication patterns.'
+        ]
+    },
 ];
 
 export default function About() {

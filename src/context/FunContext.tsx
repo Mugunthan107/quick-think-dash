@@ -90,7 +90,7 @@ export const getThinkingMessage = () =>
 export const FunProvider = ({ children }: { children: ReactNode }) => {
   const [funMode, setFunMode] = useState(() => {
     const saved = localStorage.getItem('funMode');
-    return saved !== null ? saved === 'true' : true;
+    return saved !== null ? saved === 'true' : false;
   });
   const [brainPower, setBrainPower] = useState(0);
   const [totalCorrect, setTotalCorrect] = useState(0);

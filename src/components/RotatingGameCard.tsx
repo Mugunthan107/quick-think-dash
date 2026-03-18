@@ -126,6 +126,18 @@ const GAMES = [
         iconBg: 'rgba(225,29,72,0.08)',
         desc: 'Sort colored liquids in tubes using strategic pour moves.',
     },
+    {
+        id: 'thugofwar',
+        name: 'Thug of War',
+        tag: 'VEDIC MATH',
+        tagColor: '#F43F5E',
+        tagBg: 'rgba(244,63,94,0.08)',
+        borderAccent: 'rgba(244,63,94,0.25)',
+        icon: Zap,
+        iconColor: '#F43F5E',
+        iconBg: 'rgba(244,63,94,0.08)',
+        desc: 'Outsmart the AI in a high-speed Vedic Math tug of war!',
+    },
 ] as const;
 
 /* ─────────────────────────────────────────────────────────────────────────────

@@ -34,12 +34,13 @@ const MirrorImageGame = lazy(() => import("./pages/MirrorImageGame"));
 const WaterImageGame = lazy(() => import("./pages/WaterImageGame"));
 const NumberPuzzleGame = lazy(() => import("./pages/NumberPuzzleGame"));
 const WaterColorSortGame = lazy(() => import("./pages/WaterColorSortGame"));
+const ThugOfWar = lazy(() => import("./pages/ThugOfWar"));
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
-  const isGame = ['/game', '/crossmath', '/numlink', '/motion-challenge', '/aptirush', '/number-series', '/mirror-image', '/water-image', '/number-puzzle', '/color-sort'].some(path => location.pathname.startsWith(path));
+  const isGame = ['/game', '/crossmath', '/numlink', '/motion-challenge', '/aptirush', '/number-series', '/mirror-image', '/water-image', '/number-puzzle', '/color-sort', '/thug-of-war'].some(path => location.pathname.startsWith(path));
   const isDashboard = location.pathname.startsWith('/ashu');
   const isHome = location.pathname === '/';
   const noScroll = isHome || isGame || isDashboard || location.pathname === '/lobby' || location.pathname === '/select-game';
@@ -65,6 +66,7 @@ const AppContent = () => {
             <Route path="/water-image" element={<WaterImageGame />} />
             <Route path="/number-puzzle" element={<NumberPuzzleGame />} />
             <Route path="/color-sort" element={<WaterColorSortGame />} />
+            <Route path="/thug-of-war" element={<ThugOfWar />} />
             <Route path="/select-game" element={<GameSelector />} />
             <Route path="/ashu" element={<AshuDashboard />} />
             <Route path="/lobby" element={<Lobby />} />

@@ -13,6 +13,7 @@ const WHEEL_GAMES = [
   { id: 'waterimage', name: 'Water Image', route: '/water-image', color: '#06B6D4' },
   { id: 'numpuzzle', name: 'Num Puzzle', route: '/number-puzzle', color: '#D97706' },
   { id: 'colorsort', name: 'Color Sort', route: '/color-sort', color: '#E11D48' },
+  { id: 'thugofwar', name: 'Thug of War', route: '/thug-of-war', color: '#F43F5E' },
 ];
 
 interface GameWheelProps {
@@ -30,7 +31,7 @@ const GameWheel = ({ availableGameIds, onClose, onGameSelected, isInline }: Game
   const [selectedGame, setSelectedGame] = useState<typeof WHEEL_GAMES[0] | null>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
 
-  const filteredGames = availableGameIds
+  const filteredGames = availableGameIds && availableGameIds.length > 0
     ? WHEEL_GAMES.filter(g => availableGameIds.includes(g.id))
     : WHEEL_GAMES;
 

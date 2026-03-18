@@ -107,6 +107,16 @@ const games = [
       "Plan your moves carefully to solve the puzzle efficiently."
     ]
   },
+  {
+    id: 'thugofwar', name: 'Thug of War', route: '/thug-of-war',
+    description: 'Vedic Math Challenge: Outsmart the AI in a digital tug of war!',
+    icon: Zap,
+    instructions: [
+      "Solve the Vedic Math problem before the AI (10s).",
+      "Each correct answer pulls the rope to your side.",
+      "First to 10 points wins the challenge!"
+    ]
+  },
 ];
 
 const GameSelector = () => {

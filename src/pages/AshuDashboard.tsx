@@ -33,6 +33,7 @@ const GAME_LABELS: Record<string, string> = {
   waterimage: 'Water',
   numpuzzle: 'Puzzle',
   colorsort: 'Color',
+  thugofwar: 'Tug',
 };
 
 const GAME_MAX_SCORES: Record<string, number> = {
@@ -46,6 +47,7 @@ const GAME_MAX_SCORES: Record<string, number> = {
   waterimage: 200,
   numpuzzle: 200,
   colorsort: 200,
+  thugofwar: 200,
 };
 
 const formatTime = (s: number) => {
@@ -230,7 +232,7 @@ const AshuDashboard = () => {
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
-  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink' | 'aptirush' | 'motion' | 'numberseries' | 'mirror' | 'waterimage' | 'numpuzzle' | 'colorsort'>('overall');
+  const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink' | 'aptirush' | 'motion' | 'numberseries' | 'mirror' | 'waterimage' | 'numpuzzle' | 'colorsort' | 'thugofwar'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedGames, setSelectedGames] = useState<string[]>(['bubble']);
@@ -247,6 +249,7 @@ const AshuDashboard = () => {
     { id: 'waterimage', name: 'Water Image' },
     { id: 'numpuzzle', name: 'Number Puzzle' },
     { id: 'colorsort', name: 'Color Sort' },
+    { id: 'thugofwar', name: 'Thug of War' },
   ];
 
   // Track previous pending count so toast only fires on NEW arrivals (not on re-renders)
@@ -298,7 +301,7 @@ const AshuDashboard = () => {
     const sessionTotalQ = selectedGamesList.reduce((acc, gId) => {
       // Use the FIXED total levels for each game as requested by the user
       // Even if stopped half-way, the total should reflect the game's full length
-      return acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : 20);
+      return acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : gId === 'thugofwar' ? 10 : 20);
     }, 0);
     const totalTime = sessionHistory.reduce((a, g) => a + (g.timeTaken || 0), 0) || 0;
     const totalPossible = selectedGamesList.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
@@ -346,7 +349,7 @@ const AshuDashboard = () => {
       username: s.username,
       score: h?.score ?? 0,
       correctAnswers: h?.correctAnswers || 0,
-      totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : 20),
+      totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : leaderboardTab === 'thugofwar' ? 10 : 20),
       timeTaken: h?.timeTaken || 0
     };
   };
