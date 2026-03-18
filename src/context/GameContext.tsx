@@ -30,6 +30,7 @@ export interface Student {
 
 export interface TestSession {
   pin: string;
+  name?: string | null;
   createdAt: number;
   isActive: boolean;
   status: 'WAITING' | 'STARTED' | 'FINISHED';
@@ -51,7 +52,7 @@ interface GameState {
 interface GameContextType extends GameState {
   adminLogin: (password: string) => boolean;
   adminLogout: () => void;
-  createTestPin: (selectedGames: string[]) => Promise<string>;
+  createTestPin: (selectedGames: string[], name?: string) => Promise<string>;
   verifyTestPin: (pin: string) => Promise<boolean>;
   joinTest: (pin: string, username: string) => Promise<{ success: boolean; error?: string; pending?: boolean }>;
   startTest: () => Promise<void>;
@@ -124,6 +125,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         console.log(`[GameContext] Loaded ${data.length} sessions`);
         const mappedSessions = data.map((row: any) => ({
           pin: row.pin,
+          name: row.name || null,
           createdAt: new Date(row.created_at).getTime(),
           isActive: row.is_active,
           status: row.status || 'WAITING',
@@ -210,6 +212,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           if (data) {
             setCurrentTest(prev => prev ? {
               ...prev,
+              name: data.name || prev.name || null,
               isActive: data.is_active,
               status: data.status || 'WAITING',
               numGames: data.num_games || 1,
@@ -327,7 +330,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setSessions([]);
   }, []);
 
-  const createTestPin = useCallback(async (selectedGames: string[]) => {
+  const createTestPin = useCallback(async (selectedGames: string[], name?: string) => {
     const pin = Math.floor(100000 + Math.random() * 900000).toString();
     const numGames = selectedGames.length;
 
@@ -337,6 +340,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         .from('test_sessions')
         .insert([{
           pin,
+          name: name || null,
           is_active: true,
           status: 'WAITING',
           num_games: numGames,
@@ -348,6 +352,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         console.error('Error creating test session:', error);
         if (error.message.includes('selected_games')) {
           toast.error('Missing database column "selected_games". Please run the SQL query I provided.');
+        } else if (error.message.includes('name')) {
+          toast.error('Missing database column "name". Please run: ALTER TABLE test_sessions ADD COLUMN name TEXT;');
         } else if (error.message.includes('Failed to fetch')) {
           toast.error('Connection timed out. Retrying...');
           // Optional: implement a single retry here if needed
@@ -359,6 +365,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       const newTest: TestSession = {
         pin,
+        name: name || null,
         createdAt: Date.now(),
         isActive: true,
         status: 'WAITING',
@@ -452,7 +459,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     // Step 1: Verify test pin and status in one go
     const { data: testData, error: testError } = await supabase
       .from('test_sessions')
-      .select('pin, is_active, status, created_at, num_games, selected_games, show_results')
+      .select('pin, name, is_active, status, created_at, num_games, selected_games, show_results')
       .eq('pin', pin)
       .single();
 
@@ -498,6 +505,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       if (student.status === 'APPROVED') {
         setCurrentTest({
           pin,
+          name: testData.name || null,
           createdAt: new Date(testData.created_at).getTime(),
           isActive: testData.is_active,
           status: testData.status as any || 'WAITING',
@@ -555,6 +563,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     if (!isLateJoin) {
       setCurrentTest({
         pin,
+        name: testData.name || null,
         createdAt: new Date(testData.created_at).getTime(),
         isActive: testData.is_active,
         status: (testData.status as any) || 'WAITING',

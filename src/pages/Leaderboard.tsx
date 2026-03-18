@@ -17,7 +17,7 @@ const GAME_LABELS: Record<string, string> = {
   waterimage: 'Water Image',
   numpuzzle: 'Number Puzzle',
   colorsort: 'Color Sort',
-  thugofwar: 'Tug of War',
+  thugofwar: 'Thug of War',
 };
 
 const GAME_MAX_SCORES: Record<string, number> = {
@@ -144,7 +144,7 @@ const Leaderboard = () => {
     const sessionHistory = s.gameHistory?.filter(h => selectedGames.includes(h.gameId)) || [];
     const sessionScore = sessionHistory.reduce((a, g) => a + (Number(g.score) || 0), 0);
     const sessionCorrect = sessionHistory.reduce((a, g) => a + (Number(g.correctAnswers) || 0), 0);
-    const sessionTotalQ = selectedGames.reduce((acc, gId) => acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : gId === 'thugofwar' ? 10 : 20), 0);
+    const sessionTotalQ = selectedGames.reduce((acc, gId) => acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : gId === 'thugofwar' ? 20 : 20), 0);
     const totalTime = sessionHistory.reduce((a, g) => a + (Number(g.timeTaken) || 0), 0) || 0;
     const totalPossible = selectedGames.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
     const percentage = totalPossible > 0 ? ((sessionScore / totalPossible) * 100).toFixed(0) + '%' : '0%';
@@ -404,7 +404,7 @@ const Leaderboard = () => {
                                   <div className="flex flex-col items-center gap-0.5">
                                     <span className="font-mono font-black text-[14px] text-[#0F172A]">{gd.score}</span>
                                     <span className="text-[10px] text-emerald-500 font-bold">
-                                      {gd.correctAnswers}/{gd.totalQuestions || (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : gId === 'thugofwar' ? 10 : 20)}
+                                      {gd.correctAnswers}/{gd.totalQuestions || (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : gId === 'thugofwar' ? 20 : 20)}
                                     </span>
                                     <span className="text-[10px] text-sky-400 font-bold flex items-center gap-0.5">
                                       <Clock className="w-2.5 h-2.5" />{formatTime(gd.timeTaken)}

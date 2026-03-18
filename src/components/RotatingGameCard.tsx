@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, Grid3X3, Layers3, BarChart2, Zap, Clock, Activity, Hash, FlipHorizontal, Droplets, LayoutGrid, Palette } from 'lucide-react';
+import { Brain, Grid3X3, Layers3, BarChart2, Zap, Clock, Activity, Hash, FlipHorizontal, Droplets, LayoutGrid, Palette, Sword } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    GAME DATA
@@ -17,6 +17,18 @@ const GAMES = [
         iconColor: '#6C63FF',
         iconBg: 'rgba(108,99,255,0.08)',
         desc: 'Sort math expressions by value. Tests speed under pressure.',
+    },
+    {
+        id: 'thugofwar',
+        name: 'Thug of War',
+        tag: 'VEDIC MATH',
+        tagColor: '#F43F5E',
+        tagBg: 'rgba(244,63,94,0.08)',
+        borderAccent: 'rgba(244,63,94,0.25)',
+        icon: Sword,
+        iconColor: '#F43F5E',
+        iconBg: 'rgba(244,63,94,0.08)',
+        desc: 'Outsmart the AI in a high-speed Vedic Math tug of war!',
     },
     {
         id: 'crossmath',
@@ -125,18 +137,6 @@ const GAMES = [
         iconColor: '#E11D48',
         iconBg: 'rgba(225,29,72,0.08)',
         desc: 'Sort colored liquids in tubes using strategic pour moves.',
-    },
-    {
-        id: 'thugofwar',
-        name: 'Thug of War',
-        tag: 'VEDIC MATH',
-        tagColor: '#F43F5E',
-        tagBg: 'rgba(244,63,94,0.08)',
-        borderAccent: 'rgba(244,63,94,0.25)',
-        icon: Zap,
-        iconColor: '#F43F5E',
-        iconBg: 'rgba(244,63,94,0.08)',
-        desc: 'Outsmart the AI in a high-speed Vedic Math tug of war!',
     },
 ] as const;
 

@@ -19,6 +19,21 @@ const GAMES_RULES = [
         ]
     },
     {
+        id: 'thugofwar',
+        icon: Zap,
+        name: 'Thug of War',
+        accentColor: 'text-rose-500',
+        accentBg: 'bg-rose-500/5',
+        borderColor: 'border-rose-500/20',
+        objective: 'Defeat the AI in a Vedic Math challenge by correctly answering 20 questions to pull the rope to your side.',
+        rules: [
+            'Each correct answer pulls the rope 5% toward your side and grants 10 marks.',
+            'A wrong answer or taking more than 10 seconds allows the AI to pull the rope 5% toward its side.',
+            'The game ends when someone reaches 20 points or after 40 attempts (Max 200 marks).',
+            'Questions involve Vedic Math techniques like squaring numbers ending in 5 and multiplication patterns.'
+        ]
+    },
+    {
         id: 'crossmath',
         icon: Grid3X3,
         name: 'Cross Math',
@@ -153,21 +168,6 @@ const GAMES_RULES = [
             'Difficulty scales from 3 simple colors to 5 complex color layers over 20 levels.'
         ]
     },
-    {
-        id: 'thugofwar',
-        icon: Zap,
-        name: 'Thug of War',
-        accentColor: 'text-rose-500',
-        accentBg: 'bg-rose-500/5',
-        borderColor: 'border-rose-500/20',
-        objective: 'Defeat the AI in a Vedic Math challenge by correctly answering 10 questions to pull the rope to your side.',
-        rules: [
-            'Each correct answer pulls the rope 10% toward your side and grants 20 marks.',
-            'A wrong answer or taking more than 10 seconds allows the AI to pull the rope 10% toward its side.',
-            'The game ends when someone reaches 10 points or after 20 attempts (Max 200 marks).',
-            'Questions involve Vedic Math techniques like squaring numbers ending in 5 and multiplication patterns.'
-        ]
-    },
 ];
 
 export default function About() {
@@ -213,7 +213,7 @@ export default function About() {
                                                     <game.icon className={`w-6 h-6 sm:w-8 sm:h-8 ${game.accentColor} filter drop-shadow-sm`} />
                                                 </div>
                                                 <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 shadow-sm">
-                                                    0{index + 1}
+                                                    {(index + 1) < 10 ? `0${index + 1}` : index + 1}
                                                 </div>
                                             </div>
                                             <div className="flex flex-col">

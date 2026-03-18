@@ -79,9 +79,9 @@ interface Question {
   options: number[];
 }
 
-const TOTAL_QUESTIONS = 20;
-const HUMAN_WIN_SCORE = 10;
-const AI_WIN_SCORE = 10;
+const TOTAL_QUESTIONS = 40;
+const HUMAN_WIN_SCORE = 20;
+const AI_WIN_SCORE = 20;
 const TIME_LIMIT = 10;
 
 const ThugOfWar = () => {
@@ -160,11 +160,11 @@ const ThugOfWar = () => {
 
   const checkGameStatus = (uScore: number, aScore: number) => {
     if (uScore >= HUMAN_WIN_SCORE) {
-      setTimeout(() => endGame('user'), 1000);
+      setTimeout(() => endGame('user', uScore, aScore), 1000);
     } else if (aScore >= AI_WIN_SCORE) {
-      setTimeout(() => endGame('ai'), 1000);
+      setTimeout(() => endGame('ai', uScore, aScore), 1000);
     } else if (currentIdx + 1 >= TOTAL_QUESTIONS) {
-      setTimeout(() => endGame(uScore >= aScore ? 'user' : 'ai'), 1000);
+      setTimeout(() => endGame(uScore >= aScore ? 'user' : 'ai', uScore, aScore), 1000);
     } else {
       setTimeout(() => {
         setShowFeedback(null);
@@ -174,11 +174,11 @@ const ThugOfWar = () => {
     }
 
     if (currentStudent) {
-       updateStudentProgress(currentStudent.username, (uScore * 20), currentIdx + 1, uScore, TOTAL_QUESTIONS, 'thugofwar');
+       updateStudentProgress(currentStudent.username, (uScore * 10), currentIdx + 1, uScore, TOTAL_QUESTIONS, 'thugofwar');
     }
   };
 
-  const endGame = useCallback((win: 'user' | 'ai') => {
+  const endGame = useCallback((win: 'user' | 'ai', finalUScore: number, finalAScore: number) => {
     setIsGameOver(true);
     setWinner(win);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -190,16 +190,16 @@ const ThugOfWar = () => {
     if (currentStudent && currentTest) {
       submitGameResult(currentStudent.username, {
         gameId: 'thugofwar',
-        score: userScore * 20,
+        score: finalUScore * 10,
         timeTaken: elapsed,
-        correctAnswers: userScore,
+        correctAnswers: finalUScore,
         totalQuestions: TOTAL_QUESTIONS,
         completedAt: Date.now()
       }).then(() => {
         addCompletedGame('thugofwar');
       });
     }
-  }, [userScore, aiScore, currentIdx, currentStudent, currentTest, elapsed]);
+  }, [currentIdx, currentStudent, currentTest, elapsed, submitGameResult, addCompletedGame]);
 
   const handlePostFinish = () => {
     const nextGame = getNextGame();
@@ -211,11 +211,13 @@ const ThugOfWar = () => {
   };
 
   // Rope Position Logic
-  // Both need 10 to win, so each point moves 5%
+  // Both need 20 to win. Max difference is 20.
+  // Player boxes are offset by ±15%. To reach exactly 0% or 100% on the screen at 20 points difference:
+  // 20 * multiplier = 35 => multiplier = 1.75
   const scoreDiff = userScore - aiScore;
-  const ropePos = 50 - (scoreDiff * 5); 
-  // Clamp it between 0 and 100
-  const clampedRopePos = Math.max(0, Math.min(100, ropePos));
+  const ropePos = 50 - (scoreDiff * 1.75); 
+  // Clamp it to prevent bounds overflow
+  const clampedRopePos = Math.max(15, Math.min(85, ropePos));
 
   if (isGameOver) {
     return (
@@ -235,12 +237,12 @@ const ThugOfWar = () => {
                 <div className="flex justify-around items-center">
                     <div className="text-center">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Your Score</p>
-                        <p className="text-3xl font-black text-sky-500">{userScore}</p>
+                        <p className="text-3xl font-black text-sky-500">{userScore * 10}</p>
                     </div>
                     <div className="w-px h-10 bg-slate-100" />
                     <div className="text-center">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">AI Score</p>
-                        <p className="text-3xl font-black text-rose-500">{aiScore}</p>
+                        <p className="text-3xl font-black text-rose-500">{aiScore * 10}</p>
                     </div>
                 </div>
             </div>
@@ -295,14 +297,14 @@ const ThugOfWar = () => {
                 {/* Human Player */}
                 <div 
                     className="absolute transition-all duration-700 ease-out z-10"
-                    style={{ left: `${ropePos - 15}%` }}
+                    style={{ left: `${clampedRopePos - 15}%` }}
                 >
                     <div className="flex flex-col items-center">
                         <div className="w-20 h-20 bg-sky-500 rounded-2xl shadow-lg shadow-sky-200 flex items-center justify-center animate-bounce-subtle">
                              <User className="w-10 h-10 text-white" />
                         </div>
                         <div className="mt-3 px-3 py-1 bg-white rounded-full text-xs font-bold text-sky-600 shadow-sm border border-sky-100">
-                            SCORE: {userScore}
+                            SCORE: {userScore * 10}
                         </div>
                     </div>
                 </div>
@@ -320,14 +322,14 @@ const ThugOfWar = () => {
                 {/* AI Player */}
                 <div 
                     className="absolute transition-all duration-700 ease-out z-10"
-                    style={{ left: `${ropePos + 15}%` }}
+                    style={{ left: `${clampedRopePos + 15}%` }}
                 >
                     <div className="flex flex-col items-center">
                         <div className="w-20 h-20 bg-rose-500 rounded-2xl shadow-lg shadow-rose-200 flex items-center justify-center animate-bounce-subtle-delayed">
                              <Bot className="w-10 h-10 text-white" />
                         </div>
                         <div className="mt-3 px-3 py-1 bg-white rounded-full text-xs font-bold text-rose-600 shadow-sm border border-rose-100">
-                            SCORE: {aiScore}
+                            SCORE: {aiScore * 10}
                         </div>
                     </div>
                 </div>

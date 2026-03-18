@@ -237,6 +237,7 @@ const AshuDashboard = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedGames, setSelectedGames] = useState<string[]>(['bubble']);
   const [isCreatingPin, setIsCreatingPin] = useState(false);
+  const [sessionName, setSessionName] = useState('');
 
   const availableGamesList = [
     { id: 'bubble', name: 'Bubble' },
@@ -278,10 +279,11 @@ const AshuDashboard = () => {
     if (isCreatingPin) return;
     setIsCreatingPin(true);
     try {
-      const pin = await createTestPin(selectedGames);
+      const pin = await createTestPin(selectedGames, sessionName.trim() || undefined);
       toast.success(`Test PIN created: ${pin} (${selectedGames.length} game${selectedGames.length > 1 ? 's' : ''})`);
       setShowCreatePinDialog(false);
       setSelectedGames(['bubble']);
+      setSessionName('');
     } catch (e) {
       toast.error('Failed to create PIN. Check your internet connection and Supabase status.');
     } finally {
@@ -300,8 +302,7 @@ const AshuDashboard = () => {
     const sessionCorrect = sessionHistory.reduce((a, g) => a + (g.correctAnswers || 0), 0);
     const sessionTotalQ = selectedGamesList.reduce((acc, gId) => {
       // Use the FIXED total levels for each game as requested by the user
-      // Even if stopped half-way, the total should reflect the game's full length
-      return acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : gId === 'thugofwar' ? 10 : 20);
+      return acc + (gId === 'bubble' ? 30 : gId === 'motion' ? 10 : gId === 'thugofwar' ? 20 : 20);
     }, 0);
     const totalTime = sessionHistory.reduce((a, g) => a + (g.timeTaken || 0), 0) || 0;
     const totalPossible = selectedGamesList.reduce((acc, gId) => acc + (GAME_MAX_SCORES[gId] || 0), 0);
@@ -349,7 +350,7 @@ const AshuDashboard = () => {
       username: s.username,
       score: h?.score ?? 0,
       correctAnswers: h?.correctAnswers || 0,
-      totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : leaderboardTab === 'thugofwar' ? 10 : 20),
+      totalQuestions: h?.totalQuestions || (leaderboardTab === 'motion' ? 10 : leaderboardTab === 'bubble' ? 30 : leaderboardTab === 'thugofwar' ? 20 : 20),
       timeTaken: h?.timeTaken || 0
     };
   };
@@ -578,7 +579,7 @@ const AshuDashboard = () => {
                   <SelectContent>
                     {sessions.map((session) => (
                       <SelectItem key={session.pin} value={session.pin}>
-                        PIN: {session.pin} {session.isActive ? '(Active)' : '(Inactive)'}
+                        PIN: {session.pin} {session.name ? `[${session.name}]` : ''} {session.isActive ? '(Active)' : '(Inactive)'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -599,7 +600,9 @@ const AshuDashboard = () => {
                   <div className="absolute top-0 right-0 p-4 opacity-5">
                     <Activity className="w-24 h-24 text-accent" />
                   </div>
-                  <span className="text-[10px] text-accent font-bold block mb-2 uppercase tracking-wider">Session Active</span>
+                  <span className="text-[10px] text-accent font-bold block mb-2 uppercase tracking-wider">
+                    Session Active {currentTest.name && <span className="ml-1 bg-accent/10 px-1.5 py-0.5 rounded text-foreground normal-case font-bold">{currentTest.name}</span>}
+                  </span>
                   <div className="font-mono text-3xl sm:text-5xl font-bold text-accent tracking-[0.1em] mb-2" style={{ textShadow: '0 0 20px hsl(258 80% 58% / 0.25)' }}>{currentTest.pin}</div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>Created: {new Date(currentTest.createdAt).toLocaleTimeString()}</span>
@@ -957,6 +960,15 @@ const AshuDashboard = () => {
               <p className="text-sm text-muted-foreground mb-6 font-medium">Select which games students will play.</p>
               <div className="space-y-4">
                 <div>
+                  <label className="text-sm text-muted-foreground font-semibold mb-2 block">Session Name (Optional)</label>
+                  <Input 
+                    placeholder="E.g. Class 10A Weekly Test" 
+                    value={sessionName} 
+                    onChange={e => setSessionName(e.target.value)} 
+                    className="w-full bg-white border-border" 
+                  />
+                </div>
+                <div>
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-sm text-muted-foreground font-semibold">Select Games</label>
                     <button
@@ -992,7 +1004,7 @@ const AshuDashboard = () => {
                   </p>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" className="flex-1 rounded-xl border-border" onClick={() => { setShowCreatePinDialog(false); setSelectedGames(['bubble']); }}>Cancel</Button>
+                  <Button variant="outline" className="flex-1 rounded-xl border-border" onClick={() => { setShowCreatePinDialog(false); setSelectedGames(['bubble']); setSessionName(''); }}>Cancel</Button>
                   <Button className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl shadow-md shadow-accent/20" onClick={handleCreatePin} disabled={selectedGames.length === 0 || isCreatingPin}>
                     {isCreatingPin ? 'Creating...' : 'Create PIN'}
                   </Button>
