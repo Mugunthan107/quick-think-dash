@@ -374,7 +374,10 @@ const AshuDashboard = () => {
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(60, 20, 120);
-    doc.text(`Test Results — PIN: ${currentTest?.pin}`, 14, 22);
+    const titleText = currentTest?.name 
+      ? `Test Results — ${currentTest.name} — PIN: ${currentTest.pin}`
+      : `Test Results — PIN: ${currentTest?.pin}`;
+    doc.text(titleText, 14, 22);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
@@ -430,7 +433,8 @@ const AshuDashboard = () => {
       alternateRowStyles: { fillColor: [248, 246, 255] },
     });
 
-    doc.save(`results-pin-${currentTest?.pin}.pdf`);
+    const safeName = currentTest?.name ? currentTest.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '-' : '';
+    doc.save(`results-${safeName}pin-${currentTest?.pin}.pdf`);
     toast.success('Results downloaded as PDF');
     setShowExportModal(false);
   };
@@ -461,7 +465,8 @@ const AshuDashboard = () => {
     const ws = XLSX.utils.aoa_to_sheet([headers, ...tableRows]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Results");
-    XLSX.writeFile(wb, `results-pin-${currentTest?.pin}.xlsx`);
+    const safeName = currentTest?.name ? currentTest.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '-' : '';
+    XLSX.writeFile(wb, `results-${safeName}pin-${currentTest?.pin}.xlsx`);
     toast.success('Results downloaded as Excel');
     setShowExportModal(false);
   };
@@ -514,6 +519,14 @@ const AshuDashboard = () => {
                     </span>
                   )}
                 </Button>
+
+                {currentTest && (
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    if (currentTest) deleteSession(currentTest.pin);
+                  }} className="rounded-full hover:bg-red-50 text-red-400 hover:text-red-500 transition-all duration-300 ml-2">
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                )}
 
                 {/* Contextual Join Requests Popover */}
                 {showRequestsModal && (
@@ -603,10 +616,26 @@ const AshuDashboard = () => {
                   <span className="text-[10px] text-accent font-bold block mb-2 uppercase tracking-wider">
                     Session Active {currentTest.name && <span className="ml-1 bg-accent/10 px-1.5 py-0.5 rounded text-foreground normal-case font-bold">{currentTest.name}</span>}
                   </span>
-                  <div className="font-mono text-3xl sm:text-5xl font-bold text-accent tracking-[0.1em] mb-2" style={{ textShadow: '0 0 20px hsl(258 80% 58% / 0.25)' }}>{currentTest.pin}</div>
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="font-mono text-3xl sm:text-5xl font-bold text-accent tracking-[0.1em]" style={{ textShadow: '0 0 20px hsl(258 80% 58% / 0.25)' }}>{currentTest.pin}</div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => {
+                        if (currentTest?.pin) {
+                          navigator.clipboard.writeText(currentTest.pin).then(() => {
+                            toast.success('PIN copied to clipboard', { icon: '📋' });
+                          });
+                        }
+                      }} 
+                      className="h-14 w-14 text-accent/60 hover:text-accent hover:bg-accent/20 hover:shadow-[0_0_25px_rgba(139,92,246,0.3)] rounded-2xl transition-all active:scale-90 active:shadow-[0_0_40px_rgba(139,92,246,0.5)] relative z-20"
+                    >
+                      <Copy className="w-7 h-7" />
+                    </Button>
+                  </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>Created: {new Date(currentTest.createdAt).toLocaleTimeString()}</span>
-                    <span>•</span>
+                    <span>Created at: {new Date(currentTest.createdAt).toLocaleDateString()}  ({new Date(currentTest.createdAt).toLocaleTimeString()})</span>
+                    <span>  •</span>
                     <span>{students.length} Joined</span>
                   </div>
                 </div>
@@ -633,10 +662,9 @@ const AshuDashboard = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 shrink-0">
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={handleCopyPin} className="border-border h-12 w-12 rounded-xl"><Copy className="w-5 h-5" /></Button>
-                    <Button variant="outline" size="icon" onClick={() => deleteSession(currentTest.pin)} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground h-12 w-12 rounded-xl"><Trash2 className="w-5 h-5" /></Button>
-                  </div>
+                  <Button variant="outline" className="h-[48px] w-full sm:w-48 rounded-xl font-bold text-xs bg-sky-50 text-sky-600 border-sky-200 hover:bg-sky-100 hover:border-sky-300 transition-all">
+                    <Clock className="w-4 h-4 mr-2" /> Time
+                  </Button>
                   {currentTest.status !== 'STARTED' ? (
                     <Button
                       onClick={() => { startTest(); setShowCountdown(true); }}
@@ -960,9 +988,9 @@ const AshuDashboard = () => {
               <p className="text-sm text-muted-foreground mb-6 font-medium">Select which games students will play.</p>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-muted-foreground font-semibold mb-2 block">Session Name (Optional)</label>
+                  <label className="text-sm text-muted-foreground font-semibold mb-2 block">Session Name</label>
                   <Input 
-                    placeholder="E.g. Class 10A Weekly Test" 
+                    placeholder="Eg: ADS B" 
                     value={sessionName} 
                     onChange={e => setSessionName(e.target.value)} 
                     className="w-full bg-white border-border" 

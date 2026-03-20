@@ -26,7 +26,7 @@ const OOPS_MESSAGES = [
 
 const TOTAL_LEVELS = 20;
 function getRoundTime(level: number) {
-  return level < 10 ? 10 : 5;
+  return level < 15 ? 10 : 5;
 }
 
 interface PuzzleQ {
@@ -35,75 +35,93 @@ interface PuzzleQ {
   options: number[];
   missingRow: number;
   missingCol: number;
+  type: number;
 }
 
-function generatePuzzle(): PuzzleQ {
-  const type = Math.floor(Math.random() * 3);
-  const grid: number[][] = [];
+function generatePuzzle(level: number): PuzzleQ {
+  let grid: number[][] = [];
+  let answer = 0;
 
-  switch (type) {
-    case 0: { // Row multiplication: each row is multiples of first element
-      for (let r = 0; r < 4; r++) {
-        const base = Math.floor(Math.random() * 6) + 2;
-        grid.push([base, base * 2, base * 3, base * 4]);
-      }
-      break;
+  // Decide orientation: 0 = Horizontal (Rows), 1 = Vertical (Columns)
+  // Each row/column will now have its OWN independent arithmetic sequence logic.
+  const type = Math.random() > 0.5 ? 0 : 1;
+
+  // Difficulty Scaling
+  const range = level < 5 ? 5 : level < 10 ? 15 : 25;
+  const stepRange = level < 5 ? 5 : level < 10 ? 10 : 15;
+
+  if (type === 0) { // Horizontal Pattern (Rows)
+    for (let r = 0; r < 4; r++) {
+      const start = Math.floor(Math.random() * range) + 1;
+      const rowStep = Math.floor(Math.random() * stepRange) + 2;
+      grid.push([start, start + rowStep, start + 2 * rowStep, start + 3 * rowStep]);
     }
-    case 1: { // Column arithmetic: columns increase by constant
-      const starts = Array.from({ length: 4 }, () => Math.floor(Math.random() * 5) + 1);
-      const diffs = Array.from({ length: 4 }, () => Math.floor(Math.random() * 4) + 2);
-      for (let r = 0; r < 4; r++) {
-        grid.push(starts.map((s, c) => s + diffs[c] * r));
-      }
-      break;
-    }
-    default: { // Addition pattern: each cell = row_base + col_base
-      const rowBases = Array.from({ length: 4 }, () => Math.floor(Math.random() * 8) + 1);
-      const colBases = Array.from({ length: 4 }, () => Math.floor(Math.random() * 8) + 1);
-      for (let r = 0; r < 4; r++) {
-        grid.push(colBases.map(c => rowBases[r] + c));
-      }
-      break;
+  } else { // Vertical Pattern (Columns)
+    const columnStarts = Array.from({ length: 4 }, () => Math.floor(Math.random() * range) + 1);
+    const columnSteps = Array.from({ length: 4 }, () => Math.floor(Math.random() * stepRange) + 2);
+    for (let r = 0; r < 4; r++) {
+      grid.push(columnStarts.map((s, c) => s + columnSteps[c] * r));
     }
   }
 
+  // ---------- Remove One Cell ----------
   const missingRow = Math.floor(Math.random() * 4);
   const missingCol = Math.floor(Math.random() * 4);
-  const answer = grid[missingRow][missingCol];
+  answer = grid[missingRow][missingCol];
 
-  const wrongSet = new Set<number>();
-  while (wrongSet.size < 3) {
-    const delta = (Math.floor(Math.random() * 6) + 1) * (Math.random() > 0.5 ? 1 : -1);
-    const w = answer + delta;
-    if (w !== answer && w > 0) wrongSet.add(w);
-  }
-
-  const displayGrid: (number | null)[][] = grid.map((row, r) =>
+  const displayGrid = grid.map((row, r) =>
     row.map((val, c) => (r === missingRow && c === missingCol ? null : val))
   );
 
-  const options = [answer, ...wrongSet].sort(() => Math.random() - 0.5);
-  return { grid: displayGrid, answer, options, missingRow, missingCol };
+  // ---------- Smart Wrong Options ----------
+  const wrongSet = new Set<number>();
+  wrongSet.add(answer + 1);
+  wrongSet.add(answer - 1 > 0 ? answer - 1 : answer + 2);
+  wrongSet.add(answer + 10);
+  wrongSet.add(answer - 5 > 0 ? answer - 5 : answer + 7);
+
+  const options = Array.from(wrongSet)
+    .filter(v => v !== answer)
+    .slice(0, 3);
+  
+  const finalOptions = [answer, ...options]
+    .sort(() => Math.random() - 0.5);
+
+  return { grid: displayGrid, answer, options: finalOptions, missingRow, missingCol, type };
 }
+
+function getExplanation(type: number) {
+  return type === 0 
+    ? "Pattern: Each ROW follows its own sequence (Left to Right)." 
+    : "Pattern: Each COLUMN follows its own sequence (Top to Bottom).";
+}
+
 
 export default function NumberPuzzleGame() {
   const navigate = useNavigate();
   const { currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, getNextGame } = useGame();
 
-  const questions = useMemo(() => Array.from({ length: TOTAL_LEVELS }, generatePuzzle), []);
+  const questions = useMemo(
+    () => Array.from({ length: TOTAL_LEVELS }, (_, i) => generatePuzzle(i)),
+    []
+  );
 
   const [level, setLevel] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [timeLeft, setTimeLeft] = useState(getRoundTime(0));
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [selected, setSelected] = useState(-1);
+
   const startTime = useRef(Date.now());
   const isSubmitting = useRef(false);
 
+
   useEffect(() => {
     if (!currentStudent || !currentTest) { navigate('/'); return; }
+
     if (currentTest.status === 'FINISHED') navigate('/');
   }, [currentStudent, currentTest, navigate]);
 
@@ -112,12 +130,16 @@ export default function NumberPuzzleGame() {
     setTimeLeft(getRoundTime(level));
     const iv = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) { handleSelect(-1); return getRoundTime(level); }
+        if (prev <= 0) {
+          handleSelectRef.current(-1);
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(iv);
   }, [level, gameOver]);
+
 
   const handleSelect = useCallback((idx: number) => {
     if (feedback || gameOver || isSubmitting.current) return;
@@ -125,6 +147,17 @@ export default function NumberPuzzleGame() {
     setSelected(idx);
     const q = questions[level];
     const isCorrect = idx >= 0 && q.options[idx] === q.answer;
+
+    if (isCorrect) {
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak >= 3) {
+        setScore(prev => prev + 5); // bonus
+      }
+    } else {
+      setStreak(0);
+    }
+
     const newScore = isCorrect ? score + 10 : score;
     const newCorrect = isCorrect ? correct + 1 : correct;
     setScore(newScore);
@@ -146,8 +179,15 @@ export default function NumberPuzzleGame() {
       } else {
         setLevel(l => l + 1);
       }
-    }, 600);
-  }, [feedback, gameOver, level, questions, score, correct]);
+    }, 1000);
+  }, [feedback, gameOver, level, questions, score, correct, streak]);
+
+  const handleSelectRef = useRef(handleSelect);
+  useEffect(() => {
+    handleSelectRef.current = handleSelect;
+  }, [handleSelect]);
+
+
 
   const finishGame = async (finalScore: number, finalCorrect: number, attempted: number) => {
     setGameOver(true);
@@ -237,7 +277,13 @@ export default function NumberPuzzleGame() {
         </div>
       ) : q && (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
-          <p className="text-xs text-[#94A3B8] font-bold">Level {level + 1}/{TOTAL_LEVELS}</p>
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-xs text-[#94A3B8] font-bold">Level {level + 1}/{TOTAL_LEVELS}</p>
+            <p className="text-xs font-bold text-[#94A3B8]">
+              {level < 5 ? "Easy" : level < 10 ? "Medium" : "Hard"}
+            </p>
+          </div>
+
 
           {/* Timer */}
           <div className="flex flex-col items-center gap-2 w-full max-w-sm">
@@ -292,6 +338,13 @@ export default function NumberPuzzleGame() {
               </button>
             ))}
           </div>
+
+          {feedback && (
+            <p className="text-xs text-gray-500 mt-2">
+              {getExplanation(q.type)}
+            </p>
+          )}
+
         </div>
       )}
       </div>
