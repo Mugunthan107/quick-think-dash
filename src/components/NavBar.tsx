@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { useFun } from '@/context/FunContext';
-import { ShieldCheck, Users, Activity, Trophy, Zap, BookOpen, Shield, X, Info, FileText, LogOut } from 'lucide-react';
+import { ShieldCheck, Users, Activity, Trophy, Clock, Zap, X, Info, FileText, LogOut } from 'lucide-react';
 import DecorativeCurve from './DecorativeCurve';
 import FunModeToggle from './FunModeToggle';
 
@@ -15,6 +15,8 @@ const NavBar = () => {
     const { currentStudent, students, adminLoggedIn, adminLogout } = useGame();
     const { handleLogoClick } = useFun();
     const [showInstructions, setShowInstructions] = useState(false);
+    const [gameStats, setGameStats] = useState<{ timeLeft: number; score: number | string } | null>(null);
+
     const path = location.pathname;
     const inTest = IN_TEST_ROUTES.includes(path);
     const hideCta = HIDE_CTA_ROUTES.includes(path);
@@ -24,12 +26,86 @@ const NavBar = () => {
 
     const isHome = path === '/';
 
+    useEffect(() => {
+        const handleStatsUpdate = (e: any) => {
+            setGameStats(e.detail);
+        };
+        window.addEventListener('gameStats', handleStatsUpdate);
+        return () => window.removeEventListener('gameStats', handleStatsUpdate);
+    }, []);
+
     const rules = [
         { title: 'Join with a Valid Test PIN', desc: 'You must enter the Test PIN shared by your instructor to access a session.', icon: ShieldCheck, color: '#6D4AFE' },
         { title: 'Wait for Instructor Approval', desc: 'After joining, wait until the instructor approves and starts the session.', icon: Users, color: '#3B82F6' },
         { title: 'Play All Games Honestly', desc: 'Solve the challenges on your own without external help or collaboration.', icon: Trophy, color: '#14B8A6' },
         { title: 'Follow Session Instructions', desc: 'Do not refresh, exit, or switch tabs unless instructed by the instructor.', icon: Activity, color: '#F59E0B' },
     ];
+
+    const GAME_ROUTES = ['/game', '/crossmath', '/numlink', '/motion-challenge', '/aptirush', '/number-series', '/mirror-image', '/water-image', '/number-puzzle', '/color-sort', '/thug-of-war'];
+    const isGameRoute = GAME_ROUTES.some(gamePath => path.startsWith(gamePath));
+
+    const GAME_NAMES: Record<string, string> = {
+        '/game': 'Bubble Sort',
+        '/crossmath': 'Cross Math',
+        '/numlink': 'NumLink',
+        '/motion-challenge': 'Motion Challenge',
+        '/aptirush': 'AptiRush',
+        '/number-series': 'Number Series',
+        '/mirror-image': 'Mirror Image',
+        '/water-image': 'Water Image',
+        '/number-puzzle': 'Number Puzzle',
+        '/color-sort': 'Color Sort',
+        '/thug-of-war': 'Thug of War',
+    };
+    const currentGameName = GAME_NAMES[path] || 'MindSprint';
+
+    if (isGameRoute) {
+        return (
+            <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col h-12 sm:h-14">
+                <div className="h-full flex items-center bg-sky-400/30 backdrop-blur-md shadow-none border-b-0 relative z-10">
+                    <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-10 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 shrink-0 relative z-50">
+                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center shadow-md border border-[#F1F5F9]">
+                                <img src="/favicon-round.png" alt="MindSprint" className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-contain" />
+                            </div>
+                            <span className="font-bold text-[#0F172A] text-[17px] sm:text-[19px] tracking-tight">
+                                {currentGameName}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 sm:gap-6 ml-auto mr-2 sm:mr-4">
+                            {(path === '/number-series' || path === '/mirror-image' || path === '/water-image' || path === '/number-puzzle' || path === '/color-sort' || path === '/thug-of-war') && gameStats && (
+                                <>
+                                    {gameStats.timeLeft !== undefined && (
+                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                            <Clock className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${gameStats.timeLeft <= 5 ? 'text-rose-500 animate-pulse' : 'text-sky-600'}`} />
+                                            <span className={`font-mono font-black text-[13px] sm:text-[15px] ${gameStats.timeLeft <= 5 ? 'text-rose-500' : 'text-[#0F172A]'}`}>
+                                                {gameStats.timeLeft}s
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="w-px h-6 bg-sky-200/50 hidden sm:block" />
+                                    <div className="flex items-center gap-1.5 sm:gap-2">
+                                        <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
+                                        <span className="font-mono font-black text-[13px] sm:text-[15px] text-[#0F172A]">
+                                            {gameStats.score}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => window.dispatchEvent(new CustomEvent('endGame'))}
+                            className="px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[11px] sm:text-[12px] font-bold shadow-sm transition-all active:scale-95"
+                        >
+                            End Game
+                        </button>
+                    </div>
+                </div>
+            </header>
+        );
+    }
 
     return (
         <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col ${inTest || isCrossMath ? 'h-12 sm:h-14' : 'h-14 sm:h-16'}`}>

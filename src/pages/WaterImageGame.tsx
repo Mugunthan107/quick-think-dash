@@ -191,23 +191,29 @@ export default function WaterImageGame() {
     }
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
+  useEffect(() => {
+    const onEndGame = () => finishGame(score, correct, level + 1);
+    window.addEventListener('endGame', onEndGame);
+    return () => window.removeEventListener('endGame', onEndGame);
+  }, [score, correct, level, finishGame]);
+
+  // Broadcast stats to global NavBar
+  useEffect(() => {
+    if (!gameOver) {
+      const stats = { score: currentTest?.showResults !== false ? score : '---', level: level + 1, total: TOTAL_LEVELS };
+      window.dispatchEvent(new CustomEvent('gameStats', { detail: stats }));
+    }
+    return () => {
+      window.dispatchEvent(new CustomEvent('gameStats', { detail: null }));
+    };
+  }, [score, level, gameOver, currentTest?.showResults]);
 
   if (!currentStudent || !currentTest) return null;
   const q = level < TOTAL_LEVELS ? questions[level] : null;
 
   return (
     <div className={`flex flex-col h-screen bg-transparent font-sans overflow-hidden ${feedback === 'correct' ? 'flash-correct' : feedback === 'wrong' ? 'flash-wrong' : ''}`}>
-      <div className="flex items-center justify-between px-3 sm:px-6 py-3 bg-white/80 backdrop-blur border-b border-sky-100 z-20">
-        <div className="w-[100px]" />
-        <h1 className="text-base sm:text-lg font-black text-[#0F172A]">Water Image</h1>
-        <div className="flex items-center gap-3 text-xs sm:text-sm font-bold">
-          <span className="flex items-center gap-1 text-emerald-500"><Trophy className="w-4 h-4" />{currentTest?.showResults !== false ? score : '---'}</span>
-        </div>
-      </div>
-
-      <div className="h-1 bg-sky-100">
-        <div className="h-full bg-sky-400 transition-all duration-300" style={{ width: `${(level / TOTAL_LEVELS) * 100}%` }} />
-      </div>
+      <div className="flex-1 flex flex-col items-center justify-center p-4 relative z-10 w-full overflow-hidden">
 
       {gameOver ? (
         <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
@@ -286,6 +292,7 @@ export default function WaterImageGame() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

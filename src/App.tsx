@@ -43,11 +43,11 @@ const AppContent = () => {
   const isGame = ['/game', '/crossmath', '/numlink', '/motion-challenge', '/aptirush', '/number-series', '/mirror-image', '/water-image', '/number-puzzle', '/color-sort', '/thug-of-war'].some(path => location.pathname.startsWith(path));
   const isDashboard = location.pathname.startsWith('/ashu');
   const isHome = location.pathname === '/';
-  const noScroll = isHome || isGame || isDashboard || location.pathname === '/lobby' || location.pathname === '/select-game';
+  const noScroll = isHome || isDashboard || location.pathname === '/lobby' || location.pathname === '/select-game';
   const noFooter = isGame || isDashboard || isHome || location.pathname === '/select-game';
 
   return (
-    <main className={`relative flex flex-col min-h-screen ${noScroll ? 'h-screen overflow-hidden pt-0' : 'pt-14 sm:pt-16'} bg-sky-50/20 flex flex-col relative overflow-hidden`}>
+    <main className={`relative flex flex-col min-h-screen ${noScroll || isGame ? 'h-screen overflow-hidden' : ''} ${isGame ? 'pt-12 sm:pt-14' : noScroll ? 'pt-0' : 'pt-14 sm:pt-16'} bg-sky-50/20 flex flex-col relative overflow-hidden`}>
       <WaveBackground />
 
       <div className="relative z-10 flex flex-col flex-1 h-full w-full">

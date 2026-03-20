@@ -40,7 +40,7 @@ interface Question {
 const ALL_QUESTIONS: Question[] = [
   { id: "q1", topic: "divisibility", text: "What least digit replaces # so that 279#4423 is divisible by 9?", options: ["7", "3", "1", "5"], correctIndex: 3, difficulty: 1 },
   { id: "q2", topic: "divisibility", text: "2185 is a multiple of which number?", options: ["23", "21", "17", "25"], correctIndex: 0, difficulty: 1 },
-  { id: "q3", topic: "subtraction", text: "892.7 minus 573.07 minus 95.007 equals?", options: ["233.523", "224.623", "224.777", "414.637"], correctIndex: 1, difficulty: 1 },
+  { id: "q3", topic: "subtraction", text: "892.7 - 573.07 - 95.007 equals?", options: ["233.523", "224.623", "224.777", "414.637"], correctIndex: 1, difficulty: 1 },
   { id: "q4", topic: "fraction", text: "4.004 written as a fraction in lowest form equals?", options: ["1001/250", "1001/200", "4004/1000", "2001/500"], correctIndex: 0, difficulty: 1 },
   { id: "q5", topic: "fraction", text: "0.55 repeating written as a fraction equals?", options: ["5/9", "1/11", "11/20", "1/2"], correctIndex: 0, difficulty: 1 },
   { id: "q6", topic: "addition", text: "A boy has 15 marbles and finds 10 more. How many marbles does he have now?", options: ["20", "25", "30", "35"], correctIndex: 1, difficulty: 1 },
@@ -237,6 +237,12 @@ const AptiRush = () => {
     }
   }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
 
+  useEffect(() => {
+    const onEndGame = () => handleFinish();
+    window.addEventListener('endGame', onEndGame);
+    return () => window.removeEventListener('endGame', onEndGame);
+  }, [handleFinish]);
+
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
     if (nextGame) navigate('/select-game');
@@ -249,7 +255,7 @@ const AptiRush = () => {
   const timerRadius = 24;
   const timerCircumference = 2 * Math.PI * timerRadius;
   const timerOffset = timerCircumference * (1 - timeLeft / TIME_PER_QUESTION);
-  const timerColor = timeLeft <= 3 ? '#EF4444' : timeLeft <= 5 ? '#F59E0B' : '#38BDF8';
+  const timerColor = '#EF4444';
 
   if (finished) {
     return (
@@ -303,34 +309,33 @@ const AptiRush = () => {
   const progress = ((currentQ + 1) / TOTAL_LEVELS) * 100;
 
   return (
-    <div className={`flex flex-col flex-1 w-full bg-transparent font-sans min-h-screen relative overflow-hidden ${showResult === 'correct' ? 'flash-correct' : (showResult === 'wrong' || showResult === 'timeout') ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col flex-1 w-full bg-transparent font-sans h-full relative overflow-hidden ${showResult === 'correct' ? 'flash-correct' : (showResult === 'wrong' || showResult === 'timeout') ? 'flash-wrong' : ''}`}>
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-transparent" />
       </div>
-      <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-screen">
-        <div className="w-full max-w-lg animate-fade-in relative">
+      <div className="flex flex-col flex-1 items-center justify-center p-3 sm:p-4 relative z-10 w-full min-h-0">
+        <div className="w-full max-w-lg animate-fade-in relative flex flex-col min-h-0">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4 px-2 tracking-tight font-bold">
+          <div className="flex items-center justify-between mb-2 px-2 tracking-tight font-bold">
             <span className="text-[13px] text-[#64748B]">{currentStudent?.username}</span>
             {/* Circular Timer */}
-            <div className="relative w-12 h-12 flex items-center justify-center">
+            <div className="relative w-10 h-10 flex items-center justify-center">
               <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 64 64">
-                <circle cx="32" cy="32" r={timerRadius} fill="none" stroke="#E0F2FE" strokeWidth="3" />
+                <circle cx="32" cy="32" r={timerRadius} fill="none" stroke="#FEE2E2" strokeWidth="3" />
                 <circle cx="32" cy="32" r={timerRadius} fill="none" stroke={timerColor} strokeWidth="3.5"
                   strokeDasharray={timerCircumference} strokeDashoffset={timerOffset}
                   strokeLinecap="round" className="transition-all duration-1000 linear" />
               </svg>
-              <span className={`text-[15px] font-black font-mono transition-colors duration-300 ${timeLeft <= 3 ? 'text-red-500' : 'text-sky-500'}`}>
+              <span className={`text-[13px] font-black font-mono transition-colors duration-300 text-red-500`}>
                 {timeLeft}
               </span>
             </div>
-            <div className="w-[100px]" />
           </div>
 
-          <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.10)] border border-sky-100 overflow-hidden">
+          <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.10)] border border-sky-100 overflow-hidden flex flex-col min-h-0">
             {/* Level & Score */}
-            <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-4 border-b border-sky-50">
-              <div className="flex items-center justify-between mb-4">
+            <div className="px-6 sm:px-10 pt-4 sm:pt-6 pb-2 border-b border-sky-50">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex flex-col gap-1">
                   <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Level</span>
                   <span className="text-black text-2xl font-black">{currentQ + 1} / {TOTAL_LEVELS}</span>
@@ -347,19 +352,19 @@ const AptiRush = () => {
 
             {/* Question */}
             <div className="p-6 sm:p-10">
-              <div className="bg-sky-50/50 border border-sky-100 rounded-2xl p-6 mb-6 text-center">
-                <p className="text-[18px] sm:text-[20px] font-black text-[#0F172A] leading-relaxed">{question?.text}</p>
+              <div className="bg-sky-50/50 border border-sky-100 rounded-2xl p-4 sm:p-5 mb-4 text-center">
+                <p className="text-[16px] sm:text-[19px] font-black text-[#0F172A] leading-relaxed">{question?.text}</p>
               </div>
 
               {/* Options */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {question?.options.map((opt, idx) => {
                   const isSelected = selected === idx;
                   const isCorrect = showResult && idx === question.correctIndex;
                   const isWrong = showResult === 'wrong' && isSelected;
                   return (
                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={!!showResult}
-                      className={`py-4 px-4 rounded-2xl font-bold text-[15px] transition-all duration-300 border-2
+                      className={`py-3 sm:py-4 px-3 rounded-2xl font-bold text-[14px] sm:text-[15px] transition-all duration-300 border-2
                         ${isCorrect && currentTest?.showResults !== false ? 'bg-emerald-500 text-white border-emerald-400 scale-105 shadow-lg shadow-emerald-500/20' :
                           isWrong && currentTest?.showResults !== false ? 'bg-red-500 text-white border-red-400 animate-shake' :
                             (isSelected && currentTest?.showResults === false) ? 'bg-sky-100 border-sky-300 text-sky-700' :

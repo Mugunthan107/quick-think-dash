@@ -10,6 +10,7 @@ const generateEndingWith5 = () => {
   const num = Math.floor(Math.random() * 20) * 10 + 5;
   const answer = num * num;
   return {
+    id: `${num}x${num}`,
     text: `${num}² = ?`,
     answer: answer,
     options: generateOptions(answer)
@@ -25,6 +26,7 @@ const generateTotal10 = () => {
   const b = tens * 10 + unit2;
   const answer = a * b;
   return {
+    id: `${Math.min(a, b)}x${Math.max(a, b)}`,
     text: `${a} × ${b} = ?`,
     answer: answer,
     options: generateOptions(answer)
@@ -36,6 +38,7 @@ const generateSquares = () => {
   const num = Math.floor(Math.random() * 90) + 10;
   const answer = num * num;
   return {
+    id: `${num}x${num}`,
     text: `${num}² = ?`,
     answer: answer,
     options: generateOptions(answer)
@@ -49,6 +52,7 @@ const generateNines = () => {
   const mul = multipliers[Math.floor(Math.random() * multipliers.length)];
   const answer = num * mul;
   return {
+    id: `${Math.min(num, mul)}x${Math.max(num, mul)}`,
     text: `${num} × ${mul} = ?`,
     answer: answer,
     options: generateOptions(answer)
@@ -74,6 +78,7 @@ const generators = [
 ];
 
 interface Question {
+  id: string;
   text: string;
   answer: number;
   options: number[];
@@ -103,10 +108,17 @@ const ThugOfWar = () => {
   const startTimeRef = useRef(Date.now());
 
   useEffect(() => {
-    const qs = Array.from({ length: TOTAL_QUESTIONS }, () => {
-      const gen = generators[Math.floor(Math.random() * generators.length)];
-      return gen();
-    });
+    const qs: Question[] = [];
+    const seenIds = new Set<string>();
+    
+    while (qs.length < TOTAL_QUESTIONS) {
+       const gen = generators[Math.floor(Math.random() * generators.length)];
+       const q = gen();
+       if (!seenIds.has(q.id)) {
+          seenIds.add(q.id);
+          qs.push(q);
+       }
+    }
     setQuestions(qs);
   }, []);
 
@@ -210,6 +222,29 @@ const ThugOfWar = () => {
     }
   };
 
+  useEffect(() => {
+    const onEndGame = () => endGame(userScore >= aiScore ? 'user' : 'ai', userScore, aiScore);
+    window.addEventListener('endGame', onEndGame);
+    return () => window.removeEventListener('endGame', onEndGame);
+  }, [userScore, aiScore, endGame]);
+
+  // Broadcast stats to global NavBar
+  useEffect(() => {
+    if (!isGameOver) {
+      const stats = { 
+        timeLeft, 
+        score: `${userScore * 10} vs ${aiScore * 10}`,
+        isThugOfWar: true,
+        userScore: userScore * 10,
+        aiScore: aiScore * 10
+      };
+      window.dispatchEvent(new CustomEvent('gameStats', { detail: stats }));
+    }
+    return () => {
+      window.dispatchEvent(new CustomEvent('gameStats', { detail: null }));
+    };
+  }, [timeLeft, userScore, aiScore, isGameOver]);
+
   // Rope Position Logic
   // Both need 20 to win. Max difference is 20.
   // Player boxes are offset by ±15%. To reach exactly 0% or 100% on the screen at 20 points difference:
@@ -261,140 +296,118 @@ const ThugOfWar = () => {
   const currentQuestion = questions[currentIdx];
 
   return (
-    <div className="flex flex-col flex-1 h-screen w-full bg-[#f8fafc] font-sans relative overflow-hidden">
-        {/* Header */}
-        <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-20">
-            <div className="flex items-center gap-3 bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-                <User className="w-5 h-5 text-sky-500" />
-                <span className="font-bold text-slate-700">{currentStudent?.username || 'Player'}</span>
-            </div>
-
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-                    <Clock className={`w-5 h-5 ${timeLeft <= 3 ? 'text-rose-500 animate-pulse' : 'text-amber-500'}`} />
-                    <span className={`font-mono font-bold text-xl ${timeLeft <= 3 ? 'text-rose-500' : 'text-slate-700'}`}>
-                        {timeLeft}s
-                    </span>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-3 bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-                <Bot className="w-5 h-5 text-rose-500" />
-                <span className="font-bold text-slate-700">AI Bot</span>
-            </div>
-        </div>
-
-        {/* Tug of War Area */}
-        <div className="flex-1 flex flex-col justify-center items-center px-4 relative">
+    <div className="flex flex-col flex-1 h-screen w-full bg-sky-50 font-sans relative overflow-hidden">
+        {/* Tug of War Area - Compact */}
+        <div className="flex-1 flex flex-col justify-center items-center px-4 relative pt-2 pb-2">
             {/* Field Graphics */}
             <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
                 <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-300" />
                 <div className="absolute top-0 bottom-0 left-1/2 w-1 border-r-2 border-dashed border-slate-400" />
             </div>
 
-            {/* Players and Rope */}
-            <div className="w-full max-w-5xl relative h-64 flex items-center">
+            {/* Players and Rope - Compact h-40 */}
+            <div className="w-full max-w-4xl relative h-40 flex items-center">
                 {/* Human Player */}
                 <div 
                     className="absolute transition-all duration-700 ease-out z-10"
-                    style={{ left: `${clampedRopePos - 15}%` }}
+                    style={{ left: `${clampedRopePos - 12}%` }}
                 >
                     <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 bg-sky-500 rounded-2xl shadow-lg shadow-sky-200 flex items-center justify-center animate-bounce-subtle">
-                             <User className="w-10 h-10 text-white" />
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-sky-500 rounded-2xl shadow-lg shadow-sky-200 flex items-center justify-center animate-bounce-subtle">
+                             <User className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                         </div>
-                        <div className="mt-3 px-3 py-1 bg-white rounded-full text-xs font-bold text-sky-600 shadow-sm border border-sky-100">
+                        <div className="mt-2 px-2 py-0.5 bg-white rounded-full text-[10px] font-bold text-sky-600 shadow-sm border border-sky-100">
                             SCORE: {userScore * 10}
                         </div>
                     </div>
                 </div>
 
                 {/* The Rope */}
-                <div className="absolute left-0 right-0 h-3 bg-gradient-to-r from-sky-400 via-amber-200 to-rose-400 rounded-full shadow-inner z-0 overflow-hidden">
+                <div className="absolute left-0 right-0 h-2.5 bg-gradient-to-r from-sky-400 via-amber-200 to-rose-400 rounded-full shadow-inner z-0 overflow-hidden">
                     <div 
-                        className="absolute h-full w-4 bg-white shadow-md z-10 transition-all duration-700 ease-out"
+                        className="absolute h-full w-3 bg-white shadow-md z-10 transition-all duration-700 ease-out"
                         style={{ left: `${clampedRopePos}%`, transform: 'translateX(-50%)' }}
                     >
-                        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[12px] border-b-sky-500" />
+                        <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-sky-500" />
                     </div>
                 </div>
 
                 {/* AI Player */}
                 <div 
                     className="absolute transition-all duration-700 ease-out z-10"
-                    style={{ left: `${clampedRopePos + 15}%` }}
+                    style={{ left: `${clampedRopePos + 12}%` }}
                 >
                     <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 bg-rose-500 rounded-2xl shadow-lg shadow-rose-200 flex items-center justify-center animate-bounce-subtle-delayed">
-                             <Bot className="w-10 h-10 text-white" />
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-rose-500 rounded-2xl shadow-lg shadow-rose-200 flex items-center justify-center animate-bounce-subtle-delayed">
+                             <Bot className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                         </div>
-                        <div className="mt-3 px-3 py-1 bg-white rounded-full text-xs font-bold text-rose-600 shadow-sm border border-rose-100">
+                        <div className="mt-2 px-2 py-0.5 bg-white rounded-full text-[10px] font-bold text-rose-600 shadow-sm border border-rose-100">
                             SCORE: {aiScore * 10}
                         </div>
                     </div>
                 </div>
                 
                 {/* Win markers */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-sky-200 flex items-center justify-center">
-                   <div className="rotate-90 text-[10px] font-black text-sky-400 uppercase tracking-widest">AI LOSS</div>
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-sky-200 flex items-center justify-center">
+                   <div className="rotate-90 text-[8px] font-black text-sky-400 uppercase tracking-widest">LOSS</div>
                 </div>
-                <div className="absolute right-0 top-0 bottom-0 w-1 bg-rose-200 flex items-center justify-center">
-                   <div className="-rotate-90 text-[10px] font-black text-rose-400 uppercase tracking-widest">USER LOSS</div>
+                <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-rose-200 flex items-center justify-center">
+                   <div className="-rotate-90 text-[8px] font-black text-rose-400 uppercase tracking-widest">LOSS</div>
                 </div>
             </div>
 
-            {/* Question Display */}
-            <div className="mt-8 w-full max-w-xl">
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 text-center animate-in slide-in-from-bottom-4 duration-500">
+            {/* Question Card - Compact */}
+            <div className="w-full max-w-lg z-10 mt-2">
+                <div className="bg-white rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-200/50 border border-slate-100 text-center animate-in slide-in-from-bottom-4 duration-500">
                     <p className="text-[12px] uppercase tracking-[0.2em] font-black text-slate-400 mb-4">Question {currentIdx + 1} of {TOTAL_QUESTIONS}</p>
-                    <h2 className="text-5xl font-black text-slate-900 mb-8 tracking-tighter">
+                    <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight">
                         {currentQuestion?.text}
                     </h2>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        {currentQuestion?.options.map((option, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => handleAnswer(option)}
-                                disabled={!!showFeedback}
-                                className={`
-                                    group relative py-6 px-4 rounded-[1.5rem] font-black text-2xl transition-all duration-200
-                                    ${showFeedback ? (
-                                        option === currentQuestion.answer 
-                                            ? 'bg-emerald-500 text-white shadow-emerald-200 border-emerald-400' 
-                                            : selectedOption === option 
-                                                ? 'bg-rose-500 text-white border-rose-400' 
-                                                : 'bg-slate-50 text-slate-300 border-slate-100'
-                                    ) : (
-                                        'bg-white text-slate-700 border-2 border-slate-100 hover:border-sky-400 hover:text-sky-600 hover:shadow-xl hover:shadow-sky-100 hover:-translate-y-1 active:scale-95'
-                                    )}
-                                `}
-                            >
-                                {option}
-                            </button>
-                        ))}
-                    </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {currentQuestion?.options.map((option, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleAnswer(option)}
+                                    disabled={!!showFeedback}
+                                    className={`
+                                        group relative py-4 px-4 rounded-2xl font-black text-xl transition-all duration-200
+                                        ${showFeedback ? (
+                                            option === currentQuestion.answer 
+                                                ? 'bg-emerald-500 text-white shadow-emerald-200 border-emerald-400' 
+                                                : selectedOption === option 
+                                                    ? 'bg-rose-500 text-white border-rose-400' 
+                                                    : 'bg-slate-50 text-slate-300 border-slate-100'
+                                        ) : (
+                                            'bg-white text-slate-700 border-2 border-slate-100 hover:border-sky-400 hover:text-sky-600 active:scale-95'
+                                        )}
+                                    `}
+                                >
+                                    {option}
+                                </button>
+                            ))}
+                        </div>
                 </div>
             </div>
         </div>
 
-        {/* Bottom Status Bar */}
-        <div className="p-6 bg-white border-t border-slate-100">
+        {/* Bottom Status Bar - Compact */}
+        <div className="p-3 bg-white border-t border-slate-100">
             <div className="max-w-xl mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="flex gap-1">
                         {Array.from({ length: HUMAN_WIN_SCORE }).map((_, i) => (
-                            <div key={i} className={`w-3 h-3 rounded-full transition-all duration-300 ${i < userScore ? 'bg-sky-500' : 'bg-slate-100'}`} />
+                            <div key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i < userScore ? 'bg-sky-500' : 'bg-slate-100'}`} />
                         ))}
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase ml-2">Progress To Win</span>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase ml-1">Wins</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase mr-2">AI Strength</span>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase mr-1">AI Wins</span>
                     <div className="flex gap-1">
                         {Array.from({ length: AI_WIN_SCORE }).map((_, i) => (
-                            <div key={i} className={`w-3 h-3 rounded-full transition-all duration-300 ${i < aiScore ? 'bg-rose-500' : 'bg-slate-100'}`} />
+                            <div key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i < aiScore ? 'bg-rose-500' : 'bg-slate-100'}`} />
                         ))}
                     </div>
                 </div>

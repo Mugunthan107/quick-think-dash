@@ -4,7 +4,7 @@ import { useGame } from '@/context/GameContext';
 import { Clock, Trophy, ArrowLeft, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
-import NavBar from '@/components/NavBar';
+
 import DecorativeCurve from '@/components/DecorativeCurve';
 
 const SUCCESS_MESSAGES = [
@@ -272,6 +272,12 @@ export default function WaterColorSortGame() {
     }
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
+  useEffect(() => {
+    const onEndGame = () => finishGame(score, correct, level + 1);
+    window.addEventListener('endGame', onEndGame);
+    return () => window.removeEventListener('endGame', onEndGame);
+  }, [score, correct, level]);
+
 
   if (!currentStudent || !currentTest) return null;
 
@@ -297,16 +303,24 @@ export default function WaterColorSortGame() {
     ? '👆 Tap a tube to select it'
     : `💧 Now tap where to pour`;
 
-  return (
-    <div className={`flex flex-col bg-transparent font-sans min-h-screen overflow-hidden relative ${feedback === 'correct' ? 'flash-correct' : feedback === 'wrong' ? 'flash-wrong' : ''}`}>
-      <NavBar />
-      <div className="relative flex-1 w-full flex flex-col justify-center">
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-transparent" />
-        </div>
+  // Broadcast stats to global NavBar
+  useEffect(() => {
+    if (!gameOver) {
+      const stats = { timeLeft, score: currentTest?.showResults !== false ? score : '---', level: level + 1, total: TOTAL_LEVELS };
+      window.dispatchEvent(new CustomEvent('gameStats', { detail: stats }));
+    }
+    return () => {
+      window.dispatchEvent(new CustomEvent('gameStats', { detail: null }));
+    };
+  }, [timeLeft, score, level, gameOver, currentTest?.showResults]);
 
+  if (!currentStudent || !currentTest) return null;
+
+  return (
+    <div className={`flex flex-col flex-1 w-full bg-transparent font-sans h-screen relative overflow-hidden ${feedback === 'correct' ? 'flash-correct' : (feedback === 'wrong' || feedback === 'timeout') ? 'flash-wrong' : ''}`}>
+      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-4 relative z-10 w-full overflow-hidden">
         {gameOver ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-4 relative z-10">
+          <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
             <div className="text-center animate-fade-in max-w-md w-full px-4">
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-sky-100 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-sky-200/40">
                 <Trophy className="w-10 h-10 text-sky-500" />
@@ -337,85 +351,37 @@ export default function WaterColorSortGame() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full pt-20 pb-12">
-            <div className="w-full max-w-[90vw] animate-fade-in relative flex flex-col items-center">
-              <div className="w-full mb-8 flex flex-col items-center text-center">
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A] uppercase leading-none">
-                  Sort the colors
-                </h1>
-                <p className="mt-2 text-[13px] font-black text-[#64748B] tracking-[0.4em] uppercase opacity-40">
-                  WATER SORT
-                </p>
-              </div>
-
-
-
-
-              {/* Hint bar */}
-              <div className="w-full flex items-center justify-center mb-3">
-                <div className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${selectedTube !== null
-                  ? 'bg-sky-500 text-white shadow-lg shadow-sky-400/30'
-                  : 'bg-white/70 text-[#64748B] border border-sky-100'
-                  }`}>
-                  {selectedColor && (
-                    <span className="w-4 h-4 rounded-full inline-block border-2 border-white/50 shadow-sm" style={{ backgroundColor: selectedColor }} />
-                  )}
-                  {hintText}
-                </div>
-              </div>
-
-              <div className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)] border border-sky-100 transition-all duration-300 relative w-auto min-w-[320px] lg:min-w-[620px] flex flex-col min-h-[420px]">
-                {/* Floating circular timer */}
-                <div className="absolute -left-6 -top-6 flex items-center justify-center w-14 h-14 bg-white backdrop-blur-md rounded-full shadow-xl border border-sky-100 z-50">
-                  <svg className="w-full h-full -rotate-90 filter drop-shadow-sm" viewBox="0 0 56 56">
-                    <circle cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-sky-50" />
-                    <circle
-                      cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="3.5" fill="transparent"
-                      strokeDasharray={138} strokeDashoffset={138 - (138 * timeLeft) / getTimeLimit(level)}
-                      strokeLinecap="round" className="text-red-500 transition-all duration-1000 linear"
-                    />
-                  </svg>
-                  <span className="absolute font-black text-[18px] text-red-500 font-mono tracking-tighter translate-y-[1px]">{timeLeft}</span>
-                </div>
-                {feedback && (
-                  <div className={`absolute inset-x-0 top-0 h-2 ${feedback === 'correct' ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse z-40`} />
+          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl animate-fade-in relative">
+            <div className="text-center mb-4">
+              <h1 className="text-2xl sm:text-3xl font-black text-[#0F172A] mb-2 tracking-tight">Sort the Colors</h1>
+              <div className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 mx-auto w-fit ${selectedTube !== null
+                ? 'bg-sky-500 text-white shadow-lg shadow-sky-400/30'
+                : 'bg-white/70 text-[#64748B] border border-sky-100'
+                }`}>
+                {selectedColor && (
+                  <span className="w-4 h-4 rounded-full inline-block border-2 border-white/50 shadow-sm" style={{ backgroundColor: selectedColor }} />
                 )}
+                <span>{hintText}</span>
+              </div>
+            </div>
 
-                {/* Card Header */}
-                <div className="px-8 pt-8 pb-4">
-                  <div className="flex items-center justify-between mb-6 relative">
-                    <div className="flex-1 flex justify-start">
-                      <div className="flex flex-col gap-1 items-start">
-                        <span className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Moves</span>
-                        <span className="text-xl font-black text-[#0F172A] leading-none">{moves}</span>
-                      </div>
-                    </div>
-
-                    <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2.5">
-                      <span className="text-[11px] font-black text-[#94A3B8] uppercase tracking-[0.2em] opacity-80">Level</span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-black text-[#0F172A] leading-none tracking-tighter">{level + 1}</span>
-                        <span className="text-[#94A3B8] font-black text-xs">/ {TOTAL_LEVELS}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 flex justify-end">
-                      {currentTest?.showResults !== false && (
-                        <div className="flex flex-col gap-1 items-end">
-                          <span className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">Score</span>
-                          <span className="text-2xl font-black text-sky-500 leading-none">{score}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="relative w-full h-1.5 bg-sky-100/30 rounded-full overflow-hidden mb-2">
-                    <div
-                      className="absolute top-0 left-0 h-full bg-sky-500 rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
+            <div className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.12)] border border-sky-100 transition-all duration-300 relative w-auto min-w-[320px] lg:min-w-[620px] flex flex-col">
+              {feedback && (
+                <div className={`absolute inset-x-0 top-0 h-2 ${feedback === 'correct' ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse z-40`} />
+              )}
+              {/* Internal Stats compact */}
+              <div className="px-6 pt-6 flex items-center justify-between">
+                <div className="flex flex-col font-black">
+                  <span className="text-[10px] text-[#94A3B8] uppercase">Moves</span>
+                  <span className="text-lg text-[#0F172A]">{moves}</span>
                 </div>
+                <div className="relative w-32 h-1.5 bg-sky-100/50 rounded-full overflow-hidden">
+                  <div
+                    className="absolute h-full bg-sky-500 rounded-full"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
 
                 {/* Tubes Area */}
                 <div className="flex-1 p-6 flex flex-col items-center justify-center gap-6">
@@ -479,8 +445,7 @@ export default function WaterColorSortGame() {
 
               <DecorativeCurve opacity={0.04} height="h-[200px] sm:h-[240px]" className="absolute -bottom-8 left-0 w-full pointer-events-none" animate={true} />
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

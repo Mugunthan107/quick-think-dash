@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 import { Trophy } from 'lucide-react';
 import { toast } from 'sonner';
-import NavBar from '@/components/NavBar';
+
 import DecorativeCurve from '@/components/DecorativeCurve';
 import confetti from 'canvas-confetti';
 
@@ -189,6 +189,12 @@ function BubbleGame() {
     }
   }, [score, elapsed, totalCorrect, currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, navigate]);
 
+  useEffect(() => {
+    const onEndGame = () => handleFinish();
+    window.addEventListener('endGame', onEndGame);
+    return () => window.removeEventListener('endGame', onEndGame);
+  }, [handleFinish]);
+
   const handlePostFinish = useCallback(() => {
     const next = getNextGame();
     if (next) {
@@ -287,7 +293,7 @@ function BubbleGame() {
   if (finished) {
     return (
       <div className="flex flex-col bg-transparent font-sans min-h-screen overflow-hidden relative">
-        <NavBar />
+
         <div className="relative flex-1 w-full flex flex-col justify-center items-center">
           <div className="absolute inset-0 z-0 pointer-events-none">
             <div className="absolute inset-0 bg-transparent" />
@@ -335,7 +341,7 @@ function BubbleGame() {
 
   return (
     <div className={`flex flex-col bg-transparent font-sans min-h-screen overflow-hidden relative ${feedback === 'success' ? 'flash-correct' : feedback === 'error' ? 'flash-wrong' : ''}`}>
-      <NavBar />
+
       <div className="relative flex-1 w-full flex flex-col justify-center">
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 bg-transparent" />
@@ -344,7 +350,7 @@ function BubbleGame() {
         {/* Redundant Sidebar Stats Removed to match User Image */}
 
 
-        <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full pt-28 pb-12">
+        <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full pt-12 pb-12">
           <div className="w-full max-w-[580px] animate-fade-in relative">
             <div className="w-full mb-8 flex flex-col items-center text-center">
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A] uppercase">
@@ -355,8 +361,7 @@ function BubbleGame() {
               </p>
             </div>
 
-            {/* End Test Hyperlink */}
-            <div className="w-full h-4 mb-4" />
+
 
             <div className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border border-sky-100 transition-all duration-300 overflow-hidden relative min-h-[350px] flex flex-col">
               {feedback && currentTest?.showResults !== false && (

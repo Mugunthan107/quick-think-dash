@@ -274,6 +274,16 @@ export default function NumberSeriesGame() {
     handleDrag(e.touches[0].clientX);
   };
 
+  const handleFinish = useCallback(() => {
+    finishGame(score, correct, level);
+  }, [score, correct, level]);
+
+  useEffect(() => {
+    const onEndGame = () => handleFinish();
+    window.addEventListener('endGame', onEndGame);
+    return () => window.removeEventListener('endGame', onEndGame);
+  }, [handleFinish]);
+
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
     if (nextGame) navigate('/select-game');
@@ -281,8 +291,18 @@ export default function NumberSeriesGame() {
   }, [getNextGame, navigate, currentStudent, finishTest]);
 
 
-  if (!currentStudent || !currentTest) return null;
+  // Broadcast stats to global NavBar
+  useEffect(() => {
+    if (!gameOver) {
+      const stats = { timeLeft, score: currentTest?.showResults !== false ? score : '---' };
+      window.dispatchEvent(new CustomEvent('gameStats', { detail: stats }));
+    }
+    return () => {
+      window.dispatchEvent(new CustomEvent('gameStats', { detail: null }));
+    };
+  }, [timeLeft, score, gameOver, currentTest?.showResults]);
 
+  if (!currentStudent || !currentTest) return null;
 
   const q = level < TOTAL_LEVELS ? questions[level] : null;
 
@@ -295,36 +315,6 @@ export default function NumberSeriesGame() {
       onTouchMove={onTouchMove}
       onTouchEnd={() => { isDragging.current = false; }}
     >
-      <div className="relative z-50 w-full px-4 sm:px-8 py-4 flex items-center justify-between bg-white/60 backdrop-blur-xl border-b border-white/40 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
-            <Gamepad2 className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-sm font-black text-[#0F172A] leading-none uppercase tracking-wider">Number Series</h2>
-            <p className="text-[10px] font-bold text-sky-500 mt-1.5 uppercase tracking-widest leading-none">{currentStudent.username}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 sm:gap-8">
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest mb-1 leading-none">Time Left</span>
-            <div className={`flex items-center gap-2 ${timeLeft <= 3 ? 'text-rose-500 animate-pulse' : 'text-sky-500'}`}>
-              <Clock className="w-4 h-4" />
-              <span className="font-mono font-black text-xl leading-none">{timeLeft}s</span>
-            </div>
-          </div>
-          <div className="w-px h-10 bg-slate-200/60" />
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest mb-1 leading-none">Score</span>
-            <div className="flex items-center gap-2 text-emerald-500">
-              <Trophy className="w-4 h-4" />
-              <span className="font-mono font-black text-xl leading-none">{currentTest?.showResults !== false ? score : '---'}</span>
-            </div>
-          </div>
-          <div className="w-[100px]" />
-        </div>
-      </div>
-
       <div className="flex-1 flex flex-col items-center justify-center p-4 relative z-10 w-full overflow-hidden">
         {gameOver ? (
           <div className="flex-1 flex flex-col items-center justify-center p-4 relative">

@@ -275,6 +275,12 @@ const CrossMathGame = () => {
     }
   }, [currentStudent, currentTest, submitGameResult, addCompletedGame, finishTest, navigate]);
 
+  useEffect(() => {
+    const onEndGame = () => handleFinish();
+    window.addEventListener('endGame', onEndGame);
+    return () => window.removeEventListener('endGame', onEndGame);
+  }, [handleFinish]);
+
   // Reset per-question timer when moving to a new puzzle
   useEffect(() => {
     if (finished) return;
@@ -628,7 +634,7 @@ const CrossMathGame = () => {
                 </div>
 
                 {/* Right: Score */}
-                <div className="flex-1 flex justify-end">
+                <div className="flex-1 flex justify-end gap-4 items-center">
                   {currentTest?.showResults !== false && (
                     <div className="flex items-baseline gap-2">
                       <span className="text-[10px] font-black text-[#94A3B8] uppercase tracking-wider opacity-80">Score</span>

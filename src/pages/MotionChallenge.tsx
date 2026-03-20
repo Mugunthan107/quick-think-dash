@@ -32,7 +32,7 @@ const LOADING_MESSAGES = [
   "Setting up the holes...",
   "Warming up the motion...",
 ];
-import NavBar from '@/components/NavBar';
+
 import DecorativeCurve from '@/components/DecorativeCurve';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -274,9 +274,8 @@ function canSlide(
     if (occ[nr][nc] !== null && occ[nr][nc] !== block.id) return false;
     // Cannot slide into ball
     if (nr === ballPos[0] && nc === ballPos[1]) return false;
-    // Cannot slide into hole
-    if (nr === holePos[0] && nc === holePos[1]) return false;
   }
+
   return true;
 }
 
@@ -444,6 +443,17 @@ const MotionChallenge = () => {
     }
   }, [finished]);
 
+  const handleFinish = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setFinished(true);
+  }, []);
+
+  useEffect(() => {
+    const onEndGame = () => handleFinish();
+    window.addEventListener('endGame', onEndGame);
+    return () => window.removeEventListener('endGame', onEndGame);
+  }, [handleFinish]);
+
   const handlePostFinish = useCallback(() => {
     const nextGame = getNextGame();
     if (nextGame) navigate('/select-game');
@@ -499,7 +509,7 @@ const MotionChallenge = () => {
   if (finished) {
     return (
       <div className="flex flex-col bg-transparent font-sans min-h-screen overflow-hidden relative">
-        <NavBar />
+
         <div className="relative flex-1 w-full flex flex-col justify-center items-center">
           <div className="absolute inset-0 z-0 pointer-events-none">
             <div className="absolute inset-0 bg-transparent" />
@@ -579,7 +589,7 @@ const MotionChallenge = () => {
 
   return (
     <div className={`flex flex-col bg-transparent font-sans h-screen overflow-hidden relative ${levelFlash === 'success' ? 'flash-correct' : levelFlash === ('wrong' as any) ? 'flash-wrong' : ''}`}>
-      <NavBar />
+
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center overflow-hidden relative pt-2 sm:pt-4">
@@ -587,6 +597,8 @@ const MotionChallenge = () => {
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 bg-transparent" />
         </div>
+
+
 
         {/* Page heading */}
         <div className="relative z-10 text-center pb-2 px-4">
@@ -597,9 +609,6 @@ const MotionChallenge = () => {
             Place the ball into the black hole in as few moves as possible
           </p>
         </div>
-
-        {/* End Test Hyperlink */}
-        <div className="w-full h-2 mb-2" />
 
         {/* Game Card */}
         <div className={`relative z-10 bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.18)] border transition-all duration-300 mx-4 flex flex-col
