@@ -622,7 +622,7 @@ const MotionChallenge = () => {
           )}
 
           <div className="bg-white border-b border-sky-100/50 p-4 sm:p-5">
-            <div className={`grid ${currentTest?.showResults ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'} items-center gap-4 mb-4`}>
+            <div className={`grid ${currentTest?.showResults ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-3'} items-center gap-4 mb-4`}>
               <div className="flex flex-col gap-1.5 text-center">
                 <span className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest">Level</span>
                 <span className="text-black text-2xl font-black">{levelIdx + 1}<span className="text-[#94A3B8] text-lg font-bold">/{TOTAL_LEVELS}</span></span>
