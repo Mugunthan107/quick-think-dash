@@ -5,6 +5,7 @@ import { Clock, Trophy } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 const SUCCESS_MESSAGES = [
   "Hurray! You're brilliant! 🌟",
@@ -72,10 +73,7 @@ function getBlankIndex(i: number, qIndex: number): number {
 }
 
 function getTotalTime(qIndex: number): number {
-  if (qIndex < 5) return 10;
-  if (qIndex < 10) return 15;
-  if (qIndex < 15) return 20;
-  return 25;
+  return getGameTimeLimit('crossmath', qIndex);
 }
 
 function compute(a: number, op: string, b: number): number {
@@ -551,7 +549,7 @@ const CrossMathGame = () => {
       </div>
 
       <div className="flex flex-col flex-1 items-center justify-center p-4 relative z-10 w-full pt-0 pb-20">
-        <div className="w-full max-w-[580px] animate-fade-in relative flex flex-col items-center">
+        <div className="w-full max-w-[750px] animate-fade-in relative flex flex-col items-center">
 
           {/* Header Block first as requested */}
           <div className="w-full mb-1.5 flex flex-col items-center text-center">
@@ -694,8 +692,8 @@ const CrossMathGame = () => {
             </div>
 
             {/* Answer Options row integrated into card */}
-            <div className="px-6 pb-12 flex flex-col gap-8">
-              <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="px-4 sm:px-6 pb-8 sm:pb-12 flex flex-col gap-6 sm:gap-8">
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                 {currentOptions.map((val, i) => {
                   const usedCount = usedValues.filter(v => v === val).length;
                   const availCount = currentOptions.slice(0, i + 1).filter(v => v === val).length;
@@ -711,7 +709,7 @@ const CrossMathGame = () => {
                         if (isThisUsed) return;
                         e.dataTransfer.setData('text/plain', String(val));
                       }}
-                      className={`w-14 h-14 rounded-[1.25rem] font-black text-2xl transition-all select-none border-2 shadow-sm
+                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-[1.25rem] font-black text-xl sm:text-2xl transition-all select-none border-2 shadow-sm
                         ${isThisUsed
                           ? 'bg-sky-50/50 text-[#94A3B8]/20 border-sky-50 shadow-none cursor-not-allowed scale-90'
                           : selectedOption === val

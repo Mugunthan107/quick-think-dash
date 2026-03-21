@@ -19,6 +19,7 @@ import {
 import { useEffect, useState, useRef, useCallback } from 'react';
 import CountdownOverlay from '@/components/CountdownOverlay';
 import DecorativeCurve from '@/components/DecorativeCurve';
+import TimeSettingsModal from '@/components/TimeSettingsModal';
 
 import AshuLogin from './AshuLogin';
 
@@ -235,6 +236,7 @@ const AshuDashboard = () => {
   const [leaderboardTab, setLeaderboardTab] = useState<'overall' | 'bubble' | 'crossmath' | 'numlink' | 'aptirush' | 'motion' | 'numberseries' | 'mirror' | 'waterimage' | 'numpuzzle' | 'colorsort' | 'thugofwar'>('overall');
   const [showCreatePinDialog, setShowCreatePinDialog] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showTimeModal, setShowTimeModal] = useState(false);
   const [selectedGames, setSelectedGames] = useState<string[]>(['bubble']);
   const [isCreatingPin, setIsCreatingPin] = useState(false);
   const [sessionName, setSessionName] = useState('');
@@ -662,8 +664,8 @@ const AshuDashboard = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 shrink-0">
-                  <Button variant="outline" className="h-[48px] w-full sm:w-48 rounded-xl font-bold text-xs bg-sky-50 text-sky-600 border-sky-200 hover:bg-sky-100 hover:border-sky-300 transition-all">
-                    <Clock className="w-4 h-4 mr-2" /> Time
+                  <Button onClick={() => setShowTimeModal(true)} variant="outline" className="h-[48px] w-full sm:w-48 rounded-xl font-bold text-xs bg-sky-50 text-sky-600 border-sky-200 hover:bg-sky-100 hover:border-sky-300 transition-all">
+                    <Clock className="w-4 h-4 mr-2" /> Timer
                   </Button>
                   {currentTest.status !== 'STARTED' ? (
                     <Button
@@ -1042,6 +1044,7 @@ const AshuDashboard = () => {
           </div>
         )}
       </div>
+      {showTimeModal && <TimeSettingsModal onClose={() => setShowTimeModal(false)} />}
     </div>
   );
 };

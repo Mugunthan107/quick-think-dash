@@ -4,6 +4,7 @@ import { useGame } from '@/context/GameContext';
 import { Clock, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 const SUCCESS_MESSAGES = [
   "Hurray! You're brilliant! 🌟",
@@ -26,7 +27,7 @@ const OOPS_MESSAGES = [
 
 const TOTAL_LEVELS = 20;
 function getRoundTime(level: number) {
-  return level < 15 ? 10 : 5;
+  return getGameTimeLimit('numpuzzle', level);
 }
 
 interface PuzzleQ {

@@ -5,6 +5,7 @@ import { Clock, Trophy, RotateCcw } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 const SUCCESS_MESSAGES = [
   "Hurray! You're brilliant! 🌟",
@@ -247,6 +248,7 @@ const NumLinkGame = () => {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [currentRound, setCurrentRound] = useState(0);
   const globalRound = currentLevel * ROUNDS_PER_LEVEL + currentRound;
+  const timeLimit = getGameTimeLimit('numlink', globalRound);
 
   const [grid, setGrid] = useState<Cell[][]>([]);
   const [pathStack, setPathStack] = useState<{ row: number; col: number }[]>([]);
@@ -256,7 +258,7 @@ const NumLinkGame = () => {
   const [roundFailed, setRoundFailed] = useState(false);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(LEVELS[0].timeLimit);
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [elapsed, setElapsed] = useState(0);
   const [finished, setFinished] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -295,8 +297,8 @@ const NumLinkGame = () => {
     isDrawingRef.current = false;
     setRoundComplete(false);
     setRoundFailed(false);
-    setTimeLeft(level.timeLimit);
-  }, [currentLevel, currentRound, finished]);
+    setTimeLeft(getGameTimeLimit('numlink', globalRound));
+  }, [currentLevel, currentRound, finished, globalRound]);
 
   useEffect(() => {
     if (finished || roundComplete || roundFailed) {
@@ -628,62 +630,52 @@ const NumLinkGame = () => {
   const level = LEVELS[currentLevel];
   const progress = ((globalRound + 1) / TOTAL_ROUNDS) * 100;
 
-  // Dynamic container width based on grid size so larger grids expand horizontally
-  const containerMaxW = level.gridSize <= 5 ? 'max-w-[420px]' : level.gridSize <= 6 ? 'max-w-[500px]' : level.gridSize <= 7 ? 'max-w-[600px]' : 'max-w-[680px]';
-
   return (
-    <div className={`flex flex-col flex-1 w-full h-full bg-transparent font-sans relative overflow-hidden pt-12 sm:pt-14 ${showFlash === 'correct' ? 'flash-correct' : showFlash === 'wrong' ? 'flash-wrong' : ''}`}>
+    <div className={`flex flex-col flex-1 w-full h-full bg-transparent font-sans relative overflow-hidden pt-4 sm:pt-6 ${showFlash === 'correct' ? 'flash-correct' : showFlash === 'wrong' ? 'flash-wrong' : ''}`}>
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* Soft Multi-Gradient Base */}
         <div className="absolute inset-0 bg-transparent" />
       </div>
 
-      <div className="flex flex-col flex-1 items-center px-2 sm:px-6 pb-2 pt-1 sm:pt-2 relative z-10 w-full overflow-hidden">
-        <div className={`w-full ${containerMaxW} h-full flex flex-col justify-center animate-fade-in relative min-h-0`}>
+      <div className="flex flex-col flex-1 items-center px-4 sm:px-6 pb-6 pt-2 relative z-10 w-full overflow-hidden">
+        <div className="w-full max-w-[500px] flex flex-col justify-center animate-fade-in relative min-h-0 h-full">
 
-          <div className="flex-none mb-0">
-            <div className="w-full mb-0.5 sm:mb-1 flex flex-col items-center text-center">
-              <h1 className="text-[16px] sm:text-[20px] font-black tracking-tight text-[#0F172A] uppercase leading-none">
+          <div className="flex-none mb-4">
+            <div className="w-full flex flex-col items-center text-center">
+              <h1 className="text-[20px] sm:text-[24px] font-black tracking-tight text-[#0F172A] uppercase leading-none">
                 NumLink
               </h1>
-              <p className="text-[11px] text-[#64748B] font-bold mt-0.5 max-w-[200px] truncate sm:max-w-none">Connect numbers and fill the grid</p>
-            </div>
-
-            <div className="flex items-center justify-between px-2 tracking-tight font-bold scale-95 origin-center text-[#64748B] text-[13px]">
-              <span className="truncate max-w-[150px]">{currentStudent?.username}</span>
-              <div className="w-[100px]" />
+              <p className="text-[12px] text-[#64748B] font-bold mt-1">Connect numbers and fill the grid</p>
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col justify-center relative mt-1 sm:mt-2 min-h-0">
+          <div className="flex-1 flex flex-col justify-center relative min-h-0 w-full mx-auto">
 
-            {/* Timer pill floating left outside */}
-            <div className="absolute -top-10 left-4 sm:top-4 sm:-left-20 z-20">
-              <div className={`flex flex-col items-center justify-center gap-0.5 px-2.5 py-1 sm:py-1.5 sm:px-3 rounded-xl shadow-lg border-2 transition-all duration-300 backdrop-blur-md bg-red-50 border-red-200 text-red-500`}>
-                <Clock className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${timeLeft <= Math.floor(level.timeLimit * 0.3) ? 'animate-pulse' : ''}`} />
-                <span className="font-mono font-black text-[13px] sm:text-[15px] leading-none tracking-tight">
+            {/* Timer pill */}
+            <div className="absolute -top-10 left-0 sm:top-4 sm:-left-20 z-20">
+              <div className={`flex flex-col items-center justify-center gap-1 px-3 py-1.5 sm:py-2 sm:px-4 rounded-xl shadow-lg border-2 transition-all duration-300 backdrop-blur-md bg-red-50 border-red-200 text-red-500`}>
+                <Clock className={`w-4 h-4 ${timeLeft <= Math.floor(timeLimit * 0.3) ? 'animate-pulse' : ''}`} />
+                <span className="font-mono font-black text-[14px] sm:text-[16px] leading-none tracking-tight">
                   {formatTime(timeLeft)}
                 </span>
               </div>
             </div>
 
-            <div className={`bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 transition-all duration-300 overflow-hidden relative ${showFlash === 'wrong' && currentTest?.showResults !== false ? 'border-red-200' : showFlash === 'correct' && currentTest?.showResults !== false ? 'border-emerald-200' : 'border-sky-100'}`}>
-              <div className="px-3 sm:px-5 pt-3 sm:pt-4 pb-1.5 border-b border-sky-50">
-                <div className="relative flex items-center justify-between mb-2 h-8">
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${currentLevel <= 1 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>{level.label}</span>
-                      <span className="text-[14px] font-black text-[#0F172A]">Round {globalRound + 1} / {TOTAL_ROUNDS}</span>
-                    </div>
+            <div className={`bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] border-2 transition-all duration-300 overflow-hidden relative flex flex-col h-full max-h-[600px] w-full mx-auto ${showFlash === 'wrong' && currentTest?.showResults !== false ? 'border-red-200' : showFlash === 'correct' && currentTest?.showResults !== false ? 'border-emerald-200' : 'border-sky-100'}`}>
+              
+              <div className="px-5 pt-5 pb-3 border-b border-sky-50 bg-white/50 z-10">
+                <div className="relative flex items-center justify-between mb-3 h-8">
+                  {/* Left: Level */}
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${currentLevel <= 1 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>{level.label}</span>
+                    <span className="text-[13px] font-black text-[#0F172A]">Round {globalRound + 1} / {TOTAL_ROUNDS}</span>
                   </div>
 
-                  {currentTest?.showResults !== false ? (
-                    <div className="text-right flex flex-col gap-0.5 z-10 w-[100px] items-end">
+                  {/* Right: Score */}
+                  {currentTest?.showResults !== false && (
+                    <div className="text-right flex items-center gap-2">
                       <span className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-widest leading-none">SCORE</span>
-                      <span className="font-mono font-black text-lg text-sky-500 leading-none">{score}</span>
+                      <span className="font-mono font-black text-xl text-sky-500 leading-none">{score}</span>
                     </div>
-                  ) : (
-                    <div className="w-[100px]" />
                   )}
                 </div>
                 <div className="w-full h-1.5 bg-sky-50 rounded-full overflow-hidden">
@@ -691,10 +683,10 @@ const NumLinkGame = () => {
                 </div>
               </div>
 
-              <div className="p-1.5 sm:p-3 flex justify-center">
+              <div className="flex-1 flex items-center justify-center p-3 sm:p-6 min-h-0 overflow-hidden shrink min-h-[250px]">
                 <div
                   ref={gridRef}
-                  className="inline-grid gap-0.5 sm:gap-1"
+                  className="w-full max-w-[400px] mx-auto grid gap-1.5 sm:gap-2 touch-none items-center justify-center p-2"
                   style={{ gridTemplateColumns: `repeat(${level.gridSize}, 1fr)` }}
                   onTouchMove={handleTouchMove}
                   onMouseUp={handleMouseUp}
@@ -704,15 +696,7 @@ const NumLinkGame = () => {
                       const isNumberCell = cell.number !== null;
                       const isPath = cell.inPath;
                       const isFilled = cell.filled;
-
-                      // Cells: wider but shorter for bigger grids to fit in viewport
-                      let cellClass = 'w-10 h-10 sm:w-12 sm:h-12';
-                      if (level.gridSize <= 5) cellClass = 'w-11 h-11 sm:w-13 sm:h-13';
-                      if (level.gridSize === 6) cellClass = 'w-10 h-9 sm:w-12 sm:h-11';
-                      if (level.gridSize === 7) cellClass = 'w-10 h-8 sm:w-12 sm:h-9';
-                      if (level.gridSize >= 8) cellClass = 'w-10 h-7 sm:w-11 sm:h-8';
-
-                      const textSize = level.gridSize >= 7 ? 'text-[13px] sm:text-[16px]' : 'text-[16px] sm:text-[20px]';
+                      const textSize = level.gridSize >= 7 ? 'text-[14px] sm:text-[18px]' : 'text-[18px] sm:text-[22px]';
 
                       return (
                         <div
@@ -722,14 +706,14 @@ const NumLinkGame = () => {
                           onMouseDown={() => handleCellInteraction(r, c)}
                           onMouseEnter={() => { if (isDrawingRef.current) handleCellInteraction(r, c); }}
                           onTouchStart={(e) => { e.preventDefault(); handleCellInteraction(r, c); }}
-                          className={`${cellClass} rounded-lg flex items-center justify-center font-black ${textSize} select-none touch-none cursor-pointer transition-all duration-150 border-[2px]
+                          className={`w-full aspect-square rounded-xl flex items-center justify-center font-black ${textSize} select-none touch-none cursor-pointer transition-all duration-150 border-2
                           ${isNumberCell
                               ? isFilled
-                                ? 'bg-sky-500 text-white border-sky-400 shadow-md shadow-sky-500/20 scale-105'
+                                ? 'bg-sky-500 text-white border-sky-400 shadow-md scale-105 z-10'
                                 : 'bg-white border-sky-200 text-[#0F172A] shadow-sm hover:border-sky-300'
                               : isPath
-                                ? 'bg-emerald-500/20 border-emerald-500/30'
-                                : 'bg-sky-50/50 border-sky-200 hover:border-sky-300 shadow-sm'
+                                ? 'bg-[#38BDF8] border-[#0EA5E9] text-white shadow-inner scale-[0.98]'
+                                : 'bg-sky-50/50 border-sky-100 hover:border-sky-300 shadow-sm'
                             }`}
                         >
                           {isNumberCell ? cell.number : ''}
@@ -740,18 +724,18 @@ const NumLinkGame = () => {
                 </div>
               </div>
 
-              <div className="px-3 sm:px-5 pb-1.5 sm:pb-2 flex flex-col gap-0.5">
+              <div className="px-5 pb-5 pt-2 flex flex-col gap-2 bg-white/50 z-10">
                 <div className="flex gap-2">
                   {!roundComplete && !roundFailed && (
-                    <button onClick={handleReset} className="flex-1 py-2 mb-0.5 rounded-xl sm:rounded-2xl font-black text-[11px] sm:text-[13px] uppercase tracking-widest bg-sky-50 text-sky-500 border-2 border-sky-100 hover:bg-sky-100 transition-all flex items-center justify-center gap-2">
-                      <RotateCcw className="w-3.5 h-3.5" />
+                    <button onClick={handleReset} className="flex-1 py-3.5 rounded-2xl font-black text-[13px] uppercase tracking-widest bg-sky-50 text-sky-500 border-2 border-sky-100 hover:bg-sky-100 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm">
+                      <RotateCcw className="w-4 h-4" />
                       Reset Path
                     </button>
                   )}
                 </div>
 
                 {(roundComplete || roundFailed) && (
-                  <div className={`text-center text-[12px] font-black uppercase tracking-widest ${roundComplete ? 'text-emerald-500' : 'text-red-500'}`}>
+                  <div className={`text-center py-2 text-[14px] font-black uppercase tracking-widest ${roundComplete ? 'text-emerald-500' : 'text-red-500'}`}>
                     {roundComplete
                       ? (currentTest?.showResults !== false ? `✓ Solved! +${getMarksForRound(globalRound + 1)} pts` : '✓ Solved!')
                       : timeLeft <= 0 ? "⌛ Time's up!" : "✕ Failed!"}
@@ -760,7 +744,7 @@ const NumLinkGame = () => {
               </div>
 
               {showFlash && currentTest?.showResults !== false && (
-                <div className={`absolute inset-0 pointer-events-none animate-fade-in ${showFlash === 'wrong' ? 'bg-red-500/5' : 'bg-emerald-500/5'}`} />
+                <div className={`absolute inset-0 pointer-events-none animate-fade-in z-50 ${showFlash === 'wrong' ? 'bg-red-500/10' : 'bg-emerald-500/10'}`} />
               )}
             </div>
           </div>

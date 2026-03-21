@@ -4,6 +4,7 @@ import { useGame } from "@/context/GameContext";
 import { Clock, Trophy, User, Bot, ArrowLeft, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 // Section 1: Numbers ending with 5
 const generateEndingWith5 = () => {
@@ -87,7 +88,6 @@ interface Question {
 const TOTAL_QUESTIONS = 40;
 const HUMAN_WIN_SCORE = 20;
 const AI_WIN_SCORE = 20;
-const TIME_LIMIT = 10;
 
 const ThugOfWar = () => {
   const { currentStudent, updateStudentProgress, submitGameResult, addCompletedGame, getNextGame, finishTest, currentTest } = useGame();
@@ -97,7 +97,7 @@ const ThugOfWar = () => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [userScore, setUserScore] = useState(0);
   const [aiScore, setAiScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
+  const [timeLeft, setTimeLeft] = useState(10);
   const [isGameOver, setIsGameOver] = useState(false);
   const [winner, setWinner] = useState<'user' | 'ai' | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -125,7 +125,8 @@ const ThugOfWar = () => {
   useEffect(() => {
     if (isGameOver || showFeedback) return;
 
-    setTimeLeft(TIME_LIMIT);
+    const limit = getGameTimeLimit('thugofwar', currentIdx);
+    setTimeLeft(limit);
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {

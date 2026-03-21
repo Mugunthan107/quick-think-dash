@@ -5,6 +5,7 @@ import { Clock, Trophy, Gamepad2 } from 'lucide-react';
 import DecorativeCurve from '@/components/DecorativeCurve';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 const SUCCESS_MESSAGES = [
   "Hurray! You're brilliant! 🌟",
@@ -124,10 +125,7 @@ export default function NumberSeriesGame() {
   }, [level, gameOver, questions, gameStarted]);
 
   const TIME_PER_Q_DYN = useMemo(() => {
-    if (level < 5) return 8;
-    if (level < 10) return 7;
-    if (level < 15) return 6;
-    return 5;
+    return getGameTimeLimit('numberseries', level);
   }, [level]);
 
   const finishGame = useCallback(async (finalScore: number, finalCorrect: number, questionsAttempted: number) => {

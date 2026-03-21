@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import DecorativeCurve from '@/components/DecorativeCurve';
 import confetti from 'canvas-confetti';
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 const SUCCESS_MESSAGES = [
   "Hurray! You're brilliant! 🌟",
@@ -35,9 +36,10 @@ interface BubbleData {
 const TOTAL_LEVELS = 30;
 
 function getRoundConfig(level: number) {
-  if (level <= 10) return { seconds: 10, points: 10 };
-  if (level <= 20) return { seconds: 7, points: 20 };
-  return { seconds: 5, points: 30 };
+  const seconds = getGameTimeLimit('bubble', level - 1);
+  if (level <= 10) return { seconds, points: 10 };
+  if (level <= 20) return { seconds, points: 20 };
+  return { seconds, points: 30 };
 }
 
 function getLevelConfig(level: number) {

@@ -24,9 +24,9 @@ const OOPS_MESSAGES = [
   "Shake it off and try again! 🍀",
 ];
 import DecorativeCurve from '@/components/DecorativeCurve';
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 const TOTAL_LEVELS = 20;
-const TIME_PER_QUESTION = 10; // seconds
 
 interface Question {
   id: string;
@@ -148,7 +148,7 @@ const AptiRush = () => {
   const [currentQ, setCurrentQ] = useState(0);
   const [score, setScore] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(TIME_PER_QUESTION);
+  const [timeLeft, setTimeLeft] = useState(10);
   const [selected, setSelected] = useState<number | null>(null);
   const [showResult, setShowResult] = useState<'correct' | 'wrong' | 'timeout' | null>(null);
   const [finished, setFinished] = useState(false);
@@ -162,7 +162,8 @@ const AptiRush = () => {
   // Question timer
   useEffect(() => {
     if (finished || showResult) return;
-    setTimeLeft(TIME_PER_QUESTION);
+    const currentLimit = getGameTimeLimit('aptirush', currentQ);
+    setTimeLeft(currentLimit);
     timerRef.current = setInterval(() => {
       setElapsed(p => p + 1);
       setTimeLeft(prev => {
@@ -252,9 +253,10 @@ const AptiRush = () => {
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   // Circular timer
+  const currentLimit = getGameTimeLimit('aptirush', currentQ);
   const timerRadius = 24;
   const timerCircumference = 2 * Math.PI * timerRadius;
-  const timerOffset = timerCircumference * (1 - timeLeft / TIME_PER_QUESTION);
+  const timerOffset = timerCircumference * (1 - timeLeft / Math.max(1, currentLimit));
   const timerColor = '#EF4444';
 
   if (finished) {

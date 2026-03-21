@@ -34,6 +34,7 @@ const LOADING_MESSAGES = [
 ];
 
 import DecorativeCurve from '@/components/DecorativeCurve';
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    TYPES
@@ -328,7 +329,7 @@ const MotionChallenge = () => {
   const [levelFlash, setLevelFlash] = useState<'success' | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
-  const [roundTime, setRoundTime] = useState(30);
+  const [roundTime, setRoundTime] = useState(getGameTimeLimit('motion', 0));
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -352,7 +353,7 @@ const MotionChallenge = () => {
         setBlocks(deepCloneBlocks(nextLevel.blocks));
         setBallPos(nextLevel.ballPos);
         setMoves(0);
-        setRoundTime(30); // Reset round timer
+        setRoundTime(getGameTimeLimit('motion', levelIdx)); // Reset round timer
         isSubmitting.current = false;
         setIsGenerating(false);
       }, 1500); // Slightly longer for the fun messages to read
@@ -399,7 +400,7 @@ const MotionChallenge = () => {
       if (next >= TOTAL_LEVELS) {
         setFinished(true);
       } else {
-        setRoundTime(30);
+        setRoundTime(getGameTimeLimit('motion', next));
         setLevelIdx(next);
         setTransitioning(false);
       }
@@ -414,7 +415,7 @@ const MotionChallenge = () => {
       setRoundTime(r => {
         if (r <= 1) {
           advanceLevel(false, moves);
-          return 30;
+          return getGameTimeLimit('motion', levelIdx);
         }
         return r - 1;
       });

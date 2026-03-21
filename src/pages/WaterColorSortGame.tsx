@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
 import DecorativeCurve from '@/components/DecorativeCurve';
+import { getGameTimeLimit } from '@/utils/gameTimings';
 
 const SUCCESS_MESSAGES = [
   "Hurray! You're brilliant! 🌟",
@@ -30,10 +31,7 @@ const TOTAL_LEVELS = 20;
 const TUBE_CAPACITY = 4;
 
 function getTimeLimit(difficulty: number) {
-  if (difficulty < 5) return 30;
-  if (difficulty < 10) return 40;
-  if (difficulty < 15) return 45;
-  return 50;
+  return getGameTimeLimit('colorsort', difficulty);
 }
 
 const COLORS = ['#38BDF8', '#F59E0B', '#10B981', '#EC4899', '#8B5CF6', '#EF4444', '#F97316', '#06B6D4'];
