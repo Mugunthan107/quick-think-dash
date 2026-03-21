@@ -99,6 +99,13 @@ const FullScreenEnforcer = () => {
         }
     };
 
+    useEffect(() => {
+        // Automatically exit fullscreen when student finishes the test
+        if (currentStudent?.isFinished && document.fullscreenElement) {
+            document.exitFullscreen().catch(err => console.log('Finished exit failed:', err));
+        }
+    }, [currentStudent?.isFinished]);
+
     const handleExit = () => {
         setFailed(false);
         setNeedsFullscreen(false);

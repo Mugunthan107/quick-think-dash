@@ -641,6 +641,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       gamesPlayed: newHistory.length
     } : null);
 
+    setCompletedGames(newHistory.map(g => g.gameId));
+
     // DB Update
     const { error } = await supabase
       .from('exam_results')
@@ -677,6 +679,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const finishTest = useCallback(async (username: string) => {
     if (!currentStudent) return;
+
+    // Automatic exit full screen when session finishes
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => console.log('Fullscreen exit failed:', err));
+    }
 
     const now = new Date();
     setCurrentStudent(prev => prev ? { ...prev, isFinished: true, completedAt: now.getTime() } : null);
@@ -749,10 +756,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const getNextGame = useCallback((): string | null => {
     if (!currentTest) return null;
     const selectedGames = currentTest.selectedGames || AVAILABLE_GAMES;
-    const remaining = selectedGames.filter(g => !completedGames.includes(g));
+    // Use both completedGames AND currentStudent's history for maximum reliability
+    const historyIds = currentStudent?.gameHistory.map(g => g.gameId) || [];
+    const allCompleted = Array.from(new Set([...completedGames, ...historyIds]));
+    
+    const remaining = selectedGames.filter(g => !allCompleted.includes(g));
     if (remaining.length === 0) return null;
     return remaining[0];
-  }, [currentTest, completedGames]);
+  }, [currentTest, completedGames, currentStudent?.gameHistory]);
 
   const resetCompletedGames = useCallback(() => {
     setCompletedGames([]);
