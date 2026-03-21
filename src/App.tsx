@@ -12,6 +12,7 @@ import DecorativeCurve from "./components/DecorativeCurve";
 import WaveBackground from "./components/WaveBackground";
 import Index from "./pages/Index";
 import StudentEntry from "./pages/StudentEntry";
+import FullScreenEnforcer from "./components/FullScreenEnforcer";
 import WaitingApproval from "./pages/WaitingApproval";
 import BubbleGame from "./pages/BubbleGame";
 import CrossMathGame from "./pages/CrossMathGame";
@@ -96,6 +97,7 @@ const App = () => (
             <NavBar />
             <AppContent />
             <FunLayer />
+            <FullScreenEnforcer />
           </BrowserRouter>
         </GameProvider>
       </FunProvider>
