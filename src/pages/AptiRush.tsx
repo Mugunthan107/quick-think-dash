@@ -97,7 +97,97 @@ const ALL_QUESTIONS: Question[] = [
   { id: "q57", topic: "percentage", text: "10 percent of a number is 20. What is the number?", options: ["100", "150", "200", "250"], correctIndex: 2, difficulty: 1 },
   { id: "q58", topic: "multiplication", text: "A shop sells 12 notebooks per day. How many notebooks are sold in 5 days?", options: ["50", "60", "70", "80"], correctIndex: 1, difficulty: 1 },
   { id: "q59", topic: "division", text: "48 chocolates are shared equally among 8 children. How many chocolates does each child get?", options: ["5", "6", "7", "8"], correctIndex: 1, difficulty: 1 },
-  { id: "q60", topic: "logic", text: "If one book costs 20 rupees, how much will 6 books cost?", options: ["100", "110", "120", "130"], correctIndex: 2, difficulty: 1 }
+  { id: "q60", topic: "logic", text: "If one book costs 20 rupees, how much will 6 books cost?", options: ["100", "110", "120", "130"], correctIndex: 2, difficulty: 1 },
+  { id: "q61", topic: "divisibility", text: "What least digit replaces # so that 53#2 is divisible by 3?", options: ["1", "2", "3", "4"], correctIndex: 1, difficulty: 1 },
+  { id: "q62", topic: "divisibility", text: "Which number is a multiple of 11?", options: ["121", "123", "125", "127"], correctIndex: 0, difficulty: 1 },
+  { id: "q63", topic: "addition", text: "A boy has 25 apples and buys 15 more. Total apples?", options: ["35", "40", "45", "50"], correctIndex: 1, difficulty: 1 },
+  { id: "q64", topic: "subtraction", text: "A shop had 90 items and sold 45 items. How many items remain?", options: ["40", "45", "50", "55"], correctIndex: 1, difficulty: 1 },
+  { id: "q65", topic: "multiplication", text: "A farmer has 8 rows of plants with 7 plants in each row. What is the total number of plants?", options: ["54", "56", "58", "60"], correctIndex: 1, difficulty: 1 },
+  { id: "q66", topic: "division", text: "56 chocolates are equally distributed among 8 children. How many chocolates does each child get?", options: ["6", "7", "8", "9"], correctIndex: 1, difficulty: 1 },
+  { id: "q67", topic: "square", text: "What is the square of 18?", options: ["324", "344", "364", "384"], correctIndex: 0, difficulty: 1 },
+  { id: "q68", topic: "square", text: "What is the square of 15?", options: ["200", "215", "225", "235"], correctIndex: 2, difficulty: 1 },
+  { id: "q69", topic: "square_root", text: "What is the square root of 81?", options: ["7", "8", "9", "10"], correctIndex: 2, difficulty: 1 },
+  { id: "q70", topic: "square_root", text: "What is the square root of 196?", options: ["12", "13", "14", "15"], correctIndex: 2, difficulty: 1 },
+  { id: "q71", topic: "cube_root", text: "What is the cube root of 512?", options: ["6", "7", "8", "9"], correctIndex: 2, difficulty: 1 },
+  { id: "q72", topic: "cube_root", text: "What is the cube root of 729?", options: ["7", "8", "9", "10"], correctIndex: 2, difficulty: 1 },
+  { id: "q73", topic: "fraction", text: "0.25 written as a fraction equals?", options: ["1/2", "1/3", "1/4", "1/5"], correctIndex: 2, difficulty: 1 },
+  { id: "q74", topic: "fraction", text: "3/4 of 20 equals?", options: ["10", "12", "15", "18"], correctIndex: 2, difficulty: 1 },
+  { id: "q75", topic: "percentage", text: "20% of 150 equals?", options: ["20", "25", "30", "35"], correctIndex: 2, difficulty: 1 },
+  { id: "q76", topic: "percentage", text: "50% of 80 equals?", options: ["30", "35", "40", "45"], correctIndex: 2, difficulty: 1 },
+  { id: "q77", topic: "unit_digit", text: "Unit digit of 7 × 7?", options: ["7", "9", "1", "3"], correctIndex: 1, difficulty: 1 },
+  { id: "q78", topic: "unit_digit", text: "Unit digit of 15 × 15?", options: ["5", "0", "2", "8"], correctIndex: 0, difficulty: 1 },
+  { id: "q79", topic: "average", text: "Average of 2 and 8?", options: ["4", "5", "6", "7"], correctIndex: 1, difficulty: 1 },
+  { id: "q80", topic: "average", text: "Average of 5 numbers is 12. Total sum?", options: ["50", "55", "60", "65"], correctIndex: 2, difficulty: 1 },
+  { id: "q81", topic: "logic", text: "If a pen costs 10 rupees, cost of 8 pens?", options: ["60", "70", "80", "90"], correctIndex: 2, difficulty: 1 },
+  { id: "q82", topic: "logic", text: "A number doubled is 40. What is the number?", options: ["10", "15", "20", "25"], correctIndex: 2, difficulty: 1 },
+  { id: "q83", topic: "multiplication", text: "A car travels 50 km in one hour. How far will it travel in 3 hours?", options: ["120", "130", "140", "150"], correctIndex: 3, difficulty: 1 },
+  { id: "q84", topic: "division", text: "72 chocolates are equally shared among 9 people. How many does each get?", options: ["6", "7", "8", "9"], correctIndex: 2, difficulty: 1 },
+  { id: "q85", topic: "addition", text: "A boy has 45 marbles and finds 37 more. How many marbles does he have in total?", options: ["72", "82", "92", "102"], correctIndex: 1, difficulty: 1 },
+  { id: "q86", topic: "subtraction", text: "A man had 100 rupees and spent 67 rupees. How much money is left?", options: ["23", "33", "43", "53"], correctIndex: 1, difficulty: 1 },
+  { id: "q87", topic: "multiplication", text: "A classroom has 9 rows with 9 students in each row. What is the total number of students?", options: ["72", "81", "90", "99"], correctIndex: 1, difficulty: 1 },
+  { id: "q88", topic: "division", text: "81 candies are equally shared among 9 children. How many candies does each child receive?", options: ["7", "8", "9", "10"], correctIndex: 2, difficulty: 1 },
+  { id: "q89", topic: "fraction", text: "Half of 60 equals?", options: ["20", "25", "30", "35"], correctIndex: 2, difficulty: 1 },
+  { id: "q90", topic: "percentage", text: "25% of 200 equals?", options: ["25", "40", "50", "60"], correctIndex: 2, difficulty: 1 },
+  { id: "q91", topic: "addition", text: "A shop sold 32 books in the morning and 28 in the evening. How many books were sold in total?", options: ["50", "55", "60", "65"], correctIndex: 2, difficulty: 1 },
+{ id: "q92", topic: "subtraction", text: "A tank had 150 liters of water and 45 liters were used. How much water remains?", options: ["95", "100", "105", "110"], correctIndex: 2, difficulty: 1 },
+{ id: "q93", topic: "multiplication", text: "A box contains 9 rows with 5 oranges in each row. Total oranges?", options: ["40", "45", "50", "55"], correctIndex: 1, difficulty: 1 },
+{ id: "q94", topic: "division", text: "63 chocolates are shared equally among 7 children. Each gets?", options: ["7", "8", "9", "10"], correctIndex: 2, difficulty: 1 },
+{ id: "q95", topic: "speed", text: "A car travels 480 km in 6 hours. What is its average speed in km/hr?", options: ["70", "80", "90", "100"], correctIndex: 1, difficulty: 1 },
+{ id: "q96", topic: "square_root", text: "A square has an area of 121 square units. What is the length of one side?", options: ["9", "10", "11", "12"], correctIndex: 2, difficulty: 1 },
+{ id: "q97", topic: "cube_root", text: "A cube has a volume of 1000 cubic units. What is the length of one side?", options: ["8", "9", "10", "11"], correctIndex: 2, difficulty: 1 },
+{ id: "q98", topic: "fraction", text: "A cake is divided into 12 pieces. If you eat one third of it, how many pieces did you eat?", options: ["3", "4", "5", "6"], correctIndex: 1, difficulty: 1 },
+{ id: "q99", topic: "percentage", text: "A student scored 10% of 90 marks. How many marks did the student score?", options: ["7", "8", "9", "10"], correctIndex: 2, difficulty: 1 },
+{ id: "q100", topic: "unit_digit", text: "When a number 6 is multiplied by itself, what will be the unit digit of the result?", options: ["2", "4", "6", "8"], correctIndex: 2, difficulty: 1 },
+{ id: "q101", topic: "average", text: "The average of two numbers is 15. If one number is 10, what is the other number?", options: ["12", "15", "18", "20"], correctIndex: 3, difficulty: 1 },
+{ id: "q102", topic: "logic", text: "If one notebook costs 15 rupees, how much will 4 notebooks cost?", options: ["45", "50", "55", "60"], correctIndex: 3, difficulty: 1 },
+{ id: "q103", topic: "multiplication", text: "A bus travels 40 km in one hour. How far will it travel in 4 hours?", options: ["140", "150", "160", "170"], correctIndex: 2, difficulty: 1 },
+{ id: "q104", topic: "division", text: "80 apples are packed equally into 10 boxes. How many apples are in each box?", options: ["6", "7", "8", "9"], correctIndex: 2, difficulty: 1 },
+{ id: "q105", topic: "addition", text: "A girl collected 18 stamps and later got 22 more. How many stamps does she have now?", options: ["35", "40", "45", "50"], correctIndex: 1, difficulty: 1 },
+{ id: "q106", topic: "subtraction", text: "A person had 200 rupees and spent 85 rupees. How much money is left?", options: ["105", "110", "115", "120"], correctIndex: 2, difficulty: 1 },
+{ id: "q107", topic: "multiplication", text: "There are 6 packets and each contains 7 biscuits. What is the total number of biscuits?", options: ["40", "42", "44", "46"], correctIndex: 1, difficulty: 1 },
+{ id: "q108", topic: "division", text: "90 candies are shared equally among 9 kids. How many candies does each child get?", options: ["8", "9", "10", "11"], correctIndex: 2, difficulty: 1 },
+{ id: "q109", topic: "fraction", text: "A number is 80. If you take half of it, what value do you get?", options: ["30", "35", "40", "45"], correctIndex: 2, difficulty: 1 },
+{ id: "q110", topic: "percentage", text: "A person finds 25% of 120. What value do they get?", options: ["20", "25", "30", "35"], correctIndex: 2, difficulty: 1 },
+{ id: "q111", topic: "percentage", text: "If a shirt price increases from 80 to 100, what is the percentage increase?", options: ["20%", "25%", "30%", "40%"], correctIndex: 1, difficulty: 1 },
+{ id: "q112", topic: "logic", text: "The sum of three consecutive odd numbers is 33. What is the largest number?", options: ["9", "11", "13", "15"], correctIndex: 2, difficulty: 1 },
+{ id: "q113", topic: "cube_root", text: "A cube has a volume of 216 cubic units. What is the side length?", options: ["4", "5", "6", "7"], correctIndex: 2, difficulty: 1 },
+{ id: "q114", topic: "unit_digit", text: "When 4 is multiplied by itself, what will be the unit digit?", options: ["2", "4", "6", "8"], correctIndex: 2, difficulty: 1 },
+{ id: "q115", topic: "average", text: "The average of 6, 8 and 10 is what value?", options: ["6", "7", "8", "9"], correctIndex: 2, difficulty: 1 },
+{ id: "q116", topic: "logic", text: "A number when tripled becomes 60. What is the original number?", options: ["15", "18", "20", "25"], correctIndex: 2, difficulty: 1 },
+{ id: "q117", topic: "addition", text: "A boy has 60 rupees and receives 25 more. How much money does he have now?", options: ["75", "80", "85", "90"], correctIndex: 2, difficulty: 1 },
+{ id: "q118", topic: "subtraction", text: "A shop had 120 items and sold 75 of them. How many items remain?", options: ["35", "40", "45", "50"], correctIndex: 2, difficulty: 1 },
+{ id: "q119", topic: "logic", text: "If 4 books cost 120 rupees, what is the cost of 7 books?", options: ["180", "190", "210", "220"], correctIndex: 2, difficulty: 1 },
+{ id: "q120", topic: "division", text: "96 chocolates are equally shared among 12 children. How many chocolates does each child receive?", options: ["6", "7", "8", "9"], correctIndex: 2, difficulty: 1 },
+{ id: "q121", topic: "addition", text: "A shopkeeper sold 45 pens in the morning and 35 in the evening. How many pens were sold in total?", options: ["70", "75", "80", "85"], correctIndex: 2, difficulty: 1 },
+{ id: "q122", topic: "subtraction", text: "A water tank had 180 liters and 60 liters were used. How much water remains?", options: ["100", "110", "120", "130"], correctIndex: 2, difficulty: 1 },
+{ id: "q123", topic: "multiplication", text: "A garden has 6 rows of trees with 9 trees in each row. Total trees?", options: ["48", "52", "54", "60"], correctIndex: 2, difficulty: 1 },
+{ id: "q124", topic: "division", text: "72 biscuits are shared equally among 8 children. How many biscuits does each child get?", options: ["7", "8", "9", "10"], correctIndex: 2, difficulty: 1 },
+{ id: "q125", topic: "fraction", text: "What is 2/5 of 200?", options: ["60", "80", "100", "120"], correctIndex: 1, difficulty: 1 },
+{ id: "q126", topic: "divisibility", text: "Which of these numbers is divisible by both 4 and 9?", options: ["24", "32", "36", "48"], correctIndex: 2, difficulty: 1 },
+{ id: "q127", topic: "logic", text: "A clock shows 4:00. What is the angle between the hour and minute hands?", options: ["90", "110", "120", "150"], correctIndex: 2, difficulty: 1 },
+{ id: "q128", topic: "fraction", text: "A chocolate bar has 16 pieces. If you eat one fourth, how many pieces did you eat?", options: ["2", "3", "4", "5"], correctIndex: 2, difficulty: 1 },
+{ id: "q129", topic: "percentage", text: "A student finds 20% of 50 marks. How many marks is that?", options: ["5", "8", "10", "12"], correctIndex: 2, difficulty: 1 },
+{ id: "q130", topic: "unit_digit", text: "When 8 is multiplied by itself, what will be the unit digit of the result?", options: ["2", "4", "6", "8"], correctIndex: 1, difficulty: 1 },
+{ id: "q131", topic: "average", text: "The average of 4 and 10 is what value?", options: ["6", "7", "8", "9"], correctIndex: 1, difficulty: 1 },
+{ id: "q132", topic: "logic", text: "If one bag costs 25 rupees, how much will 3 bags cost?", options: ["60", "65", "70", "75"], correctIndex: 3, difficulty: 1 },
+{ id: "q133", topic: "multiplication", text: "A train travels 30 km in one hour. How far will it travel in 5 hours?", options: ["120", "130", "140", "150"], correctIndex: 3, difficulty: 1 },
+{ id: "q134", topic: "division", text: "100 candies are packed equally into 5 boxes. How many candies are in each box?", options: ["15", "18", "20", "25"], correctIndex: 2, difficulty: 1 },
+{ id: "q135", topic: "addition", text: "A boy collected 27 coins and later found 33 more. How many coins does he have now?", options: ["50", "55", "60", "65"], correctIndex: 2, difficulty: 1 },
+{ id: "q136", topic: "subtraction", text: "A person had 250 rupees and spent 90 rupees. How much money is left?", options: ["140", "150", "160", "170"], correctIndex: 2, difficulty: 1 },
+{ id: "q137", topic: "multiplication", text: "There are 5 shelves with 12 books on each shelf. What is the total number of books?", options: ["50", "55", "60", "65"], correctIndex: 2, difficulty: 1 },
+{ id: "q138", topic: "division", text: "84 apples are shared equally among 7 friends. How many apples does each get?", options: ["10", "11", "12", "13"], correctIndex: 2, difficulty: 1 },
+{ id: "q139", topic: "fraction", text: "A number is 90. If you take one third of it, what value do you get?", options: ["20", "25", "30", "35"], correctIndex: 2, difficulty: 1 },
+{ id: "q140", topic: "percentage", text: "A person calculates 50% of 60. What value do they get?", options: ["20", "25", "30", "35"], correctIndex: 2, difficulty: 1 },
+{ id: "q141", topic: "average", text: "The average of 10, 20, 30, and 40 is?", options: ["20", "25", "30", "35"], correctIndex: 1, difficulty: 1 },
+{ id: "q142", topic: "logic", text: "A rectangle has a length of 15m and area 60 sq m. What is its perimeter?", options: ["30m", "34m", "38m", "42m"], correctIndex: 2, difficulty: 1 },
+{ id: "q143", topic: "multiplication", text: "What is 15 multiplied by 15 multiplied by 2?", options: ["400", "425", "450", "475"], correctIndex: 2, difficulty: 1 },
+{ id: "q144", topic: "unit_digit", text: "When 3 is multiplied by itself, what will be the unit digit?", options: ["3", "6", "7", "9"], correctIndex: 3, difficulty: 1 },
+{ id: "q145", topic: "average", text: "The average of 8, 12 and 16 is what value?", options: ["10", "11", "12", "13"], correctIndex: 2, difficulty: 1 },
+{ id: "q146", topic: "logic", text: "A number when doubled becomes 50. What is the original number?", options: ["20", "25", "30", "35"], correctIndex: 1, difficulty: 1 },
+{ id: "q147", topic: "addition", text: "A girl has 75 rupees and receives 25 more. How much money does she have now?", options: ["90", "95", "100", "105"], correctIndex: 2, difficulty: 1 },
+{ id: "q148", topic: "subtraction", text: "A shop had 200 items and sold 85 of them. How many items remain?", options: ["105", "110", "115", "120"], correctIndex: 2, difficulty: 1 },
+{ id: "q149", topic: "logic", text: "A person jumps 3 times the distance of 2 meters. Total distance?", options: ["5m", "6m", "7m", "8m"], correctIndex: 1, difficulty: 1 },
+{ id: "q150", topic: "division", text: "120 chocolates are equally shared among 10 children. How many chocolates does each child receive?", options: ["10", "11", "12", "13"], correctIndex: 2, difficulty: 1 }
 ];
 
 function generateQuestions(): Question[] {
@@ -180,16 +270,34 @@ const AptiRush = () => {
 
   const isSubmitting = useRef(false);
 
-  const advanceQuestion = useCallback(() => {
+  const handleFinish = useCallback((finalScoreOverride?: number, finalCorrectOverride?: number) => {
+    setFinished(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+    
+    // Use the override values if provided (helpful for the last question's race condition)
+    const finalScore = finalScoreOverride !== undefined ? finalScoreOverride : score;
+    const finalCorrect = finalCorrectOverride !== undefined ? finalCorrectOverride : correctCount;
+    
+    if (currentStudent && currentTest) {
+      submitGameResult(currentStudent.username, {
+        gameId: 'aptirush', score: finalScore, timeTaken: elapsed, correctAnswers: finalCorrect, totalQuestions: TOTAL_LEVELS, completedAt: Date.now()
+      }).then(() => {
+        addCompletedGame('aptirush');
+        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+      });
+    }
+  }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
+
+  const advanceQuestion = useCallback((finalScore?: number, finalCorrect?: number) => {
     setShowResult(null);
     setSelected(null);
     isSubmitting.current = false;
     if (currentQ + 1 >= TOTAL_LEVELS) {
-      handleFinish();
+      handleFinish(finalScore, finalCorrect);
     } else {
       setCurrentQ(p => p + 1);
     }
-  }, [currentQ]);
+  }, [currentQ, handleFinish]);
 
   const handleAnswer = (idx: number) => {
     if (showResult || finished || isSubmitting.current) return;
@@ -221,22 +329,8 @@ const AptiRush = () => {
       updateStudentProgress(currentStudent.username, newScore, currentQ + 1, newCorrect, TOTAL_LEVELS, 'aptirush');
     }
 
-    setTimeout(() => advanceQuestion(), 1200);
+    setTimeout(() => advanceQuestion(newScore, newCorrect), 1200);
   };
-
-  const handleFinish = useCallback(() => {
-    setFinished(true);
-    if (timerRef.current) clearInterval(timerRef.current);
-    const finalScore = score;
-    if (currentStudent && currentTest) {
-      submitGameResult(currentStudent.username, {
-        gameId: 'aptirush', score: finalScore, timeTaken: elapsed, correctAnswers: correctCount, totalQuestions: TOTAL_LEVELS, completedAt: Date.now()
-      }).then(() => {
-        addCompletedGame('aptirush');
-        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
-      });
-    }
-  }, [score, correctCount, currentStudent, currentTest, submitGameResult, addCompletedGame, elapsed]);
 
   useEffect(() => {
     const onEndGame = () => handleFinish();
