@@ -62,7 +62,7 @@ const NavBar = () => {
     if (isGameRoute) {
         return (
             <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 flex flex-col h-12 sm:h-14">
-                <div className="h-full flex items-center bg-sky-400/30 backdrop-blur-md shadow-none border-b-0 relative z-10">
+                <div className={`h-full flex items-center transition-all duration-500 ${path === '/thug-of-war' ? 'bg-white/10 backdrop-blur-lg border-b border-white/10' : 'bg-sky-400/30 backdrop-blur-md shadow-none border-b-0'} relative z-10`}>
                     <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-10 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-2 shrink-0 relative z-50">
                             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center shadow-md border border-[#F1F5F9]">
@@ -73,34 +73,36 @@ const NavBar = () => {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-3 sm:gap-6 ml-auto mr-2 sm:mr-4">
-                            {(path === '/number-series' || path === '/mirror-image' || path === '/water-image' || path === '/number-puzzle' || path === '/color-sort' || path === '/thug-of-war') && gameStats && (
-                                <>
+                        <div className="flex items-center gap-2 sm:gap-6 ml-auto mr-1 sm:mr-4">
+                            {(path === '/number-series' || path === '/mirror-image' || path === '/water-image' || path === '/number-puzzle' || path === '/color-sort' || path === '/thug-of-war') && gameStats && !(gameStats as any).isFinished && (
+                                <div className={`flex items-center gap-2.5 sm:gap-4 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full transition-all duration-300 ${path === '/thug-of-war' ? 'bg-white shadow-xl shadow-sky-500/10 border border-white/20' : ''}`}>
                                     {gameStats.timeLeft !== undefined && (
-                                        <div className="flex items-center gap-1.5 sm:gap-2">
-                                            <Clock className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${gameStats.timeLeft <= 5 ? 'text-rose-500 animate-pulse' : 'text-sky-600'}`} />
-                                            <span className={`font-mono font-black text-[13px] sm:text-[15px] ${gameStats.timeLeft <= 5 ? 'text-rose-500' : 'text-[#0F172A]'}`}>
+                                        <div className="flex items-center gap-1 sm:gap-2">
+                                            <Clock className={`w-3 h-3 sm:w-4 sm:h-4 ${gameStats.timeLeft <= 5 ? 'text-rose-500 animate-pulse' : 'text-sky-600'}`} />
+                                            <span className={`font-mono font-black text-[11px] sm:text-[15px] ${gameStats.timeLeft <= 5 ? 'text-rose-500' : path === '/thug-of-war' ? 'text-sky-900' : 'text-[#0F172A]'}`}>
                                                 {gameStats.timeLeft}s
                                             </span>
                                         </div>
                                     )}
-                                    <div className="w-px h-6 bg-sky-200/50 hidden sm:block" />
-                                    <div className="flex items-center gap-1.5 sm:gap-2">
-                                        <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
-                                        <span className="font-mono font-black text-[13px] sm:text-[15px] text-[#0F172A]">
+                                    <div className={`w-px h-4 sm:h-6 hidden xs:block ${path === '/thug-of-war' ? 'bg-sky-100' : 'bg-sky-200/50'}`} />
+                                    <div className="flex items-center gap-1 sm:gap-2">
+                                        <Trophy className={`w-3 h-3 sm:w-4 sm:h-4 ${path === '/thug-of-war' ? 'text-amber-500' : 'text-emerald-500'}`} />
+                                        <span className={`font-mono font-black text-[11px] sm:text-[15px] ${path === '/thug-of-war' ? 'text-sky-900' : 'text-[#0F172A]'}`}>
                                             {gameStats.score}
                                         </span>
                                     </div>
-                                </>
+                                </div>
                             )}
                         </div>
 
-                        <button
-                            onClick={() => window.dispatchEvent(new CustomEvent('endGame'))}
-                            className="px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[11px] sm:text-[12px] font-bold shadow-sm transition-all active:scale-95"
-                        >
-                            End Game
-                        </button>
+                        {!((gameStats as any)?.isFinished) && (
+                            <button
+                                onClick={() => window.dispatchEvent(new CustomEvent('endGame'))}
+                                className={`px-3 sm:px-5 py-1.5 sm:py-2 ${path === '/thug-of-war' ? 'bg-rose-500/90 backdrop-blur-md shadow-xl shadow-rose-500/20' : 'bg-rose-500 shadow-sm'} hover:bg-rose-600 text-white rounded-xl sm:rounded-2xl text-[10px] sm:text-[12px] font-black transition-all active:scale-95 z-50`}
+                            >
+                                End
+                            </button>
+                        )}
                     </div>
                 </div>
             </header>

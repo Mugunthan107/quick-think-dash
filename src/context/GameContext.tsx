@@ -686,13 +686,25 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const now = new Date();
-    setCurrentStudent(prev => prev ? { ...prev, isFinished: true, completedAt: now.getTime() } : null);
+    const completedAtTime = now.getTime();
+    
+    // Update local state immediately (Optimistic Update)
+    setCurrentStudent(prev => prev ? { ...prev, isFinished: true, completedAt: completedAtTime } : null);
+    setStudents(prev => prev.map(s => s.username === username ? { ...s, isFinished: true, completedAt: completedAtTime } : s));
 
-    await supabase
+    // Update DB
+    const { error } = await supabase
       .from('exam_results')
       .update({ completed_at: now.toISOString() })
       .eq('test_pin', currentStudent.testPin)
       .eq('student_name', username);
+      
+    if (error) {
+      console.error('[GameContext] Error finishing test:', error);
+      toast.error('Failed to save completion status. Please try again.');
+    } else {
+      console.log('[GameContext] Student finished test successfully:', username);
+    }
   }, [currentStudent]);
 
   const getLeaderboard = useCallback(() => {

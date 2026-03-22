@@ -3,8 +3,8 @@ import React from 'react';
 const WaveBackground: React.FC = () => {
     return (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#38BDF8]/10">
-            {/* Top Wave - Mirrored Professional Horizontal Wave (Starts from center of Navbar) */}
-            <div className="absolute top-7 sm:top-8 left-0 w-full opacity-40 transform rotate-180">
+            {/* Top Wave - Mirrored Professional Horizontal Wave (Starts from very top) */}
+            <div className="absolute top-0 left-0 w-full opacity-40 transform rotate-180">
                 <svg viewBox="0 0 1440 320" preserveAspectRatio="none" className="w-full h-[150px] sm:h-[220px]">
                     <defs>
                         <linearGradient id="wave-grad-top" x1="0%" y1="0%" x2="100%" y2="0%">
